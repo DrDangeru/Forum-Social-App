@@ -1,9 +1,9 @@
 import Database from 'better-sqlite3';
-//import betterSqlite3 from 'better-sqlite3';
-
-const db = new Database('forum.db');
+import path from 'path';
 
 // Initialize database tables
+const db = new Database(path.join(__dirname, 'forum.db')) as Database.Database;
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,5 +45,7 @@ db.exec(`
     FOREIGN KEY (topic_id) REFERENCES topics (id)
   );
 `);
+
+db.pragma('journal_mode = WAL');
 
 export default db;
