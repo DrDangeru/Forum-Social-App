@@ -4,17 +4,16 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Register from './components/Register';
 import Feed from './components/Feed';
-import './App.css';
 import Friends from './components/Friends';
-
-const queryClient = new QueryClient();
+import Followed from './components/Followed';
+import './App.css';
 
 // Temporary user ID for demo purposes
 const DEMO_USER_ID = 1;
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={new QueryClient()}>
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Navbar />
@@ -24,7 +23,7 @@ function App() {
               <Route path="/" element={<Feed userId={DEMO_USER_ID} />} />
               <Route path="/register" element={<Register />} />
               <Route path="/friends" element={<Friends />} />
-              <Route path="/following" element={<div className="p-4">Following page (Coming soon)</div>} />
+              <Route path="/followed" element={<Followed currentUserId={DEMO_USER_ID} />} />
               <Route path="/alerts" element={<div className="p-4">Alerts page (Coming soon)</div>} />
             </Routes>
           </main>

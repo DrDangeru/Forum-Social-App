@@ -31,10 +31,10 @@ const Navbar = () => {
               Friends ({user.friends.length})
             </Link>
             <Link
-              to="/following"
+              to="/followed"
               className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
             >
-              Following
+              Followed
             </Link>
             <Link
               to="/alerts"

@@ -1,8 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 export default function Friends() {
   const [friends, setFriends] = useState([]);
+
+  useEffect(() => {
+    const fetchFriends = async () => {
+      const response = await fetch(`http://localhost:3001/api/friends/${userId}`);
+      const data = await response.json();
+      setFriends(data);
+    };
+    fetchFriends();
+  }, []);
 
   return (
     <div>
@@ -12,7 +21,7 @@ export default function Friends() {
           <Card key={index}>
             <CardHeader>
               <CardTitle>{friend}</CardTitle>
-            </CardHeader>
+              </CardHeader>
             <CardContent>
               <p>{friend}</p>
             </CardContent>

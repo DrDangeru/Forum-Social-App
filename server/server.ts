@@ -35,13 +35,72 @@ app.post('/api/posts', (req, res) => {
   res.json({ id: result.lastInsertRowid });
 });
 
-// Follow/unfollow user
+// Follow a user
 app.post('/api/follow', (req, res) => {
   const { followerId, followingId } = req.body;
-  db.prepare(
-    'INSERT INTO follows (follower_id, following_id) VALUES (?, ?)'
-  ).run(followerId, followingId);
-  res.json({ success: true });
+  
+  try {
+    db.prepare(`
+      INSERT INTO follows (follower_id, following_id)
+      VALUES (?, ?)
+    `).run(followerId, followingId);
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to follow user' });
+  }
+});
+
+// Unfollow a user
+app.delete('/api/follow', (req, res) => {
+  const { followerId, followingId } = req.body;
+  
+  try {
+    db.prepare(`
+      DELETE FROM follows
+      WHERE follower_id = ? AND following_id = ?
+    `).run(followerId, followingId);
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to unfollow user' });
+  }
+});
+
+// Get user's followers
+app.get('/api/followers/:userId', (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    const followers = db.prepare(`
+      SELECT u.id, u.username, u.email, u.created_at
+      FROM follows f
+      JOIN users u ON f.follower_id = u.id
+      WHERE f.following_id = ?
+    `).all(userId);
+    
+    res.json(followers);
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to get followers' });
+  }
+});
+
+// Get users followed by user
+app.get('/api/following/:userId', (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    const following = db.prepare(`
+      SELECT u.id, u.username, u.email, u.created_at
+      FROM follows f
+      JOIN users u ON f.following_id = u.id
+      WHERE f.follower_id = ?
+    `).all(userId);
+    
+    res.json(following);
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to get following users' });
+  }
 });
 
 app.listen(port, () => {
