@@ -9,6 +9,7 @@ interface User {
   username: string;
   email: string;
   created_at: string;
+  avatar_url: string | null;
   followers: User[]; // maybe needed
   following: User[]; // maybe needed
 }
@@ -82,7 +83,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
                 <div key={user.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} />
+                      <AvatarImage src={user.avatar_url || undefined} />
                       <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -113,7 +114,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
                 <div key={user.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} />
+                      <AvatarImage src={user.avatar_url || undefined} />
                       <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>

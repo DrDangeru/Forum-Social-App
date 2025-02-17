@@ -47,7 +47,7 @@ const Navbar = () => {
             </Link>
             
             {user.isAuthenticated ? (
-              <Link to="/profile" className="flex items-center space-x-2">
+              <Link to={`/user/${user.id}/details`} className="flex items-center space-x-2">
                 <Avatar>
                   <AvatarImage src={user.profilePic} alt={user.username} />
                   <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>

@@ -5,6 +5,7 @@ export interface User {
   profilePic: string;
   created_at: string;
   friends: User[];
+  personalDetails?: PersonalDetails;
 }
 
 export interface Post {
@@ -26,4 +27,16 @@ export interface Topic {
   created_at: string;
   followers: User[];
   posts: Post[];
+}
+
+export interface PersonalDetails {
+  age?: number;
+  relationshipStatus?: 'Single' | 'In a relationship' | 'Married' | 'Prefer not to say';
+  hobbies?: string[];
+  occupation?: string;
+  company?: string;
+  pets?: {
+    type: string;
+    name: string;
+  }[];
 }

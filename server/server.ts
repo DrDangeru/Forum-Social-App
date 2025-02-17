@@ -73,7 +73,7 @@ app.get('/api/followers/:userId', (req, res) => {
   
   try {
     const followers = db.prepare(`
-      SELECT u.id, u.username, u.email, u.created_at
+      SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
       FROM follows f
       JOIN users u ON f.follower_id = u.id
       WHERE f.following_id = ?
@@ -91,7 +91,7 @@ app.get('/api/following/:userId', (req, res) => {
   
   try {
     const following = db.prepare(`
-      SELECT u.id, u.username, u.email, u.created_at
+      SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
       FROM follows f
       JOIN users u ON f.following_id = u.id
       WHERE f.follower_id = ?
@@ -100,6 +100,29 @@ app.get('/api/following/:userId', (req, res) => {
     res.json(following);
   } catch (error) {
     res.status(400).json({ error: 'Failed to get following users' });
+  }
+});
+
+// Get user's friends (mutual follows)
+app.get('/api/friends/:userId', (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    const friends = db.prepare(`
+      SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
+      FROM users u
+      WHERE u.id IN (
+        SELECT f1.following_id
+        FROM follows f1
+        JOIN follows f2 ON f1.following_id = f2.follower_id
+        WHERE f1.follower_id = ?
+        AND f2.following_id = ?
+      )
+    `).all(userId, userId);
+    
+    res.json(friends);
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to get friends' });
   }
 });
 
