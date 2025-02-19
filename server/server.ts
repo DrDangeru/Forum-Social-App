@@ -1,12 +1,18 @@
 import express from 'express';
 import cors from 'cors';
 import db from './db';
+import path from 'path';
+import { upload } from './middleware/upload';
+import multer from 'multer';
 
 const app = express();
 const port = 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Get feed (posts from followed users and interested topics)
 app.get('/api/feed', (req, res) => {
@@ -123,6 +129,69 @@ app.get('/api/friends/:userId', (req, res) => {
     res.json(friends);
   } catch (error) {
     res.status(400).json({ error: 'Failed to get friends' });
+  }
+});
+
+// File upload endpoint
+app.post('/api/upload/:userId', (req, res) => {
+  // Check if user exists and has permission
+  const userId = req.params.userId;
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  upload.array('files', 10)(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ error: err.message });
+    } else if (err) {
+      return res.status(500).json({ error: 'File upload failed' });
+    }
+
+    const files = (req.files as Express.Multer.File[]).map(file => ({
+      filename: file.filename,
+      originalName: file.originalname,
+      path: `/uploads/${userId}/${file.filename}`,
+      size: file.size,
+      mimetype: file.mimetype
+    }));
+
+    // Store file information in database
+    const stmt = db.prepare(`
+      INSERT INTO user_files (user_id, filename, original_name, file_path, size, mimetype)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    const insertFiles = db.transaction((files) => {
+      for (const file of files) {
+        stmt.run(userId, file.filename, file.originalName, file.path, file.size, file.mimetype);
+      }
+    });
+
+    try {
+      insertFiles(files);
+      res.json({ files });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to save file information' });
+    }
+  });
+});
+
+// Get user's files
+app.get('/api/files/:userId', (req, res) => {
+  const userId = req.params.userId;
+  
+  try {
+    const files = db.prepare(`
+      SELECT * FROM user_files 
+      WHERE user_id = ? 
+      ORDER BY created_at DESC
+    `).all(userId);
+    
+    res.json(files);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch files' });
   }
 });
 

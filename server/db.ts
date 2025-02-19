@@ -51,6 +51,21 @@ db.exec(`
   );
 `);
 
+// Create user_files table
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS user_files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    filename TEXT NOT NULL,
+    original_name TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    mimetype TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )
+`).run();
+
 db.pragma('journal_mode = WAL');
 
 export default db;
