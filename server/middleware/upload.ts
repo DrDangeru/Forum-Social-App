@@ -1,6 +1,11 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Get directory path using ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, '../../uploads');
@@ -10,9 +15,9 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Configure storage
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const userId = req.params.userId;
-    const userDir = path.join(uploadsDir, userId);
+  destination: (_req, _file, cb) => { // not using _req and _file so this is ok
+    const userId = _req.params.userId; // sets up user
+    const userDir = path.join(uploadsDir, userId); // sets up user directory
     
     // Create user directory if it doesn't exist
     if (!fs.existsSync(userDir)) {
@@ -21,7 +26,7 @@ const storage = multer.diskStorage({
     
     cb(null, userDir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => { // not using _req and _file so this is ok
     // Create unique filename with timestamp
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
@@ -29,7 +34,7 @@ const storage = multer.diskStorage({
 });
 
 // File filter
-const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   // Accept images and common document types
   const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
   

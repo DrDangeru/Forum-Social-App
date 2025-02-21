@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { User, PersonalDetails } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/';
+import { Button, ButtonProps } from './ui/button';
+import { Input } from './ui/input';
 import { Label } from './ui/label';
 import {
   Select,
@@ -13,23 +12,23 @@ import {
 } from './ui/select';
 import { Badge } from './ui/badge';
 import { Pencil, Save, X, Plus } from 'lucide-react';
-import { ButtonProps } from './ui/button';
+import { MemberProfile } from './../types/profile';
 
 interface PersonalDetailsProps {
-  user: User;
+  profile?: MemberProfile;
   isOwner: boolean;
-  onUpdateDetails?: (details: PersonalDetails) => void;
+  onUpdateDetails?: (details: MemberProfile) => void;
 }
 
-const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ user, isOwner, onUpdateDetails }) => {
+const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ profile, isOwner, onUpdateDetails }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [details, setDetails] = useState<PersonalDetails>(user.personalDetails || {
+  const [details, setDetails] = useState<MemberProfile>(profile || {
     age: undefined,
     relationshipStatus: undefined,
-    hobbies: [],
-    occupation: '',
-    company: '',
-    pets: []
+    occupation: undefined,
+    company: undefined,
+    hobbies: undefined,
+    pets: undefined
   });
 
   const handleSave = () => {
@@ -41,13 +40,13 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ user, isOwner, on
 
   const handleCancel = () => {
     setIsEditing(false);
-    setDetails(user.personalDetails || {
+    setDetails(profile || {
       age: undefined,
       relationshipStatus: undefined,
-      hobbies: [],
-      occupation: '',
-      company: '',
-      pets: []
+      occupation: undefined,
+      company: undefined,
+      hobbies: undefined,
+      pets: undefined
     });
   };
 

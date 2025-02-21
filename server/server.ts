@@ -2,8 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import db from './db';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { upload } from './middleware/upload';
 import multer from 'multer';
+
+// Get directory path using ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = 3001;
@@ -130,6 +135,19 @@ app.get('/api/friends/:userId', (req, res) => {
   } catch (error) {
     res.status(400).json({ error: 'Failed to get friends' });
   }
+});
+
+// Get user by ID
+app.get('/api/users/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  // Get user's friends count NEEDS WORK - not working now...
+  //const friendsCount = db.prepare('SELECT COUNT(*) as count FROM follows WHERE follower_id = ?').get(userId);
+  //user.friendsCount = friendsCount.count;
+  //res.json(user);
 });
 
 // File upload endpoint

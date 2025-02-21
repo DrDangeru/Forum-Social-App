@@ -1,16 +1,17 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { mockUsers } from '../data/mockData';
-import GuyProfilePic from '../Pics/Guy-20s.webp';
+import { useAuth } from '../lib/AuthContext';
+import { useProfile } from '../lib/ProfileContext';
 
 const Navbar = () => {
-  // Using first mock user as the current user
-  const currentUser = mockUsers[0];
-  const user = {
-    isAuthenticated: true,
-    ...currentUser,
-    profilePic: GuyProfilePic // Explicitly set the profile pic
+  const { user, isAuthenticated, logout } = useAuth();
+  const { profile } = useProfile();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/register');
   };
 
   return (
@@ -24,36 +25,46 @@ const Navbar = () => {
           </div>
           
           <div className="hidden sm:flex sm:items-center sm:space-x-8">
-            <Link
-              to="/friends"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
-            >
-              Friends ({user.friends.length})
-            </Link>
-            <Link
-              to="/followed"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
-            >
-              Followed
-            </Link>
-            <Link
-              to="/alerts"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md relative"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                0
-              </span>
-            </Link>
-            
-            {user.isAuthenticated ? (
-              <Link to={`/user/${user.id}/details`} className="flex items-center space-x-2">
-                <Avatar>
-                  <AvatarImage src={user.profilePic} alt={user.username} />
-                  <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium">{user.username}</span>
-              </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/friends"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                >
+                  Friends ({profile?.friendsCount || 0})
+                </Link>
+                <Link
+                  to="/followed"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                >
+                  Followed
+                </Link>
+                <Link
+                  to="/alerts"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md relative"
+                >
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {profile?.unreadAlerts || 0}
+                  </span>
+                </Link>
+                
+                <div className="flex items-center space-x-4">
+                  <Link to="/personal-details" className="flex items-center space-x-2">
+                    <Avatar>
+                      <AvatarImage src={profile?.avatarUrl} alt={user?.username} />
+                      <AvatarFallback>{user?.username?.[0]?.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">{user?.username}</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </>
             ) : (
               <Link
                 to="/register"

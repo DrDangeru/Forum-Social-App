@@ -1,52 +1,83 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Register from './components/Register';
-import Feed from './components/Feed';
+// import Feed from './components/Feed';
 import Friends from './components/Friends';
-import Followed from './components/Followed';
+// import Followed from './components/Followed';
 import PersonalDetails from './components/PersonalDetails';
-import { mockUsers } from './data/mockData';
+import { AuthProvider } from './lib/AuthContext';
+import { ProfileProvider } from './lib/ProfileContext';
+import { useAuth } from './lib/AuthContext';
 import './App.css';
+// import { MemberProfile } from './types/profile';
 
-// Temporary user ID for demo purposes
-const DEMO_USER_ID = 1;
+// Protected Route wrapper component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/register" />;
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
-  const currentUser = mockUsers.find(user => user.id === DEMO_USER_ID);
-
   return (
-    <QueryClientProvider client={new QueryClient()}>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Navbar />
-          <main className="pt-16">
-            <Routes>
-              <Route path="/" element={<Feed userId={DEMO_USER_ID} />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/friends" element={<Friends />} />
-              <Route path="/followed" element={<Followed currentUserId={DEMO_USER_ID} />} />
-              <Route path="/alerts" element={<div className="p-4">Alerts page (Coming soon)</div>} />
-              <Route 
-                path="/user/:userId/details" 
-                element={
-                  <PersonalDetails 
-                    user={currentUser!} 
-                    isOwner={true}
-                    onUpdateDetails={(details) => {
-                      // TODO: Implement update logic when backend is ready
-                      console.log('Updated details:', details);
-                    }}
-                  />
-                } 
-              />
-            </Routes>
-          </main>
-        </div>
-      </Router>
-      <ReactQueryDevtools />
-    </QueryClientProvider>
+    <AuthProvider>
+      <ProfileProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <main className="pt-16">
+              <Routes>
+                <Route path="/register" element={<Register />} />
+                {/* <Route 
+                  path="/" 
+                  element={
+                    <ProtectedRoute>
+                      <Feed isOwner={true}     />
+                    </ProtectedRoute>
+                  } 
+                /> */}
+                <Route 
+                  path="/friends" 
+                  element={
+                    <ProtectedRoute>
+                      <Friends />
+                    </ProtectedRoute>
+                  } 
+                />
+                {/* <Route 
+                  path="/followed" 
+                  element={
+                    <ProtectedRoute>
+                      <Followed /> 
+                     </ProtectedRoute>
+                  } 
+                /> */}
+                <Route 
+                  path="/alerts" 
+                  element={
+                    <ProtectedRoute>
+                      <div className="p-4">Alerts page (Coming soon)</div>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/personal-details" 
+                  element={
+                    <ProtectedRoute>
+                      <PersonalDetails isOwner={true} />
+                    </ProtectedRoute>
+                  } 
+                />
+              </Routes>
+            </main>
+          </div>
+        </Router>
+      </ProfileProvider>
+    </AuthProvider>
   );
 }
 
