@@ -17,7 +17,7 @@ export default tseslint.config(
       },
       parser: tseslint.parser,
       parserOptions: {
-        project: './tsconfig.json'
+        projectService: true
       }
     },
     plugins: {
@@ -25,13 +25,11 @@ export default tseslint.config(
       'react-refresh': reactRefresh
     },
     rules: {
+      'max-len': ['error', { code: 100, ignoreUrls: true }],
       ...js.configs.recommended.rules,
       ...tseslint.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true }
-      ]
+      ...reactRefresh.configs.recommended.rules
     }
   }
 );

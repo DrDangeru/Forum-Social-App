@@ -2,6 +2,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { Request } from 'express';
+import type * as Express from 'express';
 
 // Get directory path using ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -34,7 +36,11 @@ const storage = multer.diskStorage({
 });
 
 // File filter
-const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  _req: Request, 
+  file: Express.Multer.File, 
+  cb: multer.FileFilterCallback
+) => {
   // Accept images and common document types
   const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
   

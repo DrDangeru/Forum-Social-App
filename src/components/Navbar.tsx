@@ -28,10 +28,10 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <Link
-                  to="/friends"
+                  to="/friends" // maybe non needed
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
                 >
-                  Friends ({profile?.friendsCount || 0})
+                  Friends ({profile?.following?.length || 0})
                 </Link>
                 <Link
                   to="/followed"

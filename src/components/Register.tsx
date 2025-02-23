@@ -1,43 +1,51 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     username: '',
-    password: '',
     email: '',
-    profile_picture: null as File | null,
+    password: '',
+    firstName: '',
+    lastName: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement registration logic
-    console.log('Form submitted:', formData);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, files } = e.target;
-    if (name === 'profile_picture' && files && files.length > 0) {
-      setFormData(prev => ({
-        ...prev,
-        [name]: files[0]
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+    setError('');
+    
+    try {
+      await axios.post('/api/auth/register', formData);
+      navigate('/login');
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'Registration failed');
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12
+     sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-bold">Register</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">
                 Username
@@ -47,49 +55,85 @@ const Register = () => {
                 name="username"
                 type="text"
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border border-gray-300
+                px-3 py-2 shadow-sm focus:border-indigo-500
+                focus:outline-none focus:ring-indigo-500"
                 value={formData.username}
                 onChange={handleChange}
               />
             </div>
-
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300
+                px-3 py-2 shadow-sm focus:border-indigo-500
+                focus:outline-none focus:ring-indigo-500"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                First Name
+              </label>
+              <input
+                id="firstName"
+                name="firstName"
+                type="text"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300
+                px-3 py-2 shadow-sm focus:border-indigo-500
+                focus:outline-none focus:ring-indigo-500"
+                value={formData.firstName}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                Last Name
+              </label>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300
+                px-3 py-2 shadow-sm focus:border-indigo-500
+                focus:outline-none focus:ring-indigo-500"
+                value={formData.lastName}
+                onChange={handleChange}
+              />
+            </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <input
                 id="password"
+                minLength={10}
                 name="password"
                 type="password"
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border border-gray-300
+                px-3 py-2 shadow-sm focus:border-indigo-500
+                focus:outline-none focus:ring-indigo-500"
                 value={formData.password}
                 onChange={handleChange}
               />
             </div>
-
-            <div>
-              <label htmlFor="profile_picture" className="block text-sm font-medium text-gray-700">
-                Profile Picture
-              </label>
-              <input
-                id="profile_picture"
-                name="profile_picture"
-                type="file"
-                accept="image/*"
-                className="mt-1 block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-indigo-50 file:text-indigo-700
-                  hover:file:bg-indigo-100"
-                onChange={handleChange}
-              />
-            </div>
-
             <button
               type="submit"
-              className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="w-full flex justify-center py-2 px-4 border
+                border-transparent rounded-md shadow-sm text-sm
+                font-medium text-white bg-indigo-600 hover:bg-indigo-700
+                focus:outline-none focus:ring-2 focus:ring-offset-2
+                focus:ring-indigo-500"
             >
               Register
             </button>

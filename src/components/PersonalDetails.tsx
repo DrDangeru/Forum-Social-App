@@ -20,36 +20,49 @@ interface PersonalDetailsProps {
   onUpdateDetails?: (details: MemberProfile) => void;
 }
 
+
 const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ profile, isOwner, onUpdateDetails }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [details, setDetails] = useState<MemberProfile>(profile || {
-    age: undefined,
-    relationshipStatus: undefined,
-    occupation: undefined,
-    company: undefined,
-    hobbies: undefined,
-    pets: undefined
-  });
-
+  const [details, setDetails] = useState<MemberProfile>(
+    profile || {
+      bio: '',
+      location: '',
+      joinedDate: '', // Ensure type matches your interface
+      socialLinks: {}, // Assuming SocialLinks is an object
+      relationshipStatus: '',
+      age: undefined,
+      interests: [],
+      pets: undefined,
+    }
+  );
+  
+  const handleChange = (field: keyof MemberProfile, value: any) => {
+    setDetails((prevDetails) => ({
+      ...prevDetails,
+      [field]: value,
+    }));
+  };
+  
   const handleSave = () => {
     setIsEditing(false);
     if (onUpdateDetails) {
       onUpdateDetails(details);
     }
   };
-
+  
   const handleCancel = () => {
     setIsEditing(false);
     setDetails(profile || {
+      bio: '',
+      location: '',
+      joinedDate: '',
+      socialLinks: {},
+      relationshipStatus: '',
       age: undefined,
-      relationshipStatus: undefined,
-      occupation: undefined,
-      company: undefined,
-      hobbies: undefined,
+      interests: [],
       pets: undefined
     });
   };
-
   return (
     <div className="container mx-auto py-8 px-4">
       <Card className="max-w-3xl mx-auto">

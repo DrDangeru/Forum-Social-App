@@ -14,6 +14,8 @@ db.exec(`
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
     avatar_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );

@@ -1,4 +1,5 @@
 import express from 'express';
+import type * as Express from 'express';
 import cors from 'cors';
 import db from './db';
 import path from 'path';
