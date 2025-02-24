@@ -3,16 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  created_at: string;
-  avatar_url: string | null;
-  followers: User[]; // maybe needed
-  following: User[]; // maybe needed
-}
+import { User } from '../types';
 
 const Followed = ({ currentUserId }: { currentUserId: number }) => {
   const [followedUsers, setFollowedUsers] = useState<User[]>([]);
@@ -80,7 +71,8 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
           <CardContent>
             <div className="space-y-4">
               {followedUsers.map(user => (
-                <div key={user.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                <div key={user.id} className="flex items-center justify-between p-4 
+                hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="flex items-center space-x-4">
                     <Avatar>
                       <AvatarImage src={user.avatar_url || undefined} />
@@ -93,7 +85,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
                   </div>
                   <Button
                     variant="destructive"
-                    onClick={() => handleUnfollow(user.id)}
+                    onClick={() => handleUnfollow(user.id as any)}
                   >
                     Unfollow
                   </Button>
@@ -111,7 +103,8 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
           <CardContent>
             <div className="space-y-4">
               {followers.map(user => (
-                <div key={user.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                <div key={user.id} className="flex items-center justify-between p-4
+                 hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="flex items-center space-x-4">
                     <Avatar>
                       <AvatarImage src={user.avatar_url || undefined} />
@@ -125,7 +118,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
                   {!followedUsers.some(f => f.id === user.id) && (
                     <Button
                       variant="outline"
-                      onClick={() => handleFollow(user.id)}
+                      onClick={() => handleFollow(user.id as any)}
                     >
                       Follow Back
                     </Button>

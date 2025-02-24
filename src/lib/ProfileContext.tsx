@@ -34,8 +34,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
                     socialLinks: {},
                     interests: [],
                     following: [],
-                    followers: [],
-                    followingTopics: []
+                    // followers: [], probably not needed
+                    //followingTopics: [], probably not needed
+                    unreadAlerts: 0
                 };
                 
                 setProfile(fetchedProfile);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button, ButtonProps } from './ui/button';
+import { Button, buttonVariants } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import {
@@ -10,59 +10,71 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import { Badge } from './ui/badge';
 import { Pencil, Save, X, Plus } from 'lucide-react';
 import { MemberProfile } from './../types/profile';
+import { useProfile } from '../lib/ProfileContext';
+import { buttonVariants } from './ui/buttonConstants';
 
 interface PersonalDetailsProps {
-  profile?: MemberProfile;
   isOwner: boolean;
-  onUpdateDetails?: (details: MemberProfile) => void;
 }
 
-
-const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ profile, isOwner, onUpdateDetails }) => {
+const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
+  const { profile, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [details, setDetails] = useState<MemberProfile>(
     profile || {
+      userId: '',
+      firstName: '',
+      lastName: '',
+      userNickname: '',
       bio: '',
       location: '',
-      joinedDate: '', // Ensure type matches your interface
-      socialLinks: {}, // Assuming SocialLinks is an object
+      joinedDate: new Date().toISOString(),
+      socialLinks: {},
       relationshipStatus: '',
       age: undefined,
       interests: [],
-      pets: undefined,
+      hobbies: [],
+      pets: []
     }
   );
-  
+
   const handleChange = (field: keyof MemberProfile, value: any) => {
     setDetails((prevDetails) => ({
       ...prevDetails,
       [field]: value,
     }));
   };
-  
-  const handleSave = () => {
+
+  const handleSave = async () => {
     setIsEditing(false);
-    if (onUpdateDetails) {
-      onUpdateDetails(details);
+    try {
+      await updateProfile(details);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
     }
   };
-  
+
   const handleCancel = () => {
     setIsEditing(false);
     setDetails(profile || {
+      userId: '',
+      firstName: '',
+      lastName: '',
+      userNickname: '',
       bio: '',
       location: '',
-      joinedDate: '',
+      joinedDate: new Date().toISOString(),
       socialLinks: {},
       relationshipStatus: '',
       age: undefined,
       interests: [],
-      pets: undefined
+      hobbies: [],
+      pets: []
     });
   };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <Card className="max-w-3xl mx-auto">
@@ -100,14 +112,14 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ profile, isOwner,
                       id="age"
                       type="number"
                       value={details.age || ''}
-                      onChange={(e) => setDetails({ ...details, age: parseInt(e.target.value) || undefined })}
+                      onChange={(e) => handleChange('age', parseInt(e.target.value) || undefined)}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="relationshipStatus">Relationship Status</Label>
                     <Select
                       value={details.relationshipStatus}
-                      onValueChange={(value) => setDetails({ ...details, relationshipStatus: value as any })}
+                      onValueChange={(value) => handleChange('relationshipStatus', value as any)}
                     >
                       <SelectTrigger id="relationshipStatus">
                         <SelectValue placeholder="Select status" />
@@ -147,7 +159,7 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ profile, isOwner,
                     <Input
                       id="occupation"
                       value={details.occupation || ''}
-                      onChange={(e) => setDetails({ ...details, occupation: e.target.value })}
+                      onChange={(e) => handleChange('occupation', e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -155,7 +167,7 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ profile, isOwner,
                     <Input
                       id="company"
                       value={details.company || ''}
-                      onChange={(e) => setDetails({ ...details, company: e.target.value })}
+                      onChange={(e) => handleChange('company', e.target.value)}
                     />
                   </div>
                 </>
@@ -183,10 +195,8 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ profile, isOwner,
                 <Input
                   id="hobbies"
                   value={details.hobbies?.join(', ') || ''}
-                  onChange={(e) => setDetails({
-                    ...details,
-                    hobbies: e.target.value.split(',').map(h => h.trim()).filter(h => h)
-                  })}
+                  onChange={(e) => handleChange('hobbies', e.target.value.split(',').
+                    map(h => h.trim()).filter(h => h))}
                   placeholder="Enter hobbies separated by commas"
                 />
               </div>
@@ -194,7 +204,9 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ profile, isOwner,
               <div className="flex flex-wrap gap-2">
                 {details.hobbies?.length ? 
                   details.hobbies.map((hobby, index) => (
-                    <Badge key={index} variant="secondary">{hobby}</Badge>
+                    <Card key={index} className="inline-block mr-2 mb-2 p-2">
+                      <CardContent className="p-0 text-sm">{hobby}</CardContent>
+                    </Card>
                   )) : 
                   <p className="text-gray-600">No hobbies specified</p>
                 }

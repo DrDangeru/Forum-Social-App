@@ -1,10 +1,4 @@
-//import bcrypt from 'bcrypt'; Unused 
-
-export interface User {
-    id: string;
-    email: string;
-    username: string;  // Used for login, can be different from display name
-}
+import { User } from './index';
 
 export interface AuthCredentials {
     username: string;
@@ -18,13 +12,5 @@ export interface AuthState {
     isAuthenticated: boolean;
 }
 
-// // Registration data extends auth credentials with profile information
-//  *** DONT think these are needed or useful  ***
-// export interface RegistrationData extends AuthCredentials {
-//     email: string;
-//     profile: {
-//         firstName: string;
-//         lastName: string;
-//         userNickname: string;
-//     };
-// }
+export { User };
+

@@ -1,14 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  created_at: string;
-  avatar_url: string;
-}
+import { User } from "../types";
 
 export default function Friends() {
   const [friends, setFriends] = useState<User[]>([]);

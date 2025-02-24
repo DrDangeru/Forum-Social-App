@@ -31,6 +31,10 @@ export interface MemberProfile extends BasicProfile {
     // followers?: BasicProfile[]; unused for now
     followingMembers?: [];  // References Topic.id
     unreadAlerts?: number;  // Added for notification count. Unused for now
+    occupation?: string;    // Added for occupation info
+    company?: string;      // Added for company info
+    hobbies?: string[];    // Added for hobbies
+    pets?: Array<{ type: string; name: string; }>; // Added for pets info
 }
 
 // // For future use  *** DONT think these are needed. Topics in sep file ***

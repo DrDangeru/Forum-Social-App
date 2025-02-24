@@ -44,7 +44,8 @@ const Navbar = () => {
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md relative"
                 >
                   <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs 
+                  rounded-full h-4 w-4 flex items-center justify-center">
                     {profile?.unreadAlerts || 0}
                   </span>
                 </Link>

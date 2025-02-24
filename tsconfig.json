@@ -7,6 +7,8 @@
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -20,6 +22,13 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "server"],
+  "include": [
+    "src",
+    "server/**/*.ts"
+  ],
+  "exclude": [
+    "server/**/*.d.ts",
+    "server/*.d.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
