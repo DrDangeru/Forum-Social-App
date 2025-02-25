@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { useAuth } from '../lib/AuthContext';
+import { useAuth } from '../lib/useAuth';
 import { useProfile } from '../lib/ProfileContext';
 
 const Navbar = () => {

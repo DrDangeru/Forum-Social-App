@@ -1,56 +1,95 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { User, AuthState, AuthCredentials } from '../types/auth';
+/* eslint-disable no-unused-vars */
+import React, { createContext, useState, useCallback } from 'react';
+import { AuthState, AuthCredentials } from '../types/auth';
 
-interface AuthContextType extends AuthState {
-    login: (credentials: AuthCredentials) => Promise<void>;
+export interface AuthContextType extends AuthState {
+    login: (credentials: AuthCredentials) => Promise<void>; // disabled no unused vars
     logout: () => void;
-    register: (credentials: AuthCredentials & { firstName: string; lastName: string }) => Promise<void>;
+    register: (credentials: AuthCredentials & { firstName: string; lastName: string }) => 
+        Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [authState, setAuthState] = useState<AuthState>({
         user: null,
-        isAuthenticated: false,
+        isAuthenticated: false
     });
 
     const login = useCallback(async (credentials: AuthCredentials) => {
         try {
-            // Here you would typically make an API call to your backend
-            // For now, we'll simulate a successful login
-            const user: User = {
-                id: 'temp-id',
-                username: credentials.username,
-                firstName: 'John',
-                lastName: 'Doe',
-            };
-            
-            setAuthState({ user, isAuthenticated: true });
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(credentials),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Login failed');
+            }
+
+            const data = await response.json();
+            setAuthState({
+                user: data.user,
+                isAuthenticated: true
+            });
         } catch (error) {
-            console.error('Login failed:', error);
+            console.error('Login error:', error);
             throw error;
         }
     }, []);
 
-    const logout = useCallback(() => {
-        setAuthState({ user: null, isAuthenticated: false });
+    const logout = useCallback(async () => {
+        try {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+            });
+            setAuthState({ user: null, isAuthenticated: false });
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Still clear the local state even if the API call fails
+            setAuthState({ user: null, isAuthenticated: false });
+        }
     }, []);
 
-    const register = useCallback(async (data: AuthCredentials & { firstName: string; lastName: string }) => {
+    const register = useCallback(async (data: AuthCredentials & { 
+        firstName: string; lastName: string }) => {
         try {
-            // Here you would typically make an API call to your backend
-            // For now, we'll simulate a successful registration
-            const user: User = {
-                id: 'temp-id',
-                username: data.username,
-                firstName: data.firstName,
-                lastName: data.lastName,
-            };
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Registration failed');
+            }
+
+            const userData = await response.json();
             
-            setAuthState({ user, isAuthenticated: true });
+            // After successful registration, create a user object
+            const user = {
+                id: String(userData.userId),
+                username: data.username,
+                email: data.email,
+                firstName: data.firstName,
+                lastName: data.lastName
+            };
+
+            setAuthState({
+                user,
+                isAuthenticated: true
+            });
         } catch (error) {
-            console.error('Registration failed:', error);
+            console.error('Registration error:', error);
             throw error;
         }
     }, []);
@@ -60,12 +99,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             {children}
         </AuthContext.Provider>
     );
-}
-
-export function useAuth() {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-}
+};

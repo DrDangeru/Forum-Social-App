@@ -24,11 +24,10 @@
   },
   "include": [
     "src",
-    "server/**/*.ts"
+    "server/**/*"
   ],
   "exclude": [
-    "server/**/*.d.ts",
-    "server/*.d.ts"
+    "node_modules"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

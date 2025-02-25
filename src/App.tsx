@@ -8,7 +8,7 @@ import Friends from './components/Friends';
 import PersonalDetails from './components/PersonalDetails';
 import { AuthProvider } from './lib/AuthContext';
 import { ProfileProvider } from './lib/ProfileContext';
-import { useAuth } from './lib/AuthContext';
+import { useAuth } from './lib/useAuth';
 import './App.css';
 // import { MemberProfile } from './types/profile';
 

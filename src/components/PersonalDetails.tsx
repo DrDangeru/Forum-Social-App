@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button, buttonVariants } from './ui/button';
+import { Button} from './ui/button'; //Variants should be attached as ext class props
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import {
@@ -13,7 +13,6 @@ import {
 import { Pencil, Save, X, Plus } from 'lucide-react';
 import { MemberProfile } from './../types/profile';
 import { useProfile } from '../lib/ProfileContext';
-import { buttonVariants } from './ui/buttonConstants';
 
 interface PersonalDetailsProps {
   isOwner: boolean;
@@ -83,15 +82,15 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
           {isOwner && (
             <div className="flex space-x-2">
               {!isEditing ? (
-                <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+                <Button variant="ghost" size="default" onClick={() => setIsEditing(true)}>
                   <Pencil className="h-4 w-4" />
                 </Button>
               ) : (
                 <>
-                  <Button variant="ghost" size="icon" onClick={handleSave}>
+                  <Button variant="ghost" size="default" onClick={handleSave}>
                     <Save className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={handleCancel}>
+                  <Button variant="ghost" size="default" onClick={handleCancel}>
                     <X className="h-4 w-4" />
                   </Button>
                 </>
@@ -247,7 +246,7 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                     </div>
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="default"
                       onClick={() => {
                         const newPets = details.pets?.filter((_, i) => i !== index);
                         setDetails({ ...details, pets: newPets });
