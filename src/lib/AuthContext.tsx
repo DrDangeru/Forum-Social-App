@@ -1,83 +1,78 @@
 /* eslint-disable no-unused-vars */
 import React, { createContext, useState, useCallback } from 'react';
-import { AuthState, AuthCredentials } from '../types/auth';
+import { AuthState, AuthCredentials, User } from '../types/auth';
+import axios from 'axios';
 
 export interface AuthContextType extends AuthState {
-    login: (credentials: AuthCredentials) => Promise<void>; // disabled no unused vars
+    login: (credentials: AuthCredentials) => Promise<User>; 
     logout: () => void;
     register: (credentials: AuthCredentials & { firstName: string; lastName: string }) => 
-        Promise<void>;
+        Promise<User>;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const defaultAuthState = {
+    user: null,
+    isAuthenticated: false
+};
+
+export const AuthContext = createContext<AuthContextType>({
+    ...defaultAuthState,
+    login: async () => { throw new Error('AuthContext not initialized'); },
+    logout: () => {},
+    register: async () => { throw new Error('AuthContext not initialized'); }
+});
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [authState, setAuthState] = useState<AuthState>({
-        user: null,
-        isAuthenticated: false
-    });
+    const [authState, setAuthState] = useState<AuthState>(defaultAuthState);
 
-    const login = useCallback(async (credentials: AuthCredentials) => {
+    const login = useCallback(async (credentials: AuthCredentials): Promise<User> => {
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(credentials),
-            });
+            console.log('Login with credentials:', credentials);
+            const response = await axios.post('/api/auth/login', credentials);
+            console.log('Login response:', response.data);
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Login failed');
+            if (!response.data || !response.data.user) {
+                throw new Error('User data not found in response');
             }
 
-            const data = await response.json();
+            const user = response.data.user;
             setAuthState({
-                user: data.user,
+                user,
                 isAuthenticated: true
             });
+
+            return user;
         } catch (error) {
             console.error('Login error:', error);
-            throw error;
+            if (axios.isAxiosError(error) && error.response) {
+                throw new Error(error.response.data?.error || 'Login failed');
+            }
+            throw new Error('Login failed');
         }
     }, []);
 
-    const logout = useCallback(async () => {
-        try {
-            await fetch('/api/auth/logout', {
-                method: 'POST',
+    const logout = useCallback(() => {
+        axios.post('/api/auth/logout')
+            .then(() => {
+                setAuthState(defaultAuthState);
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Still clear the local state even if the server call fails
+                setAuthState(defaultAuthState);
             });
-            setAuthState({ user: null, isAuthenticated: false });
-        } catch (error) {
-            console.error('Logout error:', error);
-            // Still clear the local state even if the API call fails
-            setAuthState({ user: null, isAuthenticated: false });
-        }
     }, []);
 
     const register = useCallback(async (data: AuthCredentials & { 
-        firstName: string; lastName: string }) => {
+        firstName: string; lastName: string }): Promise<User> => {
         try {
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Registration failed');
-            }
-
-            const userData = await response.json();
+            console.log('Registering with data:', data);
+            const response = await axios.post('/api/auth/register', data);
+            console.log('Registration response:', response.data);
             
             // After successful registration, create a user object
-            const user = {
-                id: String(userData.userId),
+            const user: User = {
+                id: String(response.data.userId || 'temp-id'),
                 username: data.username,
                 email: data.email,
                 firstName: data.firstName,
@@ -88,14 +83,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 user,
                 isAuthenticated: true
             });
+            
+            return user;
         } catch (error) {
             console.error('Registration error:', error);
-            throw error;
+            if (axios.isAxiosError(error) && error.response) {
+                throw new Error(error.response.data?.error || 'Registration failed');
+            }
+            throw new Error('Registration failed');
         }
     }, []);
 
     return (
-        <AuthContext.Provider value={{ ...authState, login, logout, register }}>
+        <AuthContext.Provider value={{ 
+            ...authState, 
+            login, 
+            logout, 
+            register 
+        }}>
             {children}
         </AuthContext.Provider>
     );

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Register from './components/Register';
+import Login from './components/Login';
 // import Feed from './components/Feed';
 import Friends from './components/Friends';
 // import Followed from './components/Followed';
@@ -17,7 +18,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
   
   if (!isAuthenticated) {
-    return <Navigate to="/register" />;
+    return <Navigate to="/login" />;
   }
 
   return <>{children}</>;
@@ -33,6 +34,8 @@ function App() {
             <main className="pt-16">
               <Routes>
                 <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/" element={<Navigate to="/login" />} />
                 {/* <Route 
                   path="/" 
                   element={

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../lib/useAuth';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     username: '',
@@ -19,10 +20,11 @@ const Register = () => {
     setError('');
     
     try {
-      await axios.post('/api/auth/register', formData);
-      navigate('/login');
+      await register(formData);
+      navigate('/'); // Navigate to home page after successful registration
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Registration failed');
+      console.error('Registration error:', error);
+      setError(error.message || 'Registration failed');
     }
   };
 

@@ -9,7 +9,7 @@ export interface User {
   // Profile and social
   avatar_url?: string;  // Profile picture URL
   profilePic?: string;  // Alias for avatar_url for backward compatibility
-  created_at: string;   // Account creation date
+  created_at?: string;   // Account creation date
   friends?: User[];     // User's friends list
   
   // Extended profile information
@@ -35,9 +35,9 @@ export interface Topic {
   description: string;
   created_at: string;
   followers: User[];
-  posts: Post[];
+  posts: Post[] | ['This topic has no posts, but you can be FIRST!'];
   public: boolean;
-}
+} // if posts give issues use a simple array
 
 export interface PersonalDetails {
   age?: number;

@@ -1,20 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Topic } from '../types';
-import { useAuth } from '../lib/AuthContext';
+import { useAuth } from '../lib/useAuth';
 
 export default function Topics() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const { user } = useAuth();
 
-  useEffect(() => {
-    fetchTopics();
-  }, []);
-
-  const fetchTopics = async () => {
+  const fetchTopics = useCallback(async () => {
     try {
       // This would be replaced with an actual API call
+      // Real topic/s will be fetched from the database
+      // and api/topics would be put into the below as real Topics
+      // should work seamlessly.
+      // Default page for user would be his created Topics/ 1st Topic
+      // And from there he would have a feed / friends / topics to click
       const mockTopics: Topic[] = [
         {
           id: 1,
@@ -31,7 +32,11 @@ export default function Topics() {
     } catch (error) {
       console.error('Failed to fetch topics:', error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchTopics();
+  }, [fetchTopics]);
 
   const handleCreateTopic = async () => {
     try {

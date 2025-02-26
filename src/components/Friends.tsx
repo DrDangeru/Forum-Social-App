@@ -51,7 +51,8 @@ export default function Friends() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Joined {new Date(friend.created_at).toLocaleDateString()}
+                  Joined {friend.created_at ? new Date(friend.created_at).toLocaleDateString() : 
+                  'no data'}
                 </p>
               </CardContent>
             </Card>

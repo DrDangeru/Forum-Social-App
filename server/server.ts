@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { upload } from './middleware/upload';
 import multer from 'multer';
+import authRoutes from './routes/auth';
 
 // Get directory path using ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +17,9 @@ const port = 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Register auth routes
+app.use('/api/auth', authRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -60,6 +64,7 @@ app.post('/api/follow', (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(400).json({ error: 'Failed to follow user' });
+    console.error(error);
   }
 });
 
@@ -76,6 +81,7 @@ app.delete('/api/follow', (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(400).json({ error: 'Failed to unfollow user' });
+    console.error(error);
   }
 });
 
@@ -94,6 +100,7 @@ app.get('/api/followers/:userId', (req, res) => {
     res.json(followers);
   } catch (error) {
     res.status(400).json({ error: 'Failed to get followers' });
+    console.error(error);
   }
 });
 
@@ -112,6 +119,7 @@ app.get('/api/following/:userId', (req, res) => {
     res.json(following);
   } catch (error) {
     res.status(400).json({ error: 'Failed to get following users' });
+    console.error(error);
   }
 });
 
@@ -135,6 +143,7 @@ app.get('/api/friends/:userId', (req, res) => {
     res.json(friends);
   } catch (error) {
     res.status(400).json({ error: 'Failed to get friends' });
+    console.error(error);
   }
 });
 
@@ -146,7 +155,8 @@ app.get('/api/users/:userId', (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
   // Get user's friends count NEEDS WORK - not working now...
-  //const friendsCount = db.prepare('SELECT COUNT(*) as count FROM follows WHERE follower_id = ?').get(userId);
+  //const friendsCount = db.prepare('SELECT COUNT(*) as count FROM follows WHERE follower_id = ?')
+  //.get(userId);
   //user.friendsCount = friendsCount.count;
   //res.json(user);
 });
@@ -168,7 +178,7 @@ app.post('/api/upload/:userId', (req, res) => {
       return res.status(500).json({ error: 'File upload failed' });
     }
 
-    const files = (req.files as Express.Multer.File[]).map(file => ({
+    const files = (req.files as any[]).map(file => ({ //Multer File does not work, try later.
       filename: file.filename,
       originalName: file.originalname,
       path: `/uploads/${userId}/${file.filename}`,
@@ -193,6 +203,7 @@ app.post('/api/upload/:userId', (req, res) => {
       res.json({ files });
     } catch (error) {
       res.status(500).json({ error: 'Failed to save file information' });
+      console.error(error);
     }
   });
 });
@@ -211,6 +222,7 @@ app.get('/api/files/:userId', (req, res) => {
     res.json(files);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch files' });
+    console.error(error);
   }
 });
 
