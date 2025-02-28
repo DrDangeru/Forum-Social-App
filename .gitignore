@@ -49,8 +49,12 @@ vs_BuildTools.exe
 *.vssscc
 .builds
 *.pidb
-*.svclog
-*.scc
+
+# Upload directories
+/uploads
+src/pics
+uploads/
+/server/uploads
 
 # Database files
 *.db
@@ -60,9 +64,3 @@ vs_BuildTools.exe
 *.sqlite3
 *.sqlite-shm
 *.sqlite-wal
-
-# Upload directories
-uploads/
-/uploads
-/server/uploads
-/pics

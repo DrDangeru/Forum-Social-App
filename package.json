@@ -36,6 +36,7 @@
     "multer": "^1.4.5-lts.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-dropzone": "^14.3.8",
     "react-router-dom": "^6.29.0",
     "shadcn": "^2.3.0",
     "tailwind-merge": "^3.0.1",

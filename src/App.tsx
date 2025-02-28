@@ -11,6 +11,7 @@ import { AuthProvider } from './lib/AuthContext';
 import { ProfileProvider } from './lib/ProfileContext';
 import { useAuth } from './lib/useAuth';
 import './App.css';
+import PhotoGalleryPage from './components/ui/PhotoGallery';
 // import { MemberProfile } from './types/profile';
 
 // Protected Route wrapper component
@@ -52,6 +53,17 @@ function App() {
                     </ProtectedRoute>
                   } 
                 />
+                <Route 
+            path="/photos"
+            
+            element={
+              <ProtectedRoute>
+                <PhotoGalleryPage />
+              </ProtectedRoute>
+
+
+            }
+            />              
                 {/* <Route 
                   path="/followed" 
                   element={

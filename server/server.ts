@@ -1,61 +1,104 @@
 import express from 'express';
-import type * as Express from 'express';
+import type { Express, Request, Response } from 'express';
 import cors from 'cors';
 import db from './db';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { upload } from './middleware/upload';
 import multer from 'multer';
+import fs from 'fs';
 import authRoutes from './routes/auth';
+import profileRoutes from './routes/profile';
 
-// Get directory path using ES modules
+// Configure ES modules path resolution
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
+// Initialize Express
+const app: Express = express();
 const port = 3001;
 
+// Configure Multer storage
+const storage = multer.diskStorage({
+  destination: (_req, file, cb) => {
+    const userId = _req.params.userId;
+    const uploadPath = path.join(__dirname, '../uploads', userId);
+    
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  }
+});
+
+// File upload configuration
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+    files: 3
+  },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed'));
+    }
+    cb(null, true);
+  }
+});
+
+// Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Register auth routes
-app.use('/api/auth', authRoutes);
-
-// Serve uploaded files
+// Serve static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Get feed (posts from followed users and interested topics)
-app.get('/api/feed', (req, res) => {
-  const userId = req.query.userId as string;
-  const posts = db.prepare(`
-    SELECT p.*, u.username 
-    FROM posts p
-    JOIN users u ON p.user_id = u.id
-    WHERE p.user_id IN (
-      SELECT following_id 
-      FROM follows 
-      WHERE follower_id = ?
-    )
-    ORDER BY p.created_at DESC
-    LIMIT 20
-  `).all(userId);
-  res.json(posts);
-});
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 
-// Create a new post
-app.post('/api/posts', (req, res) => {
-  const { userId, content } = req.body;
-  const result = db.prepare(
-    'INSERT INTO posts (user_id, content) VALUES (?, ?)'
-  ).run(userId, content);
-  res.json({ id: result.lastInsertRowid });
-});
-
-// Follow a user
-app.post('/api/follow', (req, res) => {
-  const { followerId, followingId } = req.body;
-  
+// Social Features
+app.get('/api/feed', (req: Request, res: Response) => {
   try {
+    const userId = req.query.userId as string;
+    const posts = db.prepare(`
+      SELECT p.*, u.username 
+      FROM posts p
+      JOIN users u ON p.user_id = u.id
+      WHERE p.user_id IN (
+        SELECT following_id 
+        FROM follows 
+        WHERE follower_id = ?
+      )
+      ORDER BY p.created_at DESC
+      LIMIT 20
+    `).all(userId);
+    
+    res.json(posts);
+  } catch (error) {
+    handleServerError(res, error, 'Failed to get feed');
+  }
+});
+
+app.post('/api/posts', (req: Request, res: Response) => {
+  try {
+    const { userId, content } = req.body;
+    const result = db.prepare(
+      'INSERT INTO posts (user_id, content) VALUES (?, ?)'
+    ).run(userId, content);
+    
+    res.json({ id: result.lastInsertRowid });
+  } catch (error) {
+    handleServerError(res, error, 'Failed to create post');
+  }
+});
+
+// Follow System
+app.post('/api/follow', (req: Request, res: Response) => {
+  try {
+    const { followerId, followingId } = req.body;
     db.prepare(`
       INSERT INTO follows (follower_id, following_id)
       VALUES (?, ?)
@@ -63,16 +106,13 @@ app.post('/api/follow', (req, res) => {
     
     res.json({ success: true });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to follow user' });
-    console.error(error);
+    handleServerError(res, error, 'Failed to follow user');
   }
 });
 
-// Unfollow a user
-app.delete('/api/follow', (req, res) => {
-  const { followerId, followingId } = req.body;
-  
+app.delete('/api/follow', (req: Request, res: Response) => {
   try {
+    const { followerId, followingId } = req.body;
     db.prepare(`
       DELETE FROM follows
       WHERE follower_id = ? AND following_id = ?
@@ -80,16 +120,14 @@ app.delete('/api/follow', (req, res) => {
     
     res.json({ success: true });
   } catch (error) {
-    res.status(400).json({ error: 'Failed to unfollow user' });
-    console.error(error);
+    handleServerError(res, error, 'Failed to unfollow user');
   }
 });
 
-// Get user's followers
-app.get('/api/followers/:userId', (req, res) => {
-  const { userId } = req.params;
-  
+// User Relationships
+app.get('/api/followers/:userId', (req: Request, res: Response) => {
   try {
+    const { userId } = req.params;
     const followers = db.prepare(`
       SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
       FROM follows f
@@ -99,16 +137,13 @@ app.get('/api/followers/:userId', (req, res) => {
     
     res.json(followers);
   } catch (error) {
-    res.status(400).json({ error: 'Failed to get followers' });
-    console.error(error);
+    handleServerError(res, error, 'Failed to get followers');
   }
 });
 
-// Get users followed by user
-app.get('/api/following/:userId', (req, res) => {
-  const { userId } = req.params;
-  
+app.get('/api/following/:userId', (req: Request, res: Response) => {
   try {
+    const { userId } = req.params;
     const following = db.prepare(`
       SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
       FROM follows f
@@ -118,16 +153,13 @@ app.get('/api/following/:userId', (req, res) => {
     
     res.json(following);
   } catch (error) {
-    res.status(400).json({ error: 'Failed to get following users' });
-    console.error(error);
+    handleServerError(res, error, 'Failed to get following users');
   }
 });
 
-// Get user's friends (mutual follows)
-app.get('/api/friends/:userId', (req, res) => {
-  const { userId } = req.params;
-  
+app.get('/api/friends/:userId', (req: Request, res: Response) => {
   try {
+    const { userId } = req.params;
     const friends = db.prepare(`
       SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
       FROM users u
@@ -142,77 +174,95 @@ app.get('/api/friends/:userId', (req, res) => {
     
     res.json(friends);
   } catch (error) {
-    res.status(400).json({ error: 'Failed to get friends' });
-    console.error(error);
+    handleServerError(res, error, 'Failed to get friends');
   }
 });
 
-// Get user by ID
-app.get('/api/users/:userId', (req, res) => {
-  const userId = req.params.userId;
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-  // Get user's friends count NEEDS WORK - not working now...
-  //const friendsCount = db.prepare('SELECT COUNT(*) as count FROM follows WHERE follower_id = ?')
-  //.get(userId);
-  //user.friendsCount = friendsCount.count;
-  //res.json(user);
-});
-
-// File upload endpoint
-app.post('/api/upload/:userId', (req, res) => {
-  // Check if user exists and has permission
-  const userId = req.params.userId;
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
-  
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-
-  upload.array('files', 10)(req, res, (err) => {
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({ error: err.message });
-    } else if (err) {
-      return res.status(500).json({ error: 'File upload failed' });
+// User Management
+app.get('/api/users/:userId', (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
-
-    const files = (req.files as any[]).map(file => ({ //Multer File does not work, try later.
-      filename: file.filename,
-      originalName: file.originalname,
-      path: `/uploads/${userId}/${file.filename}`,
-      size: file.size,
-      mimetype: file.mimetype
-    }));
-
-    // Store file information in database
-    const stmt = db.prepare(`
-      INSERT INTO user_files (user_id, filename, original_name, file_path, size, mimetype)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
-    const insertFiles = db.transaction((files) => {
-      for (const file of files) {
-        stmt.run(userId, file.filename, file.originalName, file.path, file.size, file.mimetype);
-      }
-    });
-
-    try {
-      insertFiles(files);
-      res.json({ files });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to save file information' });
-      console.error(error);
-    }
-  });
+    
+    const friendsCountResult = db.prepare(`
+      SELECT COUNT(*) as count FROM follows 
+      WHERE follower_id = ? AND following_id IN (
+        SELECT follower_id FROM follows WHERE following_id = ?
+      )
+    `).get(userId, userId) as { count: number };
+    
+    res.json({ ...user, friendsCount: friendsCountResult.count });
+  } catch (error) {
+    handleServerError(res, error, 'Failed to get user');
+  }
 });
 
-// Get user's files
-app.get('/api/files/:userId', (req, res) => {
+// File Management
+app.post('/api/upload/:userId', async (req: Request, res: Response) => {
   const userId = req.params.userId;
   
   try {
+    // Validate user exists
+    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Check file count limit
+    const fileCountResult = db.prepare(`
+      SELECT COUNT(*) as count FROM user_files WHERE user_id = ?
+    `).get(userId) as { count: number };
+
+    if (fileCountResult.count >= 10) {
+      return res.status(400).json({ error: 'Maximum 10 photos allowed' });
+    }
+
+    // Handle file upload
+    upload.array('files', 3)(req, res, async (err) => {
+      try {
+        if (err) throw err;
+
+        const files = req.files as Express.Multer.File[];
+        const insertStmt = db.prepare(`
+          INSERT INTO user_files 
+          (user_id, filename, original_name, file_path, size, mimetype)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+
+        db.transaction(() => {
+          files.forEach(file => {
+            insertStmt.run(
+              userId,
+              file.filename,
+              file.originalname,
+              `/uploads/${userId}/${file.filename}`,
+              file.size,
+              file.mimetype
+            );
+          });
+        })();
+
+        res.json({
+          message: `${files.length} files uploaded successfully`,
+          files: files.map(file => ({
+            path: `/uploads/${userId}/${file.filename}`,
+            originalName: file.originalname
+          }))
+        });
+      } catch (error) {
+        handleServerError(res, error, 'File upload failed');
+      }
+    });
+  } catch (error) {
+    handleServerError(res, error, 'Upload validation failed');
+  }
+});
+
+app.get('/api/files/:userId', (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
     const files = db.prepare(`
       SELECT * FROM user_files 
       WHERE user_id = ? 
@@ -221,11 +271,63 @@ app.get('/api/files/:userId', (req, res) => {
     
     res.json(files);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch files' });
-    console.error(error);
+    handleServerError(res, error, 'Failed to fetch files');
   }
 });
 
+app.delete('/api/files/:fileId', (req: Request, res: Response) => {
+  try {
+    const { fileId } = req.params;
+    
+    // Get the file info to delete the physical file later
+    const fileInfo = db.prepare('SELECT * FROM user_files WHERE id = ?').get(fileId);
+    
+    if (!fileInfo) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    
+    // Delete from database
+    db.prepare('DELETE FROM user_files WHERE id = ?').run(fileId);
+    
+    // Delete the physical file
+    const filePath = path.join(__dirname, '..', fileInfo.file_path);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    
+    res.json({ success: true, message: 'File deleted successfully' });
+  } catch (error) {
+    handleServerError(res, error, 'Failed to delete file');
+  }
+});
+
+app.patch('/api/users/:userId/profile-pic', (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { filePath } = req.body;
+
+    db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?')
+      .run(filePath, userId);
+    
+    res.json({ message: 'Profile picture updated' });
+  } catch (error) {
+    handleServerError(res, error, 'Profile picture update failed');
+  }
+});
+
+// Central error handler
+const handleServerError = (
+  res: Response, 
+  error: unknown,
+  context: string
+) => {
+  console.error(`${context}:`, error);
+  const message = error instanceof Error ? error.message : 'Internal server error';
+  res.status(500).json({ error: message });
+};
+
+// Server initialization
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
+  fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
 });
