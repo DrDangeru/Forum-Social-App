@@ -1,7 +1,20 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import db from '../db';
-import { User } from '../types/auth';
+// think its an error to use the whole user obj here. only need the data / id
+// and use adapter pattern to then instantiate the full user obj.
+
+// Define the database user type
+interface DbUser {
+  id: number;
+  username: string;
+  email: string;
+  password_hash: string;
+  first_name: string;
+  last_name: string;
+  avatar_url?: string;
+  created_at?: string;
+}
 
 const router = Router();
 
@@ -20,7 +33,7 @@ router.post('/register', async (req, res) => {
 
     // Check if user already exists
     const existingUser = db.prepare('SELECT * FROM users WHERE email = ? OR username = ?').
-    get(email, username);
+    get(email, username) as DbUser | undefined;
     if (existingUser) {
       console.log('User already exists:', { email, username });
       return res.status(400).json({ error: 'User with this email or username already exists' });
@@ -31,17 +44,29 @@ router.post('/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
     // Insert new user
-    const result = db.prepare(`
-      INSERT INTO users (username, email, password_hash, first_name, last_name)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(username, email, passwordHash, firstName, lastName);
-
-    console.log('User registered successfully:', { userId: result.lastInsertRowid });
-    res.setHeader('Content-Type', 'application/json');
-    res.status(201).json({
-      message: 'User registered successfully',
-      userId: result.lastInsertRowid
-    });
+    try {
+      const insertStmt = db.prepare(`
+        INSERT INTO users (username, email, password_hash, first_name, last_name)
+        VALUES (?, ?, ?, ?, ?)
+      `);
+      const result = insertStmt.run(username, email, passwordHash, firstName, lastName);
+      
+      console.log('Insert result:', result);
+      
+      // Get the newly created user
+      const newUser = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as DbUser;
+      
+      console.log('User registered successfully:', { userId: newUser.id });
+      res.setHeader('Content-Type', 'application/json');
+      res.status(201).json({
+        message: 'User registered successfully',
+        userId: newUser.id
+      });
+    } catch (dbError) {
+      console.error('Database error during registration:', dbError);
+      return res.status(500).json({ error: 'Database error during registration', 
+        details: dbError });
+    }
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Internal server error during registration' });
@@ -60,7 +85,8 @@ router.post('/login', async (req, res) => {
     }
 
     // Find user
-    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    const user = db.prepare('SELECT * FROM users WHERE username = ?').
+    get(username) as DbUser | undefined;
     if (!user) {
       console.log('User not found:', { username });
       return res.status(401).json({ error: 'Invalid username or password' });
@@ -92,7 +118,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/logout', (req, res) => {
+router.post('/logout', (_req, res) => {
   // In a real app with sessions or JWT, you would invalidate the token/session here
   console.log('User logged out');
   res.status(200).json({ message: 'Logout successful' });

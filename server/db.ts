@@ -17,7 +17,8 @@ db.exec(`
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     avatar_url TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
   );
 
   CREATE TABLE IF NOT EXISTS friendships (
