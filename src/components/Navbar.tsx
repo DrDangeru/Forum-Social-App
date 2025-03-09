@@ -1,8 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { useAuth } from '../lib/useAuth';
-import { useProfile } from '../lib/ProfileContext';
+import { useAuth } from '../hooks/useAuth';
+import { useProfile } from '../hooks/useProfile';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();

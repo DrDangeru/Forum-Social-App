@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Topic } from '../types';
-import { useAuth } from '../lib/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Topics() {
   const [topics, setTopics] = useState<Topic[]>([]);

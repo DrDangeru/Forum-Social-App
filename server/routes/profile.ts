@@ -1,14 +1,8 @@
 import express from 'express';
 import type { Request, Response } from 'express';
 import db from '../db';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 
 const router = express.Router();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Get user profile information
 router.get('/:userId', (req: Request, res: Response) => {
@@ -65,16 +59,5 @@ router.put('/:userId', (req: Request, res: Response) => {
     res.status(500).json({ error: message });
   }
 });
-
-// Helper function to handle server errors
-const handleServerError = (
-  res: Response, 
-  error: unknown,
-  context: string
-) => {
-  console.error(`${context}:`, error);
-  const message = error instanceof Error ? error.message : 'Internal server error';
-  res.status(500).json({ error: message });
-};
 
 export default router;

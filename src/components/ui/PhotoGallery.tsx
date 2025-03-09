@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAuth } from '../../lib/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { useDropzone } from 'react-dropzone';
 import { Trash2, User, Upload } from 'lucide-react';
 

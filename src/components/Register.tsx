@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../lib/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 const Register = () => {
   const navigate = useNavigate();

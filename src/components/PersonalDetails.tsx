@@ -12,7 +12,7 @@ import {
 } from './ui/select';
 import { Pencil, Save, X, Plus } from 'lucide-react';
 import { MemberProfile } from './../types/profile';
-import { useProfile } from '../lib/ProfileContext';
+import { useProfile } from '../hooks/useProfile';
 
 interface PersonalDetailsProps {
   isOwner: boolean;
