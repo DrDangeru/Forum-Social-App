@@ -1,10 +1,7 @@
-import React, { createContext, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { AuthState, AuthCredentials, User } from '../types/auth';
 import axios from 'axios';
-import { AuthContextType } from './AuthContext';
-
-// Create the context with a default value
-export const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext } from '../contexts/AuthContext';
 
 // Default auth state
 const defaultAuthState: AuthState = {

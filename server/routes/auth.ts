@@ -75,12 +75,10 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    console.log('Login request received:', req.body);
     const { username, password } = req.body;
 
     // Validate required fields
     if (!username || !password) {
-      console.log('Missing required fields:', { username: !!username, password: !!password });
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
@@ -88,14 +86,12 @@ router.post('/login', async (req, res) => {
     const user = db.prepare('SELECT * FROM users WHERE username = ?').
     get(username) as DbUser | undefined;
     if (!user) {
-      console.log('User not found:', { username });
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Check password
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) {
-      console.log('Password mismatch for user:', { username });
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 

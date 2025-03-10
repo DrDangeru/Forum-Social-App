@@ -12,6 +12,7 @@ import { ProfileProvider } from './providers/ProfileProvider';
 import { useAuth } from './hooks/useAuth';
 import './App.css';
 import PhotoGalleryPage from './components/ui/PhotoGallery';
+import Home from './components/Home';
 // import { MemberProfile } from './types/profile';
 
 // Protected Route wrapper component
@@ -36,7 +37,11 @@ function App() {
               <Routes>
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/" element={<Navigate to="/login" />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Home />
+                  </ProtectedRoute>
+                } />
                 {/* <Route 
                   path="/" 
                   element={
@@ -85,6 +90,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <PersonalDetails isOwner={true} />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile/:userId" 
+                  element={
+                    <ProtectedRoute>
+                      <PersonalDetails isOwner={false} />
                     </ProtectedRoute>
                   } 
                 />

@@ -35,9 +35,10 @@ export interface MemberProfile extends BasicProfile {
     company?: string;      // Added for company info
     hobbies?: string[];    // Added for hobbies
     pets?: Array<{ type: string; name: string; }>; // Added for pets info
+    galleryImages?: string[]; // Added for photo gallery
 }
 
-// // For future use  *** DONT think these are needed. Topics in sep file ***
+// // For future use maybe *** DONT think these are needed. Topics in sep file ***
 // export interface Topic {
 //     id: string;
 //     name: string;

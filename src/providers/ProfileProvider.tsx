@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { ProfileContext, ProfileContextType } from '../contexts/ProfileContext';
 import type { MemberProfile } from '../types/profile';
+import { useAuth } from '../hooks/useAuth';
 
 // Default profile for new users
 const defaultProfile: MemberProfile = {
@@ -19,46 +20,118 @@ const defaultProfile: MemberProfile = {
 };
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const [profile, setProfile] = useState<MemberProfile | null>(null);
-
-  // Update profile information
-  const updateProfile = useCallback(
-    async (
-      updatedProfile: Partial<MemberProfile>
-    ): Promise<MemberProfile> => {
-    try {
-      // If we have a profile, merge the updates with the existing profile
-      const newProfile = profile 
-        ? { ...profile, ...updatedProfile } 
-        : { ...defaultProfile, ...updatedProfile };
-      
-      // If we have a userId, send the update to the server
-      if (newProfile.userId) {
-        // Make API call to update profile on the server
-        const response = await axios.put(`/api/profiles/${newProfile.userId}`, newProfile);
-        const updatedData = response.data;
-        setProfile(updatedData);
-        return updatedData;
-      } else {
-        // Just update local state if no userId (e.g., during initial setup)
-        setProfile(newProfile);
-        return newProfile;
+  // Store profiles in a map, keyed by userId
+  const [profiles, setProfiles] = useState<Record<string, MemberProfile>>({});
+  const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
+  const { user } = useAuth();
+  
+  // Set current profile to the logged-in user's profile
+  useEffect(() => {
+    if (user?.id) {
+      setCurrentProfileId(user.id);
+      // Load the user's profile if not already loaded
+      if (!profiles[user.id]) {
+        fetchProfile(user.id);
       }
+    }
+  }, [user, profiles]);
+  
+  // Fetch a profile by userId
+  const fetchProfile = async (userId: string) => {
+    try {
+      const response = await axios.get(`/api/profiles/${userId}`);
+      const profileData = response.data;
+      
+      setProfiles(prevProfiles => ({
+        ...prevProfiles,
+        [userId]: profileData
+      }));
+      
+      return profileData;
+    } catch (error) {
+      console.error(`Error fetching profile for user ${userId}:`, error);
+      // Create a default profile for this user if not found
+      const newProfile = { ...defaultProfile, userId };
+      setProfiles(prevProfiles => ({
+        ...prevProfiles,
+        [userId]: newProfile
+      }));
+      return newProfile;
+    }
+  };
+  
+  // Get a profile by userId, fetching it if not already loaded
+  const getProfile = useCallback(async (userId: string): Promise<MemberProfile> => {
+    if (profiles[userId]) {
+      return profiles[userId];
+    }
+    
+    return await fetchProfile(userId);
+  }, [profiles]);
+  
+  // Update profile information
+  const updateProfile = useCallback(async (
+    updatedProfile: Partial<MemberProfile>,
+    userId?: string
+  ): Promise<MemberProfile> => {
+    // Use provided userId or current profile id
+    const targetUserId = userId || currentProfileId;
+    
+    if (!targetUserId) {
+      throw new Error('No user ID provided for profile update');
+    }
+    
+    try {
+      // Get the existing profile or use default
+      const existingProfile = profiles[targetUserId] || { ...defaultProfile, userId: targetUserId };
+      
+      // Merge updates with existing profile
+      const newProfile = { ...existingProfile, ...updatedProfile };
+      
+      // Send update to server
+      const response = await axios.put(`/api/profiles/${targetUserId}`, newProfile);
+      const updatedData = response.data;
+      
+      // Update profiles map
+      setProfiles(prevProfiles => ({
+        ...prevProfiles,
+        [targetUserId]: updatedData
+      }));
+      
+      return updatedData;
     } catch (error) {
       console.error('Error updating profile:', error);
-      // Return the local updated profile even if the server update failed
-      const fallbackProfile = profile 
-        ? { ...profile, ...updatedProfile } 
-        : { ...defaultProfile, ...updatedProfile };
-      setProfile(fallbackProfile);
+      
+      // Update local state even if server update failed
+      const existingProfile = profiles[targetUserId] || { ...defaultProfile, userId: targetUserId };
+      const fallbackProfile = { ...existingProfile, ...updatedProfile };
+      
+      setProfiles(prevProfiles => ({
+        ...prevProfiles,
+        [targetUserId]: fallbackProfile
+      }));
+      
       return fallbackProfile;
     }
-  }, [profile]);
+  }, [profiles, currentProfileId]);
+
+  // Set which profile is currently being viewed
+  const setCurrentProfile = useCallback((userId: string) => {
+    setCurrentProfileId(userId);
+    
+    // Load the profile if not already loaded
+    if (!profiles[userId]) {
+      fetchProfile(userId);
+    }
+  }, [profiles]);
 
   // Create the context value object
   const contextValue: ProfileContextType = {
-    profile,
-    updateProfile
+    profile: currentProfileId ? profiles[currentProfileId] || null : null,
+    profiles,
+    getProfile,
+    updateProfile,
+    setCurrentProfile
   };
 
   return (

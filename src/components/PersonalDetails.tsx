@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button} from './ui/button'; //Variants should be attached as ext class props
 import { Input } from './ui/input';
@@ -10,9 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import { Pencil, Save, X, Plus } from 'lucide-react';
+import { Pencil, Save, X, Plus, Upload, Image, Trash2 } from 'lucide-react';
 import { MemberProfile } from './../types/profile';
 import { useProfile } from '../hooks/useProfile';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 
 interface PersonalDetailsProps {
   isOwner: boolean;
@@ -35,7 +36,9 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
       age: undefined,
       interests: [],
       hobbies: [],
-      pets: []
+      pets: [],
+      avatarUrl: '',
+      galleryImages: []
     }
   );
 
@@ -46,10 +49,54 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
     }));
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [galleryImages, setGalleryImages] = useState<string[]>(details.galleryImages || []);
+  
+  const handleProfilePicUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        handleChange('avatarUrl', result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleGalleryUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newImages: string[] = [];
+      
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          newImages.push(result);
+          if (newImages.length === files.length) {
+            setGalleryImages(prev => [...prev, ...newImages]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+  
+  const removeGalleryImage = (index: number) => {
+    setGalleryImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSave = async () => {
     setIsEditing(false);
     try {
-      await updateProfile(details);
+      // Include gallery images in the profile update
+      const updatedDetails = {
+        ...details,
+        galleryImages
+      };
+      await updateProfile(updatedDetails);
     } catch (error) {
       console.error('Failed to update profile:', error);
     }
@@ -70,8 +117,11 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
       age: undefined,
       interests: [],
       hobbies: [],
-      pets: []
+      pets: [],
+      avatarUrl: '',
+      galleryImages: []
     });
+    setGalleryImages([]);
   };
 
   return (
@@ -99,6 +149,41 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
           )}
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Profile Picture */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Profile Picture</h3>
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-24 w-24">
+                {details.avatarUrl ? (
+                  <AvatarImage src={details.avatarUrl} alt="Profile" />
+                ) : (
+                  <AvatarFallback className="text-lg">
+                    {details.firstName?.[0]}{details.lastName?.[0]}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              
+              {isEditing && (
+                <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleProfilePicUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Photo
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Basic Information</h3>
@@ -278,6 +363,69 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                   )) : 
                   <p className="text-gray-600">No pets specified</p>
                 }
+              </div>
+            )}
+          </div>
+
+          {/* Photo Gallery */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Photo Gallery</h3>
+            {isEditing ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {galleryImages.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={image} 
+                        alt={`Gallery ${index}`} 
+                        className="w-full h-32 object-cover rounded-md"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 
+                        transition-opacity"
+                        onClick={() => removeGalleryImage(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                
+                <div>
+                  <input
+                    type="file"
+                    ref={galleryInputRef}
+                    onChange={handleGalleryUpload}
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="w-full"
+                  >
+                    <Image className="h-4 w-4 mr-2" />
+                    Add Photos
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {galleryImages.length > 0 ? (
+                  galleryImages.map((image, index) => (
+                    <img 
+                      key={index} 
+                      src={image} 
+                      alt={`Gallery ${index}`} 
+                      className="w-full h-32 object-cover rounded-md"
+                    />
+                  ))
+                ) : (
+                  <p className="text-gray-600 col-span-full">No photos in gallery</p>
+                )}
               </div>
             )}
           </div>
