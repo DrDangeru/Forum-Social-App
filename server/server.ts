@@ -18,8 +18,9 @@ const app: Express = express();
 const port = 3001;
 
 // Configure Multer storage
+// as config, no  real file handling and req, so below is ok.
 const storage = multer.diskStorage({
-  destination: (_req, file, cb) => {
+  destination: (_req, _file, cb) => {
     const userId = _req.params.userId;
     const uploadPath = path.join(__dirname, '../uploads', userId);
     
@@ -49,8 +50,8 @@ const upload = multer({
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -222,9 +223,19 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
     // Handle file upload
     upload.array('files', 3)(req, res, async (err) => {
       try {
-        if (err) throw err;
+        if (err) {
+          console.error('File upload error:', err);
+          return res.status(400).json({ error: err.message });
+        }
 
         const files = req.files as Express.Multer.File[];
+        
+        if (!files || files.length === 0) {
+          return res.status(400).json({ error: 'No files uploaded' });
+        }
+        
+        console.log(`Received ${files.length} files for user ${userId}`);
+
         const insertStmt = db.prepare(`
           INSERT INTO user_files 
           (user_id, filename, original_name, file_path, size, mimetype)
@@ -280,7 +291,15 @@ app.delete('/api/files/:fileId', (req: Request, res: Response) => {
     const { fileId } = req.params;
     
     // Get the file info to delete the physical file later
-    const fileInfo = db.prepare('SELECT * FROM user_files WHERE id = ?').get(fileId);
+    const fileInfo = db.prepare('SELECT * FROM user_files WHERE id = ?').get(fileId) as {
+      id: string;
+      user_id: string;
+      filename: string;
+      original_name: string;
+      file_path: string;
+      size: number;
+      mimetype: string;
+    } | undefined;
     
     if (!fileInfo) {
       return res.status(404).json({ error: 'File not found' });
@@ -294,8 +313,9 @@ app.delete('/api/files/:fileId', (req: Request, res: Response) => {
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
-    
+    console.log('File deleted successfully');
     res.json({ success: true, message: 'File deleted successfully' });
+    
   } catch (error) {
     handleServerError(res, error, 'Failed to delete file');
   }

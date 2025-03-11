@@ -33,7 +33,9 @@ export default function PhotoGalleryPage() {
   const uploadMutation = useMutation({
     mutationFn: async (files: File[]) => {
       const formData = new FormData();
-      files.forEach(file => formData.append('photos', file));
+      files.forEach(file => formData.append('files', file));
+      
+      console.log(`Uploading ${files.length} files for user ${user?.id}`);
       
       const { data } = await axios.post(
         `/api/upload/${user?.id}`, 

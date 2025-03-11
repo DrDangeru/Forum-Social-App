@@ -1,4 +1,4 @@
-import { Topic } from ".";
+import { Topic } from "./Topic";
 
 // Basic profile information
 export interface BasicProfile {
@@ -14,6 +14,19 @@ export interface SocialLinks {
     twitter?: string;
     github?: string;
     linkedin?: string;
+}
+
+// Personal details information
+export interface PersonalDetails {
+    age?: number;
+    relationshipStatus?: 'Single' | 'In a relationship' | 'Married' | 'Prefer not to say';
+    hobbies?: string[];
+    occupation?: string;
+    company?: string;
+    pets?: {
+        type: string;
+        name: string;
+    }[];
 }
 
 // Member profile extends basic profile with additional information
@@ -37,18 +50,3 @@ export interface MemberProfile extends BasicProfile {
     pets?: Array<{ type: string; name: string; }>; // Added for pets info
     galleryImages?: string[]; // Added for photo gallery
 }
-
-// // For future use maybe *** DONT think these are needed. Topics in sep file ***
-// export interface Topic {
-//     id: string;
-//     name: string;
-//     description?: string;
-// }
-
-// // Separate interface for profile state management 
-// // Dont see the need for this
-// export interface ProfileState {
-//     profile: MemberProfile | null;
-//     loading: boolean;
-//     error?: string;
-// }

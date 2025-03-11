@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { ProfileContext, ProfileContextType } from '../contexts/ProfileContext';
-import type { MemberProfile } from '../types/profile';
+import type { MemberProfile } from '../types/Profile';
 import { useAuth } from '../hooks/useAuth';
 
 // Default profile for new users
@@ -88,9 +88,13 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       // Merge updates with existing profile
       const newProfile = { ...existingProfile, ...updatedProfile };
       
+      console.log('Sending profile update to server:', newProfile);
+      
       // Send update to server
       const response = await axios.put(`/api/profiles/${targetUserId}`, newProfile);
       const updatedData = response.data;
+      
+      console.log('Received updated profile from server:', updatedData);
       
       // Update profiles map
       setProfiles(prevProfiles => ({
@@ -111,7 +115,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         [targetUserId]: fallbackProfile
       }));
       
-      return fallbackProfile;
+      return fallbackProfile; // Return the fallback profile when there's an error
     }
   }, [profiles, currentProfileId]);
 

@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { Pencil, Save, X, Plus, Upload, Image, Trash2 } from 'lucide-react';
-import { MemberProfile } from './../types/profile';
+import { MemberProfile } from '../types/Profile';
 import { useProfile } from '../hooks/useProfile';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 

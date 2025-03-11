@@ -98,6 +98,9 @@ router.put('/:userId', (req: Request, res: Response) => {
     const { userId } = req.params;
     const profileData = req.body;
     
+    console.log('Profile update request received for user:', userId);
+    console.log('Profile data:', JSON.stringify(profileData, null, 2));
+    
     // Ensure the profile exists in the database
     ensureProfileTablesExist();
     

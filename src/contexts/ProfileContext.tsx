@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { MemberProfile } from '../types/profile';
+import type { MemberProfile } from '../types/Profile';
 
 // Define the context type
 export interface ProfileContextType {

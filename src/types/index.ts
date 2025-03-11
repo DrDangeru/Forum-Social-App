@@ -1,52 +1,16 @@
-export interface User {
-  // Core user information
-  id: number | string;  // Supporting both number and string IDs for flexibility
-  username: string;     // Display name / nickname
-  email: string;
-  firstName: string;
-  lastName: string;
-  
-  // Profile and social
-  avatar_url?: string;  // Profile picture URL
-  profilePic?: string;  // Alias for avatar_url for backward compatibility
-  created_at?: string;   // Account creation date
-  friends?: User[];     // User's friends list
-  
-  // Extended profile information
-  personalDetails?: PersonalDetails;
-}
+// Re-export types from their respective files
+// This allows imports like `import { User } from '../types'` to continue working
 
-export interface Post {
-  id: number;
-  user_id: number;
-  username: string;
-  userProfilePic: string;
-  content: string;
-  topic: string;
-  created_at: string;
-  likes: number;
-  comments: number;
-}
+// Auth types
+export type { User, AuthCredentials, AuthState } from './Auth';
 
-export interface Topic {
-  id: number;
-  headline: string;
-  topicOwnerOrMod: User['id'];
-  description: string;
-  created_at: string;
-  followers: User[];
-  posts: Post[] | ['This topic has no posts, but you can be FIRST!'];
-  public: boolean;
-} // if posts give issues use a simple array
+// Topic types
+export type { Topic, Post, Comment } from './Topic';
 
-export interface PersonalDetails {
-  age?: number;
-  relationshipStatus?: 'Single' | 'In a relationship' | 'Married' | 'Prefer not to say';
-  hobbies?: string[];
-  occupation?: string;
-  company?: string;
-  pets?: {
-    type: string;
-    name: string;
-  }[];
-}
+// Profile types
+export type { 
+  MemberProfile, 
+  SocialLinks,
+  PersonalDetails,
+  BasicProfile
+} from './Profile';
