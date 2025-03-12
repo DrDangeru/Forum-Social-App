@@ -8,6 +8,8 @@ import multer from 'multer';
 import fs from 'fs';
 import authRoutes from './routes/auth';
 import profileRoutes from './routes/profile';
+import friendsRoutes from './routes/friends';
+import usersRoutes from './routes/users';
 
 // Configure ES modules path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -59,6 +61,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/friends', friendsRoutes);
+app.use('/api/users', usersRoutes);
 
 // Social Features
 app.get('/api/feed', (req: Request, res: Response) => {
