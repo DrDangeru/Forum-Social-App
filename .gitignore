@@ -50,6 +50,10 @@ vs_BuildTools.exe
 .builds
 *.pidb
 
+# Windsurf specific files
+.windsurfrules
+
+
 # Upload directories
 /uploads
 src/pics

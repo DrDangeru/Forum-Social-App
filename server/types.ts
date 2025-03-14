@@ -1,5 +1,3 @@
-import Database from 'better-sqlite3';
-
 // Define database entity interfaces
 export interface User {
   id: number;
@@ -38,7 +36,7 @@ export interface GalleryImage {
 // Define the structure of dbHelpers
 export interface DbHelpers {
   users: {
-    getById: (userId: string) => User;
+    getById: (userId: number) => User;
     create: (user: {
       username: string;
       email: string;
@@ -46,61 +44,61 @@ export interface DbHelpers {
       first_name: string;
       last_name: string;
     }) => any;
-    update: (userId: string, data: {
+    update: (userId: number, data: {
       first_name?: string;
       last_name?: string;
       bio?: string;
       avatar_url?: string | null;
     }) => any;
-    updateProfilePicture: (userId: string, filePath: string) => any;
+    updateProfilePicture: (userId: number, filePath: string) => any;
   };
   
   profiles: {
-    getByUserId: (userId: string) => Profile | undefined;
-    exists: (userId: string) => any;
-    update: (userId: string, data: {
+    getByUserId: (userId: number) => Profile | undefined;
+    exists: (userId: number) => any;
+    update: (userId: number, data: {
       location?: string;
-      socialLinks?: object;
-      relationshipStatus?: string;
+      social_links?: string;
+      relationship_status?: string;
       age?: number | null;
-      interests?: string[];
+      interests?: string;
       occupation?: string;
       company?: string;
-      hobbies?: string[];
-      pets?: any[];
+      hobbies?: string;
+      pets?: string;
     }) => any;
-    create: (userId: string, data: {
+    create: (userId: number, data: {
       location?: string;
-      socialLinks?: object;
-      relationshipStatus?: string;
+      social_links?: string;
+      relationship_status?: string;
       age?: number | null;
-      interests?: string[];
+      interests?: string;
       occupation?: string;
       company?: string;
-      hobbies?: string[];
-      pets?: any[];
+      hobbies?: string;
+      pets?: string;
     }) => any;
   };
   
   galleryImages: {
-    getByUserId: (userId: string) => GalleryImage[];
-    deleteAllForUser: (userId: string) => any;
-    create: (userId: string, imageUrl: string) => any;
+    getByUserId: (userId: number) => GalleryImage[];
+    deleteAllForUser: (userId: number) => any;
+    create: (userId: number, imageUrl: string) => any;
   };
   
   userFiles: {
-    getByUserId: (userId: string) => any[];
-    getFileCount: (userId: string) => { count: number };
+    getByUserId: (userId: number) => any[];
+    getFileCount: (userId: number) => { count: number };
     create: (file: {
-      user_id: string;
+      user_id: number;
       filename: string;
       original_name: string;
       file_path: string;
       size: number;
       mimetype: string;
     }) => any;
-    getById: (fileId: string) => any;
-    deleteById: (fileId: string) => any;
+    getById: (fileId: number) => any;
+    deleteById: (fileId: number) => any;
   };
   
   transaction: {
@@ -109,5 +107,3 @@ export interface DbHelpers {
     rollback: () => void;
   };
 }
-
-export type { User, Profile, GalleryImage, DbHelpers };

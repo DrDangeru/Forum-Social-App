@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
@@ -16,7 +16,16 @@ const FriendsList: React.FC<FriendsListProps> = ({
   profileId,
   isOwner = false
 }) => {
-  const { friends, isLoading, error, removeFriend } = useFriends();
+  const { friends, isLoading, error, removeFriend, refreshFriends } = useFriends();
+
+  // If profileId is provided, fetch friends for that specific profile
+  useEffect(() => {
+    if (profileId) {
+      // This would ideally call a specific function to get another user's friends
+      // For now, we'll just refresh the current user's friends
+      refreshFriends();
+    }
+  }, [profileId, refreshFriends]);
 
   if (isLoading) {
     return <div className="text-center py-4">Loading friends...</div>;
@@ -29,7 +38,9 @@ const FriendsList: React.FC<FriendsListProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Friends</CardTitle>
+        <CardTitle>
+          {profileId ? "User's Friends" : "Friends"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {friends.length === 0 ? (
@@ -58,30 +69,28 @@ interface FriendItemProps {
 }
 
 const FriendItem: React.FC<FriendItemProps> = ({ friend, isOwner, onRemove }) => {
-  const name = `${friend.firstName} ${friend.lastName}`;
-
   return (
     <div className="flex items-center justify-between p-3 rounded-lg border">
       <div className="flex items-center space-x-3">
         <Avatar>
           {friend.avatarUrl ? (
-            <AvatarImage src={friend.avatarUrl} alt={name} />
+            <AvatarImage src={friend.avatarUrl} alt={`${friend.firstName} ${friend.lastName}`} />
           ) : (
-            <AvatarFallback>{getInitials(name)}</AvatarFallback>
+            <AvatarFallback>{getInitials(`${friend.firstName} ${friend.lastName}`)}</AvatarFallback>
           )}
         </Avatar>
         <div>
-          <p className="font-medium">{name}</p>
+          <p className="font-medium">{friend.firstName} {friend.lastName}</p>
           <p className="text-sm text-muted-foreground">@{friend.userNickname}</p>
         </div>
       </div>
       
       {isOwner && (
         <Button 
-          variant="ghost" 
-          size="sm" 
           onClick={onRemove}
-          className="text-red-500 hover:text-red-700 hover:bg-red-100"
+          variant="outline" 
+          size="sm"
+          className="text-red-500 hover:text-red-700 border-red-300 hover:bg-red-50"
         >
           <UserX size={16} className="mr-1" />
           Remove

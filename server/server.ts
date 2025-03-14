@@ -1,7 +1,7 @@
 import express from 'express';
 import type { Express, Request, Response } from 'express';
 import cors from 'cors';
-import db from './db';
+import db, { dbHelpers } from './db';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
@@ -212,13 +212,11 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
   
   try {
     // Validate user exists
-    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    const user = dbHelpers.users.getById(Number(userId));
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     // Check file count limit
-    const fileCountResult = db.prepare(`
-      SELECT COUNT(*) as count FROM user_files WHERE user_id = ?
-    `).get(userId) as { count: number };
+    const fileCountResult = dbHelpers.userFiles.getFileCount(Number(userId));
 
     if (fileCountResult.count >= 10) {
       return res.status(400).json({ error: 'Maximum 10 photos allowed' });
@@ -240,32 +238,36 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
         
         console.log(`Received ${files.length} files for user ${userId}`);
 
-        const insertStmt = db.prepare(`
-          INSERT INTO user_files 
-          (user_id, filename, original_name, file_path, size, mimetype)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `);
+        // Begin transaction
+        dbHelpers.transaction.begin();
 
-        db.transaction(() => {
+        try {
           files.forEach(file => {
-            insertStmt.run(
-              userId,
-              file.filename,
-              file.originalname,
-              `/uploads/${userId}/${file.filename}`,
-              file.size,
-              file.mimetype
-            );
+            dbHelpers.userFiles.create({
+              user_id: Number(userId),
+              filename: file.filename,
+              original_name: file.originalname,
+              file_path: `/uploads/${userId}/${file.filename}`,
+              size: file.size,
+              mimetype: file.mimetype
+            });
           });
-        })();
-
-        res.json({
-          message: `${files.length} files uploaded successfully`,
-          files: files.map(file => ({
-            path: `/uploads/${userId}/${file.filename}`,
-            originalName: file.originalname
-          }))
-        });
+          
+          // Commit transaction
+          dbHelpers.transaction.commit();
+          
+          res.json({
+            message: `${files.length} files uploaded successfully`,
+            files: files.map(file => ({
+              path: `/uploads/${userId}/${file.filename}`,
+              originalName: file.originalname
+            }))
+          });
+        } catch (dbError) {
+          // Rollback transaction on error
+          dbHelpers.transaction.rollback();
+          throw dbError;
+        }
       } catch (error) {
         handleServerError(res, error, 'File upload failed');
       }
@@ -278,11 +280,7 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
 app.get('/api/files/:userId', (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
-    const files = db.prepare(`
-      SELECT * FROM user_files 
-      WHERE user_id = ? 
-      ORDER BY created_at DESC
-    `).all(userId);
+    const files = dbHelpers.userFiles.getByUserId(Number(userId));
     
     res.json(files);
   } catch (error) {
@@ -295,9 +293,9 @@ app.delete('/api/files/:fileId', (req: Request, res: Response) => {
     const { fileId } = req.params;
     
     // Get the file info to delete the physical file later
-    const fileInfo = db.prepare('SELECT * FROM user_files WHERE id = ?').get(fileId) as {
-      id: string;
-      user_id: string;
+    const fileInfo = dbHelpers.userFiles.getById(Number(fileId)) as {
+      id: number;
+      user_id: number;
       filename: string;
       original_name: string;
       file_path: string;
@@ -310,7 +308,7 @@ app.delete('/api/files/:fileId', (req: Request, res: Response) => {
     }
     
     // Delete from database
-    db.prepare('DELETE FROM user_files WHERE id = ?').run(fileId);
+    dbHelpers.userFiles.deleteById(Number(fileId));
     
     // Delete the physical file
     const filePath = path.join(__dirname, '..', fileInfo.file_path);
@@ -330,8 +328,7 @@ app.patch('/api/users/:userId/profile-pic', (req: Request, res: Response) => {
     const { userId } = req.params;
     const { filePath } = req.body;
 
-    db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?')
-      .run(filePath, userId);
+    dbHelpers.users.updateProfilePicture(Number(userId), filePath);
     
     res.json({ message: 'Profile picture updated' });
   } catch (error) {
