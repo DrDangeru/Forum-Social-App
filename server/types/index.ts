@@ -1,5 +1,6 @@
+/* eslint-disable no-unused-vars */
 /**
- * Consolidated type definitions for the entire application
+ * Consolidated server-side type definitions
  * All types are defined here to avoid duplication and ensure consistency
  */
 
@@ -117,7 +118,6 @@ export interface GalleryImage {
   user_id: number;
   image_url: string;
   created_at: string;
-  file_name?: string;
 }
 
 // Basic topic definition
@@ -128,13 +128,6 @@ export interface Topic {
   created_by: number;
   created_at: string;
   updated_at: string;
-  
-  // Client-specific additions
-  headline?: string;
-  topicOwnerOrMod?: number;
-  followers?: User[];
-  posts?: Post[];
-  public?: boolean;
 }
 
 // Post definition
@@ -145,11 +138,6 @@ export interface Post {
   created_by: number;
   created_at: string;
   updated_at: string;
-  
-  // Client-specific additions
-  author?: User | BasicProfile;
-  topic?: Topic | string;
-  comments?: Comment[];
 }
 
 // Comment definition
@@ -160,9 +148,6 @@ export interface Comment {
   created_by: number;
   created_at: string;
   updated_at: string;
-  
-  // Client-specific additions
-  author?: User | BasicProfile;
 }
 
 // Follow relationship
@@ -190,4 +175,79 @@ export interface UserFile {
 export interface DbOperationResult {
   changes?: number;
   lastInsertRowid?: number | bigint;
+}
+
+// Database helper types
+export interface DbHelpers {
+  users: {
+    getById: (userId: string) => User;
+    create: (user: {
+      username: string;
+      email: string;
+      password_hash: string;
+      first_name: string;
+      last_name: string;
+    }) => DbOperationResult;
+    update: (userId: string, data: {
+      first_name?: string;
+      last_name?: string;
+      bio?: string;
+      avatar_url?: string | null;
+    }) => DbOperationResult;
+    updateProfilePicture: (userId: string, filePath: string) => DbOperationResult;
+  };
+  
+  profiles: {
+    getByUserId: (userId: string) => Profile | undefined;
+    exists: (userId: string) => boolean;
+    update: (userId: string, data: {
+      location?: string;
+      social_links?: string;
+      relationship_status?: string;
+      age?: number | null;
+      interests?: string;
+      occupation?: string;
+      company?: string;
+      hobbies?: string;
+      pets?: string;
+    }) => DbOperationResult;
+    create: (userId: string, data: {
+      location?: string;
+      social_links?: string;
+      relationship_status?: string;
+      age?: number | null;
+      interests?: string;
+      occupation?: string;
+      company?: string;
+      hobbies?: string;
+      pets?: string;
+    }) => DbOperationResult;
+  };
+  
+  galleryImages: {
+    getByUserId: (userId: string) => GalleryImage[];
+    deleteAllForUser: (userId: string) => DbOperationResult;
+    create: (userId: string, imageUrl: string) => DbOperationResult;
+  };
+  
+  userFiles: {
+    getByUserId: (userId: string) => UserFile[];
+    getFileCount: (userId: string) => { count: number };
+    create: (file: {
+      user_id: string;
+      filename: string;
+      original_name: string;
+      file_path: string;
+      size: number;
+      mimetype: string;
+    }) => DbOperationResult;
+    getById: (fileId: string) => UserFile;
+    deleteById: (fileId: string) => DbOperationResult;
+  };
+  
+  transaction: {
+    begin: () => void;
+    commit: () => void;
+    rollback: () => void;
+  };
 }

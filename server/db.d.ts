@@ -1,5 +1,3 @@
-import Database from 'better-sqlite3';
-
 // Define database entity interfaces
 export interface User {
   id: number;
