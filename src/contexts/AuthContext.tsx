@@ -1,4 +1,4 @@
-import type { AuthState, AuthCredentials, User } from '../types/Auth';
+import type { AuthState, AuthCredentials, User } from '../types';
 import { createContext } from 'react';
 
 // Define the context type

@@ -1,38 +1,55 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { ProfileContext, ProfileContextType } from '../contexts/ProfileContext';
-import type { MemberProfile } from '../types/Profile';
+import type { MemberProfile } from '../types';
 import { useAuth } from '../hooks/useAuth';
 
 // Default profile for new users
 const defaultProfile: MemberProfile = {
   userId: '',
-  firstName: '',
-  lastName: '',
-  userNickname: '',
+  first_name: '',
+  last_name: '',
+  username: '',
   joinedDate: new Date().toISOString(),
   bio: '',
   location: '',
   interests: [],
   following: [],
   followingMembers: [],
-  unreadAlerts: 0
+  unreadAlerts: 0,
+  profile: {
+    user_id: 0,
+    location: null,
+    social_links: null,
+    relationship_status: null,
+    age: null,
+    interests: null,
+    occupation: null,
+    company: null,
+    hobbies: null,
+    pets: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  avatar_url: '',
+  galleryImages: []
 };
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   // Store profiles in a map, keyed by userId
   const [profiles, setProfiles] = useState<Record<string, MemberProfile>>({});
-  const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
+  const [currentProfileId, setCurrentProfileId] = useState<number | null>(null);
   const { user } = useAuth();
   
   // Set current profile to the logged-in user's profile
   useEffect(() => {
-    if (user?.id) {
-      setCurrentProfileId(user.id);
+    if (user?.userId) {
+      setCurrentProfileId(user.userId);
       // Load the user's profile if not already loaded
-      if (!profiles[user.id]) {
-        fetchProfile(user.id);
-      }
+      // if (!profiles[user.userId]) {
+      //   fetchProfile(user.userId);
+      // }  Think this wont work... and not registered users will not
+      // have a profile, thus probably best to leave this out
     }
   }, [user, profiles]);
   

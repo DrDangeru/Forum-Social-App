@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { User } from '../types';
+import { User,  } from '../types';
 
 const Followed = ({ currentUserId }: { currentUserId: number }) => {
   const [followedUsers, setFollowedUsers] = useState<User[]>([]);
@@ -54,7 +54,10 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
 
   useEffect(() => {
     fetchFollowData();
-  }, [currentUserId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId ]); // fetchFollowData results in re-renders
+  // which is not wanted. If excluding it causes some issues,
+  // we can add it with memoization or use a different approach.
 
   if (loading) {
     return <div>Loading...</div>;
@@ -71,7 +74,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
           <CardContent>
             <div className="space-y-4">
               {followedUsers.map(user => (
-                <div key={user.id} className="flex items-center justify-between p-4 
+                <div key={user.userId} className="flex items-center justify-between p-4 
                 hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="flex items-center space-x-4">
                     <Avatar>
@@ -85,7 +88,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
                   </div>
                   <Button
                     variant="destructive"
-                    onClick={() => handleUnfollow(user.id as any)}
+                    onClick={() => handleUnfollow(user.userId as any)}
                   >
                     Unfollow
                   </Button>
@@ -103,7 +106,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
           <CardContent>
             <div className="space-y-4">
               {followers.map(user => (
-                <div key={user.id} className="flex items-center justify-between p-4
+                <div key={user.userId} className="flex items-center justify-between p-4
                  hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="flex items-center space-x-4">
                     <Avatar>
@@ -115,10 +118,10 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                   </div>
-                  {!followedUsers.some(f => f.id === user.id) && (
+                  {!followedUsers.some(f => f.userId === user.userId) && (
                     <Button
                       variant="outline"
-                      onClick={() => handleFollow(user.id as any)}
+                      onClick={() => handleFollow(user.userId as any)}
                     >
                       Follow Back
                     </Button>

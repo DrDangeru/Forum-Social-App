@@ -18,8 +18,8 @@ const Feed = ({ userId }: { userId: number }) => {
       {posts?.map((post) => (
         <Card key={post.id} className="mb-4">
           <CardHeader>
-            <CardTitle className="text-xl">{post.author.firstName} 
-              {post.author.lastName}</CardTitle>
+            <CardTitle className="text-xl">{post.author?.first_name} 
+              {post.author?.last_name}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-base">{post.content}</p>

@@ -1,12 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { AuthState, AuthCredentials, User } from '../types/Auth';
+import { AuthState, AuthCredentials, User } from '../types';
 import axios from 'axios';
 import { AuthContext } from '../contexts/AuthContext';
 
 // Default auth state
 const defaultAuthState: AuthState = {
     user: null,
-    isAuthenticated: false
+    isAuthenticated: false,
+    loading: false,
+    error: null
 };
 
 // Provider component
@@ -23,7 +25,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const user = response.data.user;
             setAuthState({
                 user,
-                isAuthenticated: true
+                isAuthenticated: true,
+                loading: false,
+                error: null
             });
 
             return user;
@@ -58,7 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             setAuthState({
                 user,
-                isAuthenticated: true
+                isAuthenticated: true,
+                loading: false,
+                error: null
             });
             
             return user;

@@ -7,7 +7,7 @@
 
 // Basic user type
 export interface User {
-  id: number;
+  userId: number;
   username: string;
   email: string;
   password_hash: string;
@@ -22,6 +22,7 @@ export interface User {
 export interface AuthCredentials {
   username: string;
   password: string;
+  userId: number;
 }
 
 // Authentication state
@@ -78,9 +79,8 @@ export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 
 // Friend request interface
 export interface FriendRequest {
-  id: number;
-  sender_id: number;
-  receiver_id: number;
+  receiver_id: User["userId"]; // userId of requested user
+  sender_userId: User["userId"] ; // userId of requestor for fr
   status: FriendRequestStatus;
   created_at: string;
   updated_at: string;
@@ -88,7 +88,7 @@ export interface FriendRequest {
 
 // Basic profile for display in lists
 export interface BasicProfile {
-  id: number;
+  userId: string;
   username: string;
   first_name: string;
   last_name: string;
@@ -96,8 +96,8 @@ export interface BasicProfile {
 }
 
 // Member profile with additional information
-export interface MemberProfile {
-  user: User;
+export interface MemberProfile extends BasicProfile {
+  userId: string; // Duplicate userId for type safety
   profile: Profile;
   isFriend?: boolean;
   friendRequestStatus?: FriendRequestStatus;
@@ -107,6 +107,14 @@ export interface MemberProfile {
   followingMembers?: any[];
   unreadAlerts?: number;
   galleryImages?: string[];
+  bio?: string;
+  location?: string;
+  interests?: string[];
+  occupation?: string;
+  company?: string;
+  hobbies?: string[];
+  pets?: any[];
+  joinedDate?: string;
 }
 
 // ==================== CONTENT TYPES ====================

@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useFriends } from '../hooks/useFriends';
-import { BasicProfile } from '../types/Profile';
+import { BasicProfile } from '../types';
 import { getInitials } from '../lib/utils';
 import { Search, UserPlus } from 'lucide-react';
 
@@ -69,30 +69,30 @@ const AddFriend: React.FC = () => {
         {!isSearching && searchResults.length > 0 && (
           <div className="space-y-4 mt-2">
             {searchResults.map((user) => {
-              const status = getFriendRequestStatus(user.userId);
+              const status = getFriendRequestStatus(Number(user.userId));
               
               return (
                 <div key={user.userId} className="flex items-center justify-between
                  p-3 rounded-lg border">
                   <div className="flex items-center space-x-3">
                     <Avatar>
-                      {user.avatarUrl ? (
-                        <AvatarImage src={user.avatarUrl} 
-                        alt={`${user.firstName} ${user.lastName}`} />
+                      {user.avatar_url ? (
+                        <AvatarImage src={user.avatar_url} 
+                        alt={`${user.first_name} ${user.last_name}`} />
                       ) : (
-                        <AvatarFallback>{getInitials(`${user.firstName} ${user.lastName}`)}
+                        <AvatarFallback>{getInitials(`${user.first_name} ${user.last_name}`)}
                         </AvatarFallback>
                       )}
                     </Avatar>
                     <div>
-                      <p className="font-medium">{user.firstName} {user.lastName}</p>
-                      <p className="text-sm text-muted-foreground">@{user.userNickname}</p>
+                      <p className="font-medium">{user.first_name} {user.last_name}</p>
+                      <p className="text-sm text-muted-foreground">@{user.username}</p>
                     </div>
                   </div>
                   
                   {status === 'none' && (
                     <Button 
-                      onClick={() => sendFriendRequest(user.userId)}
+                      onClick={() => sendFriendRequest(Number(user.userId))}
                       size="sm"
                     >
                       <UserPlus size={16} className="mr-1" />

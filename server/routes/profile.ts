@@ -31,8 +31,9 @@ router.get('/:userId', (req: Request, res: Response) => {
     `).get(Number(userId)) as { count: number };
     
     // Get gallery images
-    const galleryImagesResult = dbHelpers.galleryImages.getByUserId(Number(userId))
-      as GalleryImage[];
+    const galleryImagesResult = // implicit type GalleryImage[] auto assigned
+       dbHelpers.galleryImages.getByUserId(Number(userId));
+    
     
     const galleryImages = galleryImagesResult.map((item: GalleryImage) => item.image_url);
     

@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FriendRequest, BasicProfile } from '../types/Profile';
+import { FriendRequest, BasicProfile } from '../types';
 import { useAuth } from './useAuth';
 
-// Check everything below 11 to 16 errors...
 interface UseFriendsReturn {
   // Data
   friends: BasicProfile[];
@@ -12,17 +11,17 @@ interface UseFriendsReturn {
   error: string | null;
   
   // Friend request actions
-  sendFriendRequest: (receiverId: string) => Promise<void>;
-  acceptFriendRequest: (requestId: string) => Promise<void>;
-  rejectFriendRequest: (requestId: string) => Promise<void>;
-  removeFriend: (friendId: string) => Promise<void>;
+  sendFriendRequest: (userId: number) => Promise<void>;
+  acceptFriendRequest: (requestId: number) => Promise<void>;
+  rejectFriendRequest: (requestId: number) => Promise<void>;
+  removeFriend: (friendId: number) => Promise<void>;
   
   // Utility functions
   refreshFriends: () => Promise<void>;
-  isFriend: (targetUserId: string) => boolean;
-  hasPendingRequestFrom: (targetUserId: string) => boolean;
-  hasPendingRequestTo: (targetUserId: string) => boolean;
-  getFriendRequestStatus: (targetUserId: string) => 'none' | 'friends' | 'received' | 'sent';
+  isFriend: (userId: number) => boolean;
+  hasPendingRequestFrom: (userId: number) => boolean;
+  hasPendingRequestTo: (userId: number) => boolean;
+  getFriendRequestStatus: (userId: number) => 'none' | 'friends' | 'received' | 'sent';
 }
 
 export function useFriends(): UseFriendsReturn {
@@ -60,7 +59,7 @@ export function useFriends(): UseFriendsReturn {
     
     await executeApiCall(async () => {
       // Fetch friends
-      const friendsResponse = await fetch(`/api/friends/${user.id}`);
+      const friendsResponse = await fetch(`/api/friends/${user.userId}`);
       if (!friendsResponse.ok) {
         throw new Error('Failed to fetch friends');
       }
@@ -68,7 +67,7 @@ export function useFriends(): UseFriendsReturn {
       setFriends(friendsData);
       
       // Fetch friend requests
-      const requestsResponse = await fetch(`/api/friends/${user.id}/requests`);
+      const requestsResponse = await fetch(`/api/friends/${user.userId}/requests`);
       if (!requestsResponse.ok) {
         throw new Error('Failed to fetch friend requests');
       }
@@ -79,7 +78,7 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall]);
 
   // Send a friend request
-  const sendFriendRequest = useCallback(async (receiverId: string): Promise<void> => {
+  const sendFriendRequest = useCallback(async (userId: number): Promise<void> => {
     if (!user) return;
     
     await executeApiCall(async () => {
@@ -89,8 +88,8 @@ export function useFriends(): UseFriendsReturn {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          senderId: user.id,
-          receiverId,
+          senderId: user.userId,
+          receiverId: userId,
         }),
       });
       
@@ -105,7 +104,7 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Accept a friend request
-  const acceptFriendRequest = useCallback(async (requestId: string): Promise<void> => {
+  const acceptFriendRequest = useCallback(async (requestId: number): Promise<void> => {
     if (!user) return;
     
     await executeApiCall(async () => {
@@ -116,7 +115,7 @@ export function useFriends(): UseFriendsReturn {
         },
         body: JSON.stringify({
           status: 'accepted',
-          userId: user.id,
+          userId: user.userId,
         }),
       });
       
@@ -131,7 +130,7 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Reject a friend request
-  const rejectFriendRequest = useCallback(async (requestId: string): Promise<void> => {
+  const rejectFriendRequest = useCallback(async (requestId: number): Promise<void> => {
     if (!user) return;
     
     await executeApiCall(async () => {
@@ -142,7 +141,7 @@ export function useFriends(): UseFriendsReturn {
         },
         body: JSON.stringify({
           status: 'rejected',
-          userId: user.id,
+          userId: user.userId,
         }),
       });
       
@@ -157,11 +156,11 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Remove a friend
-  const removeFriend = useCallback(async (friendId: string): Promise<void> => {
+  const removeFriend = useCallback(async (friendId: number): Promise<void> => {
     if (!user) return;
     
     await executeApiCall(async () => {
-      const response = await fetch(`/api/friends/${user.id}/friend/${friendId}`, {
+      const response = await fetch(`/api/friends/${user.userId}/friend/${friendId}`, {
         method: 'DELETE',
       });
       
@@ -176,41 +175,41 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Utility function to check if a user is a friend
-  const isFriend = useCallback((targetUserId: string): boolean => {
-    return friends.some(friend => friend.userId === targetUserId);
+  const isFriend = useCallback((userId: number): boolean => {
+    return friends.some(friend => Number(friend.userId) === userId);
   }, [friends]);
 
   // Utility function to check if there's a pending request from a user
-  const hasPendingRequestFrom = useCallback((targetUserId: string): boolean => {
-    return receivedRequests.some(request => request.senderId === targetUserId);
+  const hasPendingRequestFrom = useCallback((userId: number): boolean => {
+    return receivedRequests.some(request => request.sender_userId === userId);
   }, [receivedRequests]);
 
   // Utility function to check if there's a pending request to a user
-  const hasPendingRequestTo = useCallback((targetUserId: string): boolean => {
-    return sentRequests.some(request => request.receiverId === targetUserId);
+  const hasPendingRequestTo = useCallback((userId: number): boolean => {
+    return sentRequests.some(request => request.receiver_id === userId);
   }, [sentRequests]);
 
   // Get the overall friend status with a user
   const getFriendRequestStatus = useCallback(
-    (targetUserId: string): 'none' | 'friends' | 'received' | 'sent' => {
-      if (isFriend(targetUserId)) {
+    (userId: number): 'none' | 'friends' | 'received' | 'sent' => {
+      if (isFriend(userId)) {
         return 'friends';
       }
       
-      if (hasPendingRequestFrom(targetUserId)) {
+      if (hasPendingRequestFrom(userId)) {
         return 'received';
       }
       
-      if (hasPendingRequestTo(targetUserId)) {
+      if (hasPendingRequestTo(userId)) {
         return 'sent';
       }
       
       return 'none';
-    }, 
+    },
     [isFriend, hasPendingRequestFrom, hasPendingRequestTo]
   );
 
-  // Initial fetch
+  // Load friends and requests on mount or when user changes
   useEffect(() => {
     if (user) {
       fetchFriendsAndRequests();
@@ -231,7 +230,7 @@ export function useFriends(): UseFriendsReturn {
     rejectFriendRequest,
     removeFriend,
     
-    // Utilities
+    // Utility functions
     refreshFriends: fetchFriendsAndRequests,
     isFriend,
     hasPendingRequestFrom,

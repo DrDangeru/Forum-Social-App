@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { DbHelpers, User, GalleryImage, Profile } from './types/database';
+import type { DbHelpers, User, GalleryImage, Profile } from './types';
 import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);

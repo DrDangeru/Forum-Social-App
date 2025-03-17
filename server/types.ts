@@ -1,6 +1,12 @@
+/* eslint-disable no-unused-vars */
 // Define database entity interfaces
+// This is in your DbHelpers interface, which is defining the shape 
+// of your database helper functions. Since this is just an
+//  interface definition (not an implementation),
+//  the linter is incorrectly flagging the parameter as unused.
+// Takes over from db.d.ts... probably if it works...
 export interface User {
-  id: number;
+  userId: number;
   username: string;
   email: string;
   password_hash: string;
