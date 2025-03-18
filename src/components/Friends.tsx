@@ -1,34 +1,28 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-import { User } from "../types";
+import { BasicProfile } from "../types"; 
+import { Link } from "react-router-dom";
+import { Button } from "./ui/button";
+import { SendFriendRequest } from "./FriendRequests";
+import { useFriends } from "@/hooks/useFriends";
 
 export default function Friends() {
-  const [friends, setFriends] = useState<User[]>([]);
+  const [friends, setFriends] = useState<BasicProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { friends: friendsList, isLoading, error: friendsError } = useFriends();
   
-  // TODO: Replace with actual user ID from auth context
-  const userId = 1; // Temporary hardcoded user ID
-
+  // Fetch friends from the useFriends hook
   useEffect(() => {
-    const fetchFriends = async () => {
-      try {
-        const response = await fetch(`http://localhost:3001/api/friends/${userId}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch friends');
-        }
-        const data = await response.json();
-        setFriends(data);
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+    if (!isLoading) {
+      setFriends(friendsList);
+      setLoading(false);
+      if (friendsError) {
+        setError(friendsError);
       }
-    };
-    
-    fetchFriends();
-  }, [userId]);
+    }
+  }, [friendsList, isLoading, friendsError]);
 
   if (loading) return <div>Loading friends...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -41,19 +35,26 @@ export default function Friends() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {friends.map((friend) => (
-            <Card key={friend.id}>
+            <Card key={friend.userId}>
               <CardHeader className="flex flex-row items-center gap-4">
                 <Avatar>
-                  <AvatarImage src={friend.avatar_url} alt={friend.username} />
-                  <AvatarFallback>{friend.username[0].toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={friend.avatar_url || ""} alt={friend.username} />
+                  <AvatarFallback>{friend.first_name[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <CardTitle>{friend.username}</CardTitle>
+                <div className="flex flex-col">
+                  <CardTitle>{friend.username}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {friend.first_name} {friend.last_name}
+                  </p>
+                </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Joined {friend.created_at ? new Date(friend.created_at).toLocaleDateString() : 
-                  'no data'}
-                </p>
+              <CardContent className="flex justify-between items-center">
+                <Link to={`/profile/${friend.userId}`}>
+                  <Button variant="outline" size="sm">
+                    View Profile
+                  </Button>
+                </Link>
+                <SendFriendRequest userId={friend.userId} />
               </CardContent>
             </Card>
           ))}

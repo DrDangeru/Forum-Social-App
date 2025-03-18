@@ -39,6 +39,80 @@ export interface GalleryImage {
   created_at: string;
 }
 
+// Friend request status
+export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
+
+// Friend request interface
+export interface FriendRequest {
+  id: number;
+  receiver_id: number; // userId of requested user
+  sender_userId: number; // userId of requestor
+  status: FriendRequestStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+// Friend request with user details
+export interface FriendRequestWithDetails extends FriendRequest {
+  // Sender information
+  sender_first_name: string;
+  sender_last_name: string;
+  sender_username: string;
+  sender_avatar_url: string | null;
+  
+  // Receiver information
+  receiver_first_name: string;
+  receiver_last_name: string;
+  receiver_username: string;
+  receiver_avatar_url: string | null;
+}
+
+// Basic profile for display in lists
+export interface BasicProfile {
+  userId: string;
+  username: string;
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
+}
+
+// Topic interface
+export interface Topic {
+  id: number;
+  title: string;
+  description: string;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+  
+  // Client-specific additions
+  headline?: string;
+  topicOwnerOrMod?: number;
+}
+
+// Member profile with additional information
+export interface MemberProfile extends BasicProfile {
+  userId: string; // Duplicate userId for type safety
+  profile: Profile;
+  isFriend?: boolean;
+  friendRequestStatus?: FriendRequestStatus;
+  following?: Topic[];
+  friends?: BasicProfile[];
+  friendRequests?: FriendRequest[];
+  followingMembers?: any[];
+  unreadAlerts?: number;
+  age?: number | null;
+  galleryImages?: string[];
+  bio?: string;
+  location?: string | null;
+  interests?: string[];
+  occupation?: string;
+  company?: string;
+  hobbies?: string[];
+  pets?: any[];
+  joinedDate?: string;
+}
+
 // Define the structure of dbHelpers
 export interface DbHelpers {
   users: {

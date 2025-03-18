@@ -61,29 +61,42 @@ export interface SocialLinks {
   website?: string;
 }
 
-// Personal details structure
-export interface PersonalDetails {
-  location?: string;
-  socialLinks?: SocialLinks;
-  relationshipStatus?: string;
-  age?: number | null;
-  interests?: string[];
-  occupation?: string;
-  company?: string;
-  hobbies?: string[];
-  pets?: any[];
-}
+// Personal details structure Duplicate of MemberProfile .. delete
+// export interface PersonalDetails {
+//   location?: string;
+//   socialLinks?: SocialLinks;
+//   relationshipStatus?: string;
+//   age?: number | null;
+//   interests?: string[];
+//   occupation?: string;
+//   company?: string;
+//   hobbies?: string[];
+//   pets?: any[];
+// }
 
 // Friend request status
 export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 
 // Friend request interface
 export interface FriendRequest {
+  id?: number;
   receiver_id: User["userId"]; // userId of requested user
-  sender_userId: User["userId"] ; // userId of requestor for fr
+  sender_userId: User["userId"]; // userId of requestor for fr
   status: FriendRequestStatus;
   created_at: string;
   updated_at: string;
+  
+  // Sender information
+  sender_first_name?: string;
+  sender_last_name?: string;
+  sender_username?: string;
+  sender_avatar_url?: string | null;
+  
+  // Receiver information
+  receiver_first_name?: string;
+  receiver_last_name?: string;
+  receiver_username?: string;
+  receiver_avatar_url?: string | null;
 }
 
 // Basic profile for display in lists
@@ -106,6 +119,7 @@ export interface MemberProfile extends BasicProfile {
   friendRequests?: FriendRequest[];
   followingMembers?: any[];
   unreadAlerts?: number;
+  age?: number | null;
   galleryImages?: string[];
   bio?: string;
   location?: string;

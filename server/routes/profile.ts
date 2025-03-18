@@ -39,7 +39,7 @@ router.get('/:userId', (req: Request, res: Response) => {
     
     // Format response
     const response = {
-      userId: user.id,
+      userId: user.userId,
       firstName: user.first_name,
       lastName: user.last_name,
       userNickname: user.username,

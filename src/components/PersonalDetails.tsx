@@ -10,10 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import { Pencil, Save, X, Plus, Upload, Image, Trash2 } from 'lucide-react';
-import { MemberProfile } from '../types/Profile';
+import { 
+  Pencil, Save, X, Plus, Upload, Image, Trash2
+} from 'lucide-react';
+import { MemberProfile } from '../types';
 import { useProfile } from '../hooks/useProfile';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { useParams } from 'react-router-dom';
+import { SendFriendRequest } from './FriendRequests';
 
 interface PersonalDetailsProps {
   isOwner: boolean;
@@ -22,6 +26,7 @@ interface PersonalDetailsProps {
 const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
   const { profile, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
+  const { userId } = useParams<{ userId: string }>();
   const [details, setDetails] = useState<MemberProfile>(
     profile || {
       userId: '',
@@ -42,34 +47,49 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
     }
   );
 
-  const handleChange = (field: keyof MemberProfile, value: any) => {
-    setDetails((prevDetails) => ({
-      ...prevDetails,
-      [field]: value,
-    }));
-  };
-
+  const handleChange = (field: string, value: any) => {
+    setDetails((prevDetails) => {
+      // Handle nested properties (e.g., 'profile.relationship_status')
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.');
+        return {
+          ...prevDetails,
+          [parent]: {
+            ...(prevDetails[parent as keyof MemberProfile] as any),
+            [child]: value
+          }
+        };
+      }
+      
+      // Handle top-level properties
+      return {
+        ...prevDetails,
+        [field]: value,
+      };
+    });
+  }; // Updated to handle nested properties
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [galleryImages, setGalleryImages] = useState<string[]>(details.galleryImages || []);
-  
+
   const handleProfilePicUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        handleChange('avatarUrl', result);
+        handleChange('avatar_url', result);
       };
       reader.readAsDataURL(file);
     }
   };
-  
+
   const handleGalleryUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
       const newImages: string[] = [];
-      
+
       Array.from(files).forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -83,7 +103,7 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
       });
     }
   };
-  
+
   const removeGalleryImage = (index: number) => {
     setGalleryImages(prev => prev.filter((_, i) => i !== index));
   };
@@ -129,24 +149,29 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
       <Card className="max-w-3xl mx-auto">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-2xl font-bold">Personal Details</CardTitle>
-          {isOwner && (
-            <div className="flex space-x-2">
-              {!isEditing ? (
-                <Button variant="ghost" size="default" onClick={() => setIsEditing(true)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              ) : (
-                <>
-                  <Button variant="ghost" size="default" onClick={handleSave}>
-                    <Save className="h-4 w-4" />
+          <div className="flex space-x-2">
+            {isOwner ? (
+              <div className="flex space-x-2">
+                {!isEditing ? (
+                  <Button variant="ghost" size="default" onClick={() => setIsEditing(true)}>
+                    <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="default" onClick={handleCancel}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
+                ) : (
+                  <>
+                    <Button variant="ghost" size="default" onClick={handleSave}>
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="default" onClick={handleCancel}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : (
+              // Friend request UI for non-owner views
+              userId && <SendFriendRequest userId={userId} />
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Profile Picture */}
@@ -154,11 +179,11 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
             <h3 className="text-lg font-semibold">Profile Picture</h3>
             <div className="flex items-center space-x-4">
               <Avatar className="h-24 w-24">
-                {details.avatarUrl ? (
-                  <AvatarImage src={details.avatarUrl} alt="Profile" />
+                {details.avatar_url ? (
+                  <AvatarImage src={details.avatar_url} alt="Profile" />
                 ) : (
                   <AvatarFallback className="text-lg">
-                    {details.firstName?.[0]}{details.lastName?.[0]}
+                    {details.first_name?.[0]}{details.last_name?.[0]}
                   </AvatarFallback>
                 )}
               </Avatar>
@@ -202,8 +227,9 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                   <div className="space-y-2">
                     <Label htmlFor="relationshipStatus">Relationship Status</Label>
                     <Select
-                      value={details.relationshipStatus}
-                      onValueChange={(value) => handleChange('relationshipStatus', value as any)}
+                      value={details.profile?.relationship_status || ''}
+                      onValueChange={(value) => handleChange('profile.relationship_status', 
+                        value as any)}
                     >
                       <SelectTrigger id="relationshipStatus">
                         <SelectValue placeholder="Select status" />
@@ -225,7 +251,9 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                   </div>
                   <div>
                     <Label>Relationship Status</Label>
-                    <p className="text-gray-600">{details.relationshipStatus || 'Not specified'}</p>
+                    <p className="text-gray-600">
+                      {details.profile?.relationship_status || 'Not specified'}
+                    </p>
                   </div>
                 </>
               )}
