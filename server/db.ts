@@ -26,7 +26,7 @@ function initializeDatabase() {
     );
 
     CREATE TABLE IF NOT EXISTS profiles (
-      user_id INTEGER PRIMARY KEY,
+      userId INTEGER PRIMARY KEY,
       location TEXT,
       social_links TEXT,
       relationship_status TEXT,
@@ -38,55 +38,55 @@ function initializeDatabase() {
       pets TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS gallery_images (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
       image_url TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS user_files (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
       filename TEXT NOT NULL,
       original_name TEXT NOT NULL,
       file_path TEXT NOT NULL,
       size INTEGER NOT NULL,
       mimetype TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS friendships (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      friend_id INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      friendId INTEGER NOT NULL,
       status TEXT DEFAULT 'pending',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(user_id, friend_id),
-      FOREIGN KEY (user_id) REFERENCES users (id),
-      FOREIGN KEY (friend_id) REFERENCES users (id)
+      UNIQUE(userId, friendId),
+      FOREIGN KEY (userId) REFERENCES users (id),
+      FOREIGN KEY (friendId) REFERENCES users (id)
     );
 
     CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
       content TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id)
+      FOREIGN KEY (userId) REFERENCES users (id)
     );
 
     CREATE TABLE IF NOT EXISTS follows (
-      follower_id INTEGER NOT NULL,
-      following_id INTEGER NOT NULL,
+      followerId INTEGER NOT NULL,
+      followingId INTEGER NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (follower_id, following_id),
-      FOREIGN KEY (follower_id) REFERENCES users (id),
-      FOREIGN KEY (following_id) REFERENCES users (id)
+      PRIMARY KEY (followerId, followingId),
+      FOREIGN KEY (followerId) REFERENCES users (id),
+      FOREIGN KEY (followingId) REFERENCES users (id)
     );
 
     CREATE TABLE IF NOT EXISTS topics (
@@ -96,12 +96,12 @@ function initializeDatabase() {
     );
 
     CREATE TABLE IF NOT EXISTS user_topics (
-      user_id INTEGER NOT NULL,
-      topic_id INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      topicId INTEGER NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (user_id, topic_id),
-      FOREIGN KEY (user_id) REFERENCES users (id),
-      FOREIGN KEY (topic_id) REFERENCES topics (id)
+      PRIMARY KEY (userId, topicId),
+      FOREIGN KEY (userId) REFERENCES users (id),
+      FOREIGN KEY (topicId) REFERENCES topics (id)
     );
   `);
 }
@@ -161,14 +161,14 @@ const dbHelpers: DbHelpers = {
   profiles: {
     getByUserId: (userId: number) => {
       const result = db.prepare(`
-        SELECT * FROM profiles WHERE user_id = ?
+        SELECT * FROM profiles WHERE userId = ?
       `).get(userId);
       
       return result as Profile | undefined;
     },
     
     exists: (userId: number) => {
-      return db.prepare('SELECT 1 FROM profiles WHERE user_id = ?').get(userId);
+      return db.prepare('SELECT 1 FROM profiles WHERE userId = ?').get(userId);
     },
     
     update: (userId: number, data: {
@@ -194,7 +194,7 @@ const dbHelpers: DbHelpers = {
             hobbies = ?,
             pets = ?,
             updated_at = CURRENT_TIMESTAMP
-        WHERE user_id = ?
+        WHERE userId = ?
       `).run(
         data.location || '',
         data.social_links || '{}',
@@ -222,7 +222,7 @@ const dbHelpers: DbHelpers = {
     }) => {
       return db.prepare(`
         INSERT INTO profiles (
-          user_id, location, social_links, relationship_status, 
+          userId, location, social_links, relationship_status, 
           age, interests, occupation, company, hobbies, pets
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
@@ -244,7 +244,7 @@ const dbHelpers: DbHelpers = {
   galleryImages: {
     getByUserId: (userId: number) => {
       const results = db.prepare(`
-        SELECT * FROM gallery_images WHERE user_id = ? ORDER BY created_at DESC
+        SELECT * FROM gallery_images WHERE userId = ? ORDER BY created_at DESC
       `).all(userId);
       
       return results as GalleryImage[];
@@ -252,13 +252,13 @@ const dbHelpers: DbHelpers = {
     
     deleteAllForUser: (userId: number) => {
       return db.prepare(`
-        DELETE FROM gallery_images WHERE user_id = ?
+        DELETE FROM gallery_images WHERE userId = ?
       `).run(userId);
     },
     
     create: (userId: number, imageUrl: string) => {
       return db.prepare(`
-        INSERT INTO gallery_images (user_id, image_url)
+        INSERT INTO gallery_images (userId, image_url)
         VALUES (?, ?)
       `).run(userId, imageUrl);
     }
@@ -268,22 +268,29 @@ const dbHelpers: DbHelpers = {
   userFiles: {
     getByUserId: (userId: number) => {
       return db.prepare(`
-        SELECT * FROM user_files WHERE user_id = ? ORDER BY created_at DESC
+        SELECT * FROM user_files WHERE userId = ? ORDER BY created_at DESC
       `).all(userId);
     },
     
     getFileCount: (userId: number) => {
       return db.prepare(`
-        SELECT COUNT(*) as count FROM user_files WHERE user_id = ?
+        SELECT COUNT(*) as count FROM user_files WHERE userId = ?
       `).get(userId) as { count: number };
     },
     
-    create: (file) => {
+    create: (file: {
+      userId: number;
+      filename: string;
+      original_name: string;
+      file_path: string;
+      size: number;
+      mimetype: string;
+    }) => {
       return db.prepare(`
-        INSERT INTO user_files (user_id, filename, original_name, file_path, size, mimetype)
+        INSERT INTO user_files (userId, filename, original_name, file_path, size, mimetype)
         VALUES (?, ?, ?, ?, ?, ?)
       `).run(
-        file.user_id,
+        file.userId,
         file.filename,
         file.original_name,
         file.file_path,

@@ -1,73 +1,58 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { ProfileContext, ProfileContextType } from '../contexts/ProfileContext';
-import type { MemberProfile } from '../types';
+import type { Profile } from '../types';
 import { useAuth } from '../hooks/useAuth';
 
 // Default profile for new users
-const defaultProfile: MemberProfile = {
+const defaultProfile: Profile = {
   userId: '',
+  username: '',
   first_name: '',
   last_name: '',
-  username: '',
-  joinedDate: new Date().toISOString(),
   bio: '',
   location: '',
   interests: [],
   following: [],
   followingMembers: [],
   unreadAlerts: 0,
-  profile: {
-    user_id: 0,
-    location: null,
-    social_links: null,
-    relationship_status: null,
-    age: null,
-    interests: null,
-    occupation: null,
-    company: null,
-    hobbies: null,
-    pets: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  avatar_url: '',
+  social_links: null,
+  relationship_status: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  avatar_url: null,
   galleryImages: []
 };
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   // Store profiles in a map, keyed by userId
-  const [profiles, setProfiles] = useState<Record<string, MemberProfile>>({});
-  const [currentProfileId, setCurrentProfileId] = useState<number | null>(null);
+  const [profiles, setProfiles] = useState<Record<string, Profile>>({});
+  const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
   const { user } = useAuth();
   
   // Set current profile to the logged-in user's profile
   useEffect(() => {
     if (user?.userId) {
-      setCurrentProfileId(user.userId);
+      setCurrentProfileId(user.userId.toString());
       // Load the user's profile if not already loaded
       // if (!profiles[user.userId]) {
       //   fetchProfile(user.userId);
       // }  Think this wont work... and not registered users will not
       // have a profile, thus probably best to leave this out
     }
-  }, [user, profiles]);
+  }, [user]);
   
   // Fetch a profile by userId
   const fetchProfile = async (userId: string) => {
     try {
       const response = await axios.get(`/api/profiles/${userId}`);
-      const profileData = response.data;
-      
       setProfiles(prevProfiles => ({
         ...prevProfiles,
-        [userId]: profileData
+        [userId]: response.data
       }));
-      
-      return profileData;
+      return response.data;
     } catch (error) {
-      console.error(`Error fetching profile for user ${userId}:`, error);
-      // Create a default profile for this user if not found
+      console.error('Error fetching profile:', error);
       const newProfile = { ...defaultProfile, userId };
       setProfiles(prevProfiles => ({
         ...prevProfiles,
@@ -78,7 +63,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   };
   
   // Get a profile by userId, fetching it if not already loaded
-  const getProfile = useCallback(async (userId: string): Promise<MemberProfile> => {
+  const getProfile = useCallback(async (userId: string): Promise<Profile> => {
     if (profiles[userId]) {
       return profiles[userId];
     }
@@ -88,14 +73,14 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   
   // Update profile information
   const updateProfile = useCallback(async (
-    updatedProfile: Partial<MemberProfile>,
+    updatedProfile: Partial<Profile>,
     userId?: string
-  ): Promise<MemberProfile> => {
+  ): Promise<Profile> => {
     // Use provided userId or current profile id
     const targetUserId = userId || currentProfileId;
     
     if (!targetUserId) {
-      throw new Error('No user ID provided for profile update');
+      throw new Error('No user ID provided and no current profile set');
     }
     
     try {
@@ -113,7 +98,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       
       console.log('Received updated profile from server:', updatedData);
       
-      // Update profiles map
+      // Update profiles map with the server response data
       setProfiles(prevProfiles => ({
         ...prevProfiles,
         [targetUserId]: updatedData
@@ -123,16 +108,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error updating profile:', error);
       
-      // Update local state even if server update failed
-      const existingProfile = profiles[targetUserId] || { ...defaultProfile, userId: targetUserId };
-      const fallbackProfile = { ...existingProfile, ...updatedProfile };
-      
-      setProfiles(prevProfiles => ({
-        ...prevProfiles,
-        [targetUserId]: fallbackProfile
-      }));
-      
-      return fallbackProfile; // Return the fallback profile when there's an error
+      // Don't update local state if server update failed - this ensures we don't get out of sync
+      throw error;
     }
   }, [profiles, currentProfileId]);
 

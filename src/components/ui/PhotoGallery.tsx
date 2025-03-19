@@ -8,7 +8,7 @@ interface UserPhoto {
   id: number;
   file_path: string;
   original_name: string;
-  user_id: string;
+  userId: string;
   created_at: string;
   size: number;
   mimetype: string;
@@ -20,13 +20,13 @@ export default function PhotoGalleryPage() {
 
   // Fetch user's photos
   const { data: photos = [] } = useQuery({
-    queryKey: ['userPhotos', user?.id],
+    queryKey: ['userPhotos', user?.userId],
     queryFn: async () => {
-      if (!user?.id) return [];
-      const { data } = await axios.get<UserPhoto[]>(`/api/files/${user.id}`);
+      if (!user?.userId) return [];
+      const { data } = await axios.get<UserPhoto[]>(`/api/files/${user.userId}`);
       return data;
     },
-    enabled: !!user?.id
+    enabled: !!user?.userId
   });
 
   // File upload mutation
@@ -35,24 +35,24 @@ export default function PhotoGalleryPage() {
       const formData = new FormData();
       files.forEach(file => formData.append('files', file));
       
-      console.log(`Uploading ${files.length} files for user ${user?.id}`);
+      console.log(`Uploading ${files.length} files for user ${user?.userId}`);
       
       const { data } = await axios.post(
-        `/api/upload/${user?.id}`, 
+        `/api/upload/${user?.userId}`, 
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userPhotos', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['userPhotos', user?.userId] });
     }
   });
 
   // Set profile picture mutation
   const setProfilePicMutation = useMutation({
     mutationFn: async (filePath: string) => {
-      await axios.patch(`/api/users/${user?.id}/profile-pic`, { filePath });
+      await axios.patch(`/api/users/${user?.userId}/profile-pic`, { filePath });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user'] });
@@ -65,7 +65,7 @@ export default function PhotoGalleryPage() {
       await axios.delete(`/api/files/${fileId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userPhotos', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['userPhotos', user?.userId] });
     }
   });
 

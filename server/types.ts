@@ -18,7 +18,7 @@ export interface User {
 }
 
 export interface Profile {
-  user_id: number;
+  userId: number;
   location: string | null;
   social_links: string | null;
   relationship_status: string | null;
@@ -34,7 +34,7 @@ export interface Profile {
 
 export interface GalleryImage {
   id: number;
-  user_id: number;
+  userId: number;
   image_url: string;
   created_at: string;
 }
@@ -45,7 +45,7 @@ export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 // Friend request interface
 export interface FriendRequest {
   id: number;
-  receiver_id: number; // userId of requested user
+  receiverId: number; // userId of requested user
   sender_userId: number; // userId of requestor
   status: FriendRequestStatus;
   created_at: string;
@@ -170,7 +170,7 @@ export interface DbHelpers {
     getByUserId: (userId: number) => any[];
     getFileCount: (userId: number) => { count: number };
     create: (file: {
-      user_id: number;
+      userId: number;
       filename: string;
       original_name: string;
       file_path: string;

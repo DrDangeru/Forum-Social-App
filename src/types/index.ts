@@ -37,18 +37,31 @@ export interface AuthState {
 
 // Basic profile information
 export interface Profile {
-  user_id: number;
-  location: string | null;
+  userId: string; 
+  username: string;
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
   social_links: string | null;
   relationship_status: string | null;
-  age: number | null;
-  interests: string | null;
-  occupation: string | null;
-  company: string | null;
-  hobbies: string | null;
-  pets: string | null;
   created_at: string;
   updated_at: string;
+  isFriend?: boolean;
+  friendRequestStatus?: FriendRequestStatus;
+  following?: Topic[];
+  friends?: BasicProfile[];
+  friendRequests?: FriendRequest[];
+  followingMembers?: any[];
+  unreadAlerts?: number;
+  age?: number | null;
+  galleryImages?: string[];
+  bio?: string;
+  location?: string;
+  interests?: string[];
+  occupation?: string;
+  company?: string;
+  hobbies?: string[];
+  pets?: any[];
 }
 
 // Social links structure
@@ -108,35 +121,12 @@ export interface BasicProfile {
   avatar_url: string | null;
 }
 
-// Member profile with additional information
-export interface MemberProfile extends BasicProfile {
-  userId: string; // Duplicate userId for type safety
-  profile: Profile;
-  isFriend?: boolean;
-  friendRequestStatus?: FriendRequestStatus;
-  following?: Topic[];
-  friends?: BasicProfile[];
-  friendRequests?: FriendRequest[];
-  followingMembers?: any[];
-  unreadAlerts?: number;
-  age?: number | null;
-  galleryImages?: string[];
-  bio?: string;
-  location?: string;
-  interests?: string[];
-  occupation?: string;
-  company?: string;
-  hobbies?: string[];
-  pets?: any[];
-  joinedDate?: string;
-}
-
 // ==================== CONTENT TYPES ====================
 
 // Gallery Image type
 export interface GalleryImage {
   id: number;
-  user_id: number;
+  userId: number;
   image_url: string;
   created_at: string;
   file_name?: string;
@@ -199,7 +189,7 @@ export interface Follow {
 // File related types
 export interface UserFile {
   id: number;
-  user_id: number;
+  userId: number;
   filename: string;
   original_name: string;
   file_path: string;

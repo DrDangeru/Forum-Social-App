@@ -71,11 +71,11 @@ app.get('/api/feed', (req: Request, res: Response) => {
     const posts = db.prepare(`
       SELECT p.*, u.username 
       FROM posts p
-      JOIN users u ON p.user_id = u.id
-      WHERE p.user_id IN (
-        SELECT following_id 
+      JOIN users u ON p.userId = u.id
+      WHERE p.userId IN (
+        SELECT followingId 
         FROM follows 
-        WHERE follower_id = ?
+        WHERE followerId = ?
       )
       ORDER BY p.created_at DESC
       LIMIT 20
@@ -91,7 +91,7 @@ app.post('/api/posts', (req: Request, res: Response) => {
   try {
     const { userId, content } = req.body;
     const result = db.prepare(
-      'INSERT INTO posts (user_id, content) VALUES (?, ?)'
+      'INSERT INTO posts (userId, content) VALUES (?, ?)'
     ).run(userId, content);
     
     res.json({ id: result.lastInsertRowid });
@@ -105,7 +105,7 @@ app.post('/api/follow', (req: Request, res: Response) => {
   try {
     const { followerId, followingId } = req.body;
     db.prepare(`
-      INSERT INTO follows (follower_id, following_id)
+      INSERT INTO follows (followerId, followingId)
       VALUES (?, ?)
     `).run(followerId, followingId);
     
@@ -120,7 +120,7 @@ app.delete('/api/follow', (req: Request, res: Response) => {
     const { followerId, followingId } = req.body;
     db.prepare(`
       DELETE FROM follows
-      WHERE follower_id = ? AND following_id = ?
+      WHERE followerId = ? AND followingId = ?
     `).run(followerId, followingId);
     
     res.json({ success: true });
@@ -136,8 +136,8 @@ app.get('/api/followers/:userId', (req: Request, res: Response) => {
     const followers = db.prepare(`
       SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
       FROM follows f
-      JOIN users u ON f.follower_id = u.id
-      WHERE f.following_id = ?
+      JOIN users u ON f.followerId = u.id
+      WHERE f.followingId = ?
     `).all(userId);
     
     res.json(followers);
@@ -152,8 +152,8 @@ app.get('/api/following/:userId', (req: Request, res: Response) => {
     const following = db.prepare(`
       SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
       FROM follows f
-      JOIN users u ON f.following_id = u.id
-      WHERE f.follower_id = ?
+      JOIN users u ON f.followingId = u.id
+      WHERE f.followerId = ?
     `).all(userId);
     
     res.json(following);
@@ -169,11 +169,11 @@ app.get('/api/friends/:userId', (req: Request, res: Response) => {
       SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
       FROM users u
       WHERE u.id IN (
-        SELECT f1.following_id
+        SELECT f1.followingId
         FROM follows f1
-        JOIN follows f2 ON f1.following_id = f2.follower_id
-        WHERE f1.follower_id = ?
-        AND f2.following_id = ?
+        JOIN follows f2 ON f1.followingId = f2.followerId
+        WHERE f1.followerId = ?
+        AND f2.followingId = ?
       )
     `).all(userId, userId);
     
@@ -195,8 +195,8 @@ app.get('/api/users/:userId', (req: Request, res: Response) => {
     
     const friendsCountResult = db.prepare(`
       SELECT COUNT(*) as count FROM follows 
-      WHERE follower_id = ? AND following_id IN (
-        SELECT follower_id FROM follows WHERE following_id = ?
+      WHERE followerId = ? AND followingId IN (
+        SELECT followerId FROM follows WHERE followingId = ?
       )
     `).get(userId, userId) as { count: number };
     
@@ -222,6 +222,14 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Maximum 10 photos allowed' });
     }
 
+    // Ensure user upload directory exists
+    const userUploadDir = path.join(__dirname, '../uploads', userId);
+    if (!fs.existsSync(userUploadDir)) {
+      fs.mkdirSync(userUploadDir, { recursive: true });
+    }
+
+    console.log(`Processing file upload for user ${userId}`);
+
     // Handle file upload
     upload.array('files', 3)(req, res, async (err) => {
       try {
@@ -237,42 +245,55 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
         }
         
         console.log(`Received ${files.length} files for user ${userId}`);
+        console.log('Files:', files.map(f => ({ name: f.filename, path: f.path })));
 
         // Begin transaction
         dbHelpers.transaction.begin();
 
         try {
-          files.forEach(file => {
-            dbHelpers.userFiles.create({
-              user_id: Number(userId),
+          const savedFiles = files.map(file => {
+            // Ensure the file path is relative for database storage
+            const relativePath = `/uploads/${userId}/${file.filename}`;
+            console.log(`Saving file ${file.filename} with path ${relativePath}`);
+            
+            // Create database record
+            const result = dbHelpers.userFiles.create({
+              userId: Number(userId),
               filename: file.filename,
               original_name: file.originalname,
-              file_path: `/uploads/${userId}/${file.filename}`,
+              file_path: relativePath,
               size: file.size,
               mimetype: file.mimetype
             });
+            
+            return {
+              id: result.lastInsertRowid,
+              path: relativePath,
+              originalName: file.originalname
+            };
           });
           
           // Commit transaction
           dbHelpers.transaction.commit();
+          console.log('File upload transaction committed successfully');
           
           res.json({
             message: `${files.length} files uploaded successfully`,
-            files: files.map(file => ({
-              path: `/uploads/${userId}/${file.filename}`,
-              originalName: file.originalname
-            }))
+            files: savedFiles
           });
         } catch (dbError) {
           // Rollback transaction on error
+          console.error('Database error during file upload:', dbError);
           dbHelpers.transaction.rollback();
           throw dbError;
         }
       } catch (error) {
+        console.error('File upload failed:', error);
         handleServerError(res, error, 'File upload failed');
       }
     });
   } catch (error) {
+    console.error('Upload validation failed:', error);
     handleServerError(res, error, 'Upload validation failed');
   }
 });
@@ -295,7 +316,7 @@ app.delete('/api/files/:fileId', (req: Request, res: Response) => {
     // Get the file info to delete the physical file later
     const fileInfo = dbHelpers.userFiles.getById(Number(fileId)) as {
       id: number;
-      user_id: number;
+      userId: number;
       filename: string;
       original_name: string;
       file_path: string;
@@ -350,5 +371,10 @@ const handleServerError = (
 // Server initialization
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
-  fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
+  
+  // Ensure uploads directory exists
+  const uploadsDir = path.join(__dirname, '../uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
 });

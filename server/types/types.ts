@@ -37,7 +37,7 @@ export interface AuthState {
 
 // Basic profile information
 export interface Profile {
-  user_id: number;
+  userId: number;
   location: string | null;
   social_links: string | null;
   relationship_status: string | null;
@@ -49,6 +49,14 @@ export interface Profile {
   pets: string | null;
   created_at: string;
   updated_at: string;
+  isFriend?: boolean;
+  friendRequestStatus?: FriendRequestStatus;
+  following?: Topic[];
+  friends?: BasicProfile[];
+  friendRequests?: FriendRequest[];
+  followingMembers?: any[];
+  unreadAlerts?: number;
+  galleryImages?: string[];
 }
 
 // Social links structure
@@ -61,27 +69,14 @@ export interface SocialLinks {
   website?: string;
 }
 
-// Personal details structure Duplicate of MemberProfile... delete after confirm
-// export interface PersonalDetails {
-//   location?: string;
-//   socialLinks?: SocialLinks;
-//   relationshipStatus?: string;
-//   age?: number | null;
-//   interests?: string[];
-//   occupation?: string;
-//   company?: string;
-//   hobbies?: string[];
-//   pets?: any[];
-// }
-
 // Friend request status
 export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 
 // Friend request interface
 export interface FriendRequest {
   id: number;
-  sender_id: number;
-  receiver_id: number;
+  senderId: number;
+  receiverId: number;
   status: FriendRequestStatus;
   created_at: string;
   updated_at: string;
@@ -96,46 +91,23 @@ export interface BasicProfile {
   avatar_url: string | null;
 }
 
-// Member profile with additional information
-export interface MemberProfile {
-  user: User;
-  profile: Profile;
-  isFriend?: boolean;
-  friendRequestStatus?: FriendRequestStatus;
-  following?: Topic[];
-  friends?: BasicProfile[];
-  friendRequests?: FriendRequest[];
-  followingMembers?: any[];
-  unreadAlerts?: number;
-  galleryImages?: string[];
-}
-
 // ==================== CONTENT TYPES ====================
 
-// Gallery Image type
-export interface GalleryImage {
-  id: number;
-  user_id: number;
-  image_url: string;
-  created_at: string;
-}
-
-// Basic topic definition
+// Topic interface
 export interface Topic {
   id: number;
   title: string;
   description: string;
-  created_by: number;
   created_at: string;
   updated_at: string;
 }
 
-// Post definition
+// Post interface
 export interface Post {
   id: number;
-  topic_id: number;
+  userId: number;
   content: string;
-  created_by: number;
+  createdBy: number;
   created_at: string;
   updated_at: string;
 }
@@ -143,17 +115,17 @@ export interface Post {
 // Comment definition
 export interface Comment {
   id: number;
-  post_id: number;
+  postId: number;
   content: string;
-  created_by: number;
+  createdBy: number;
   created_at: string;
   updated_at: string;
 }
 
 // Follow relationship
 export interface Follow {
-  follower_id: number;
-  following_id: number;
+  followerId: number;
+  followingId: number;
   created_at: string;
 }
 
@@ -162,12 +134,20 @@ export interface Follow {
 // File related types
 export interface UserFile {
   id: number;
-  user_id: number;
+  userId: number;
   filename: string;
   original_name: string;
   file_path: string;
   size: number;
   mimetype: string;
+  created_at: string;
+}
+
+// Gallery Image type
+export interface GalleryImage {
+  id: number;
+  userId: number;
+  imageUrl: string;
   created_at: string;
 }
 
@@ -180,7 +160,7 @@ export interface DbOperationResult {
 // Database helper types
 export interface DbHelpers {
   users: {
-    getById: (userId: string) => User;
+    getById: (userId: number) => User;
     create: (user: {
       username: string;
       email: string;
@@ -188,19 +168,19 @@ export interface DbHelpers {
       first_name: string;
       last_name: string;
     }) => DbOperationResult;
-    update: (userId: string, data: {
+    update: (userId: number, data: {
       first_name?: string;
       last_name?: string;
       bio?: string;
       avatar_url?: string | null;
     }) => DbOperationResult;
-    updateProfilePicture: (userId: string, filePath: string) => DbOperationResult;
+    updateProfilePicture: (userId: number, filePath: string) => DbOperationResult;
   };
   
   profiles: {
-    getByUserId: (userId: string) => Profile | undefined;
-    exists: (userId: string) => boolean;
-    update: (userId: string, data: {
+    getByUserId: (userId: number) => Profile | undefined;
+    exists: (userId: number) => boolean;
+    update: (userId: number, data: {
       location?: string;
       social_links?: string;
       relationship_status?: string;
@@ -211,7 +191,7 @@ export interface DbHelpers {
       hobbies?: string;
       pets?: string;
     }) => DbOperationResult;
-    create: (userId: string, data: {
+    create: (userId: number, data: {
       location?: string;
       social_links?: string;
       relationship_status?: string;
@@ -225,24 +205,24 @@ export interface DbHelpers {
   };
   
   galleryImages: {
-    getByUserId: (userId: string) => GalleryImage[];
-    deleteAllForUser: (userId: string) => DbOperationResult;
-    create: (userId: string, imageUrl: string) => DbOperationResult;
+    getByUserId: (userId: number) => GalleryImage[];
+    deleteAllForUser: (userId: number) => DbOperationResult;
+    create: (userId: number, imageUrl: string) => DbOperationResult;
   };
   
   userFiles: {
-    getByUserId: (userId: string) => UserFile[];
-    getFileCount: (userId: string) => { count: number };
+    getByUserId: (userId: number) => UserFile[];
+    getFileCount: (userId: number) => { count: number };
     create: (file: {
-      user_id: string;
+      userId: number;
       filename: string;
       original_name: string;
       file_path: string;
       size: number;
       mimetype: string;
     }) => DbOperationResult;
-    getById: (fileId: string) => UserFile;
-    deleteById: (fileId: string) => DbOperationResult;
+    getById: (fileId: number) => UserFile;
+    deleteById: (fileId: number) => DbOperationResult;
   };
   
   transaction: {

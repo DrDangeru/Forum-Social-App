@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button} from './ui/button'; //Variants should be attached as ext class props
 import { Input } from './ui/input';
@@ -13,11 +13,13 @@ import {
 import { 
   Pencil, Save, X, Plus, Upload, Image, Trash2
 } from 'lucide-react';
-import { MemberProfile } from '../types';
+import { Profile } from '../types';
 import { useProfile } from '../hooks/useProfile';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useParams } from 'react-router-dom';
 import { SendFriendRequest } from './FriendRequests';
+import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 
 interface PersonalDetailsProps {
   isOwner: boolean;
@@ -27,25 +29,34 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
   const { profile, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   const { userId } = useParams<{ userId: string }>();
-  const [details, setDetails] = useState<MemberProfile>(
+  const { user } = useAuth();
+  const [details, setDetails] = useState<Profile>(
     profile || {
       userId: '',
-      firstName: '',
-      lastName: '',
-      userNickname: '',
+      first_name: '',
+      last_name: '',
+      username: '',
       bio: '',
       location: '',
-      joinedDate: new Date().toISOString(),
-      socialLinks: {},
-      relationshipStatus: '',
-      age: undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      social_links: null,
+      relationship_status: null,
       interests: [],
       hobbies: [],
       pets: [],
-      avatarUrl: '',
+      avatar_url: null,
       galleryImages: []
     }
   );
+
+  // Update details when profile changes
+  useEffect(() => {
+    if (profile) {
+      setDetails(profile);
+      setGalleryImages(profile.galleryImages || []);
+    }
+  }, [profile]);
 
   const handleChange = (field: string, value: any) => {
     setDetails((prevDetails) => {
@@ -55,7 +66,7 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
         return {
           ...prevDetails,
           [parent]: {
-            ...(prevDetails[parent as keyof MemberProfile] as any),
+            ...(prevDetails[parent as keyof Profile] as any),
             [child]: value
           }
         };
@@ -72,40 +83,96 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [galleryImages, setGalleryImages] = useState<string[]>(details.galleryImages || []);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleProfilePicUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePicUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        handleChange('avatar_url', result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleGalleryUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const newImages: string[] = [];
-
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          newImages.push(result);
-          if (newImages.length === files.length) {
-            setGalleryImages(prev => [...prev, ...newImages]);
-          }
+    if (!file || !user?.userId) return;
+    
+    try {
+      setIsUploading(true);
+      
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('files', file);
+      
+      // Upload file to server
+      const response = await axios.post(`/api/upload/${user.userId}`, formData);
+      console.log('Profile picture upload response:', response.data);
+      
+      if (response.data.files && response.data.files.length > 0) {
+        // Use the returned file path for the avatar
+        const filePath = response.data.files[0].path;
+        handleChange('avatar_url', filePath);
+        
+        // Save the profile immediately to persist the change
+        const updatedDetails = {
+          ...details,
+          avatar_url: filePath
         };
-        reader.readAsDataURL(file);
-      });
+        await updateProfile(updatedDetails);
+        console.log('Profile updated with new avatar:', filePath);
+      }
+    } catch (error) {
+      console.error('Failed to upload profile picture:', error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const removeGalleryImage = (index: number) => {
-    setGalleryImages(prev => prev.filter((_, i) => i !== index));
+  const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || !user?.userId) return;
+    
+    try {
+      setIsUploading(true);
+      
+      // Create form data for upload
+      const formData = new FormData();
+      Array.from(files).forEach(file => {
+        formData.append('files', file);
+      });
+      
+      // Upload files to server
+      const response = await axios.post(`/api/upload/${user.userId}`, formData);
+      console.log('Gallery upload response:', response.data);
+      
+      if (response.data.files && response.data.files.length > 0) {
+        // Add the returned file paths to the gallery
+        const newPaths = response.data.files.map((file: any) => file.path);
+        const updatedGallery = [...galleryImages, ...newPaths];
+        setGalleryImages(updatedGallery);
+        
+        // Save the profile immediately to persist the change
+        const updatedDetails = {
+          ...details,
+          galleryImages: updatedGallery
+        };
+        await updateProfile(updatedDetails);
+        console.log('Profile updated with new gallery images:', newPaths);
+      }
+    } catch (error) {
+      console.error('Failed to upload gallery images:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeGalleryImage = async (index: number) => {
+    const updatedGallery = galleryImages.filter((_, i) => i !== index);
+    setGalleryImages(updatedGallery);
+    
+    // Save the profile immediately to persist the change
+    try {
+      const updatedDetails = {
+        ...details,
+        galleryImages: updatedGallery
+      };
+      await updateProfile(updatedDetails);
+      console.log('Profile updated after removing gallery image');
+    } catch (error) {
+      console.error('Failed to update profile after removing gallery image:', error);
+    }
   };
 
   const handleSave = async () => {
@@ -116,6 +183,7 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
         ...details,
         galleryImages
       };
+      console.log('Saving profile with data:', updatedDetails);
       await updateProfile(updatedDetails);
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -126,22 +194,22 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
     setIsEditing(false);
     setDetails(profile || {
       userId: '',
-      firstName: '',
-      lastName: '',
-      userNickname: '',
+      first_name: '',
+      last_name: '',
+      username: '',
       bio: '',
       location: '',
-      joinedDate: new Date().toISOString(),
-      socialLinks: {},
-      relationshipStatus: '',
-      age: undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      social_links: null,
+      relationship_status: null,
       interests: [],
       hobbies: [],
       pets: [],
-      avatarUrl: '',
+      avatar_url: null,
       galleryImages: []
     });
-    setGalleryImages([]);
+    setGalleryImages(profile?.galleryImages || []);
   };
 
   return (
@@ -200,9 +268,16 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                   <Button 
                     variant="outline" 
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
                   >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Photo
+                    {isUploading ? (
+                      <span>Uploading...</span>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Photo
+                      </>
+                    )}
                   </Button>
                 </div>
               )}
@@ -227,8 +302,8 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                   <div className="space-y-2">
                     <Label htmlFor="relationshipStatus">Relationship Status</Label>
                     <Select
-                      value={details.profile?.relationship_status || ''}
-                      onValueChange={(value) => handleChange('profile.relationship_status', 
+                      value={details.relationship_status || ''}
+                      onValueChange={(value) => handleChange('relationship_status', 
                         value as any)}
                     >
                       <SelectTrigger id="relationshipStatus">
@@ -252,7 +327,7 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                   <div>
                     <Label>Relationship Status</Label>
                     <p className="text-gray-600">
-                      {details.profile?.relationship_status || 'Not specified'}
+                      {details.relationship_status || 'Not specified'}
                     </p>
                   </div>
                 </>
@@ -434,9 +509,16 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                     variant="outline" 
                     onClick={() => galleryInputRef.current?.click()}
                     className="w-full"
+                    disabled={isUploading}
                   >
-                    <Image className="h-4 w-4 mr-2" />
-                    Add Photos
+                    {isUploading ? (
+                      <span>Uploading...</span>
+                    ) : (
+                      <>
+                        <Image className="h-4 w-4 mr-2" />
+                        Add Photos
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

@@ -37,7 +37,7 @@ export interface AuthState {
 
 // Basic profile information
 export interface Profile {
-  user_id: number;
+  userId: number;
   location: string | null;
   social_links: string | null;
   relationship_status: string | null;
@@ -115,9 +115,9 @@ export interface MemberProfile {
 // Gallery Image type
 export interface GalleryImage {
   id: number;
-  user_id: number;
+  userId: number;
   image_url: string;
-  created_at: string;
+  created_at: string;     
 }
 
 // Basic topic definition
@@ -162,7 +162,7 @@ export interface Follow {
 // File related types
 export interface UserFile {
   id: number;
-  user_id: number;
+  userId: number;
   filename: string;
   original_name: string;
   file_path: string;
@@ -234,7 +234,7 @@ export interface DbHelpers {
     getByUserId: (userId: string) => UserFile[];
     getFileCount: (userId: string) => { count: number };
     create: (file: {
-      user_id: string;
+      userId: string;
       filename: string;
       original_name: string;
       file_path: string;

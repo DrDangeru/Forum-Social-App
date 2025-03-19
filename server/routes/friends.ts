@@ -7,8 +7,8 @@ const router = express.Router();
 // Define types for database results
 interface FriendRequest {
   id: number;
-  sender_id: string;
-  receiver_id: string;
+  senderId: string;
+  receiverId: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
 }
@@ -23,8 +23,8 @@ interface Friend {
 
 interface ReceivedRequest {
   id: number;
-  sender_id: string;
-  receiver_id: string;
+  senderId: string;
+  receiverId: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   sender_username: string;
@@ -35,8 +35,8 @@ interface ReceivedRequest {
 
 interface SentRequest {
   id: number;
-  sender_id: string;
-  receiver_id: string;
+  senderId: string;
+  receiverId: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   receiver_username: string;
@@ -51,22 +51,26 @@ function ensureFriendTablesExist() {
   db.prepare(`
     CREATE TABLE IF NOT EXISTS friend_requests (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      sender_id TEXT NOT NULL,
-      receiver_id TEXT NOT NULL,
+      senderId TEXT NOT NULL,
+      receiverId TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
       created_at TEXT NOT NULL,
-      UNIQUE(sender_id, receiver_id)
+      UNIQUE(senderId, receiverId)
     )
   `).run();
 
-  // Create friends table if it doesn't exist
+  // Create friendships table if it doesn't exist
   db.prepare(`
-    CREATE TABLE IF NOT EXISTS friends (
-      user_id TEXT NOT NULL,
-      friend_id TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      PRIMARY KEY (user_id, friend_id)
-    )
+    CREATE TABLE IF NOT EXISTS friendships (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId TEXT NOT NULL,
+      friendId TEXT NOT NULL,
+      status TEXT DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(userId, friendId),
+      FOREIGN KEY (userId) REFERENCES users (id),
+      FOREIGN KEY (friendId) REFERENCES users (id)
+    );
   `).run();
 }
 
@@ -80,9 +84,10 @@ router.get('/:userId', (req: Request, res: Response) => {
     // Get all friends
     const friends = db.prepare(`
       SELECT u.id, u.username, u.first_name, u.last_name, u.avatar_url
-      FROM friends f
-      JOIN users u ON f.friend_id = u.id
-      WHERE f.user_id = ?
+      FROM friendships f
+      JOIN users u ON f.friendId = u.id
+      WHERE f.userId = ?
+      AND f.status = 'accepted'
     `).all(userId) as Friend[];
     
     res.json(friends);
@@ -104,8 +109,8 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
     const receivedRequests = db.prepare(`
       SELECT 
         fr.id, 
-        fr.sender_id, 
-        fr.receiver_id, 
+        fr.senderId, 
+        fr.receiverId, 
         fr.status, 
         fr.created_at,
         u.username as sender_username,
@@ -113,16 +118,16 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
         u.last_name as sender_last_name,
         u.avatar_url as sender_avatar_url
       FROM friend_requests fr
-      JOIN users u ON fr.sender_id = u.id
-      WHERE fr.receiver_id = ? AND fr.status = 'pending'
+      JOIN users u ON fr.senderId = u.id
+      WHERE fr.receiverId = ? AND fr.status = 'pending'
     `).all(userId) as ReceivedRequest[];
     
     // Get sent requests
     const sentRequests = db.prepare(`
       SELECT 
         fr.id, 
-        fr.sender_id, 
-        fr.receiver_id, 
+        fr.senderId, 
+        fr.receiverId, 
         fr.status, 
         fr.created_at,
         u.username as receiver_username,
@@ -130,8 +135,8 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
         u.last_name as receiver_last_name,
         u.avatar_url as receiver_avatar_url
       FROM friend_requests fr
-      JOIN users u ON fr.receiver_id = u.id
-      WHERE fr.sender_id = ? AND fr.status = 'pending'
+      JOIN users u ON fr.receiverId = u.id
+      WHERE fr.senderId = ? AND fr.status = 'pending'
     `).all(userId) as SentRequest[];
     
     res.json({
@@ -174,9 +179,9 @@ router.post('/request', (req: Request, res: Response) => {
     
     // Check if they are already friends
     const alreadyFriends = db.prepare(`
-      SELECT * FROM friends WHERE 
-      (user_id = ? AND friend_id = ?) OR
-      (user_id = ? AND friend_id = ?)
+      SELECT * FROM friendships WHERE 
+      (userId = ? AND friendId = ?) OR
+      (userId = ? AND friendId = ?)
     `).get(senderId, receiverId, receiverId, senderId);
     
     if (alreadyFriends) {
@@ -186,8 +191,8 @@ router.post('/request', (req: Request, res: Response) => {
     // Check if a request already exists
     const existingRequest = db.prepare(`
       SELECT * FROM friend_requests WHERE 
-      (sender_id = ? AND receiver_id = ?) OR
-      (sender_id = ? AND receiver_id = ?)
+      (senderId = ? AND receiverId = ?) OR
+      (senderId = ? AND receiverId = ?)
     `).get(senderId, receiverId, receiverId, senderId) as FriendRequest | undefined;
     
     if (existingRequest) {
@@ -199,32 +204,12 @@ router.post('/request', (req: Request, res: Response) => {
     }
     
     // Create friend request
-    const result = db.prepare(`
-      INSERT INTO friend_requests (sender_id, receiver_id, status, created_at)
-      VALUES (?, ?, 'pending', datetime('now'))
+    db.prepare(`
+      INSERT INTO friend_requests (senderId, receiverId, created_at)
+      VALUES (?, ?, CURRENT_TIMESTAMP)
     `).run(senderId, receiverId);
     
-    if (result.changes > 0) {
-      const newRequest = db.prepare(`
-        SELECT 
-          fr.id, 
-          fr.sender_id, 
-          fr.receiver_id, 
-          fr.status, 
-          fr.created_at,
-          u.username as receiver_username,
-          u.first_name as receiver_first_name,
-          u.last_name as receiver_last_name,
-          u.avatar_url as receiver_avatar_url
-        FROM friend_requests fr
-        JOIN users u ON fr.receiver_id = u.id
-        WHERE fr.id = last_insert_rowid()
-      `).get() as SentRequest;
-      
-      res.status(201).json(newRequest);
-    } else {
-      res.status(500).json({ error: 'Failed to create friend request' });
-    }
+    res.status(201).json({ message: 'Friend request sent' });
   } catch (error) {
     console.error('Error sending friend request:', error);
     const message = error instanceof Error ? error.message : 'Internal server error';
@@ -253,7 +238,7 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
     }
     
     // Verify the user is the receiver of the request
-    if (request.receiver_id !== userId) {
+    if (request.receiverId !== userId) {
       return res.status(403).json({ error: 'Not authorized to respond to this request' });
     }
     
@@ -265,14 +250,14 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
       db.transaction(() => {
         // Add friend relationship in both directions
         db.prepare(`
-          INSERT INTO friends (user_id, friend_id, created_at)
-          VALUES (?, ?, datetime('now'))
-        `).run(request.sender_id, request.receiver_id);
+          INSERT INTO friendships (userId, friendId, created_at)
+          VALUES (?, ?, CURRENT_TIMESTAMP)
+        `).run(request.senderId, request.receiverId);
         
         db.prepare(`
-          INSERT INTO friends (user_id, friend_id, created_at)
-          VALUES (?, ?, datetime('now'))
-        `).run(request.receiver_id, request.sender_id);
+          INSERT INTO friendships (userId, friendId, created_at)
+          VALUES (?, ?, CURRENT_TIMESTAMP)
+        `).run(request.receiverId, request.senderId);
       })();
     }
     
@@ -293,8 +278,8 @@ router.delete('/:userId/friend/:friendId', (req: Request, res: Response) => {
     
     // Remove friend relationship in both directions
     db.transaction(() => {
-      db.prepare('DELETE FROM friends WHERE user_id = ? AND friend_id = ?').run(userId, friendId);
-      db.prepare('DELETE FROM friends WHERE user_id = ? AND friend_id = ?').run(friendId, userId);
+      db.prepare('DELETE FROM friendships WHERE userId = ? AND friendId = ?').run(userId, friendId);
+      db.prepare('DELETE FROM friendships WHERE userId = ? AND friendId = ?').run(friendId, userId);
     })();
     
     res.json({ message: 'Friend removed' });
