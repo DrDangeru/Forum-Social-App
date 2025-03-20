@@ -33,7 +33,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   // Set current profile to the logged-in user's profile
   useEffect(() => {
     if (user?.userId) {
-      setCurrentProfileId(user.userId.toString());
+      setCurrentProfileId(user.userId);
       // Load the user's profile if not already loaded
       // if (!profiles[user.userId]) {
       //   fetchProfile(user.userId);

@@ -7,7 +7,7 @@
 
 // Basic user type
 export interface User {
-  userId: number;
+  userId: string;
   username: string;
   email: string;
   password_hash: string;
@@ -22,7 +22,7 @@ export interface User {
 export interface AuthCredentials {
   username: string;
   password: string;
-  userId: number;
+  userId: string;
 }
 
 // Authentication state
@@ -126,7 +126,7 @@ export interface BasicProfile {
 // Gallery Image type
 export interface GalleryImage {
   id: number;
-  userId: number;
+  userId: string;
   image_url: string;
   created_at: string;
   file_name?: string;
@@ -137,13 +137,13 @@ export interface Topic {
   id: number;
   title: string;
   description: string;
-  created_by: number;
+  created_by: string;
   created_at: string;
   updated_at: string;
   
   // Client-specific additions
   headline?: string;
-  topicOwnerOrMod?: number;
+  topicOwnerOrMod?: string;
   followers?: User[];
   posts?: Post[];
   public?: boolean;
@@ -154,7 +154,7 @@ export interface Post {
   id: number;
   topic_id: number;
   content: string;
-  created_by: number;
+  created_by: string;
   created_at: string;
   updated_at: string;
   
@@ -169,7 +169,7 @@ export interface Comment {
   id: number;
   post_id: number;
   content: string;
-  created_by: number;
+  created_by: string;
   created_at: string;
   updated_at: string;
   
@@ -179,8 +179,8 @@ export interface Comment {
 
 // Follow relationship
 export interface Follow {
-  follower_id: number;
-  following_id: number;
+  follower_id: string;
+  following_id: string;
   created_at: string;
 }
 
@@ -189,7 +189,7 @@ export interface Follow {
 // File related types
 export interface UserFile {
   id: number;
-  userId: number;
+  userId: string;
   filename: string;
   original_name: string;
   file_path: string;

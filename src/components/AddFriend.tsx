@@ -69,7 +69,7 @@ const AddFriend: React.FC = () => {
         {!isSearching && searchResults.length > 0 && (
           <div className="space-y-4 mt-2">
             {searchResults.map((user) => {
-              const status = getFriendRequestStatus(Number(user.userId));
+              const status = getFriendRequestStatus(user.userId);
               
               return (
                 <div key={user.userId} className="flex items-center justify-between
@@ -92,7 +92,7 @@ const AddFriend: React.FC = () => {
                   
                   {status === 'none' && (
                     <Button 
-                      onClick={() => sendFriendRequest(Number(user.userId))}
+                      onClick={() => sendFriendRequest(user.userId)}
                       size="sm"
                     >
                       <UserPlus size={16} className="mr-1" />

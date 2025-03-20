@@ -11,17 +11,17 @@ interface UseFriendsReturn {
   error: string | null;
   
   // Friend request actions
-  sendFriendRequest: (userId: number) => Promise<void>;
-  acceptFriendRequest: (requestId: number) => Promise<void>;
-  rejectFriendRequest: (requestId: number) => Promise<void>;
-  removeFriend: (friendId: number) => Promise<void>;
+  sendFriendRequest: (userId: string) => Promise<void>;
+  acceptFriendRequest: (requestId: string) => Promise<void>;
+  rejectFriendRequest: (requestId: string) => Promise<void>;
+  removeFriend: (friendId: string) => Promise<void>;
   
   // Utility functions
   refreshFriends: () => Promise<void>;
-  isFriend: (userId: number) => boolean;
-  hasPendingRequestFrom: (userId: number) => boolean;
-  hasPendingRequestTo: (userId: number) => boolean;
-  getFriendRequestStatus: (userId: number) => 'none' | 'friends' | 'received' | 'sent';
+  isFriend: (userId: string) => boolean;
+  hasPendingRequestFrom: (userId: string) => boolean;
+  hasPendingRequestTo: (userId: string) => boolean;
+  getFriendRequestStatus: (userId: string) => 'none' | 'friends' | 'received' | 'sent';
 }
 
 export function useFriends(): UseFriendsReturn {
@@ -78,7 +78,7 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall]);
 
   // Send a friend request
-  const sendFriendRequest = useCallback(async (userId: number): Promise<void> => {
+  const sendFriendRequest = useCallback(async (userId: string): Promise<void> => {
     if (!user) return;
     
     await executeApiCall(async () => {
@@ -104,7 +104,7 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Accept a friend request
-  const acceptFriendRequest = useCallback(async (requestId: number): Promise<void> => {
+  const acceptFriendRequest = useCallback(async (requestId: string): Promise<void> => {
     if (!user) return;
     
     await executeApiCall(async () => {
@@ -130,7 +130,7 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Reject a friend request
-  const rejectFriendRequest = useCallback(async (requestId: number): Promise<void> => {
+  const rejectFriendRequest = useCallback(async (requestId: string): Promise<void> => {
     if (!user) return;
     
     await executeApiCall(async () => {
@@ -156,7 +156,7 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Remove a friend
-  const removeFriend = useCallback(async (friendId: number): Promise<void> => {
+  const removeFriend = useCallback(async (friendId: string): Promise<void> => {
     if (!user) return;
     
     await executeApiCall(async () => {
@@ -175,23 +175,23 @@ export function useFriends(): UseFriendsReturn {
   }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Utility function to check if a user is a friend
-  const isFriend = useCallback((userId: number): boolean => {
-    return friends.some(friend => Number(friend.userId) === userId);
+  const isFriend = useCallback((userId: string): boolean => {
+    return friends.some(friend => friend.userId === userId);
   }, [friends]);
 
   // Utility function to check if there's a pending request from a user
-  const hasPendingRequestFrom = useCallback((userId: number): boolean => {
+  const hasPendingRequestFrom = useCallback((userId: string): boolean => {
     return receivedRequests.some(request => request.sender_userId === userId);
   }, [receivedRequests]);
 
   // Utility function to check if there's a pending request to a user
-  const hasPendingRequestTo = useCallback((userId: number): boolean => {
+  const hasPendingRequestTo = useCallback((userId: string): boolean => {
     return sentRequests.some(request => request.receiver_id === userId);
   }, [sentRequests]);
 
   // Get the overall friend status with a user
   const getFriendRequestStatus = useCallback(
-    (userId: number): 'none' | 'friends' | 'received' | 'sent' => {
+    (userId: string): 'none' | 'friends' | 'received' | 'sent' => {
       if (isFriend(userId)) {
         return 'friends';
       }

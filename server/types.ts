@@ -6,7 +6,7 @@
 //  the linter is incorrectly flagging the parameter as unused.
 // Takes over from db.d.ts... probably if it works...
 export interface User {
-  userId: number;
+  userId: string;
   username: string;
   email: string;
   password_hash: string;
@@ -18,11 +18,11 @@ export interface User {
 }
 
 export interface Profile {
-  userId: number;
+  userId: string;
   location: string | null;
   social_links: string | null;
   relationship_status: string | null;
-  age: number | null;
+  age: string | null;
   interests: string | null;
   occupation: string | null;
   company: string | null;
@@ -34,7 +34,7 @@ export interface Profile {
 
 export interface GalleryImage {
   id: number;
-  userId: number;
+  userId: string;
   image_url: string;
   created_at: string;
 }
@@ -45,8 +45,8 @@ export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 // Friend request interface
 export interface FriendRequest {
   id: number;
-  receiverId: number; // userId of requested user
-  sender_userId: number; // userId of requestor
+  receiverId: string; // userId of requested user
+  sender_userId: string; // userId of requestor
   status: FriendRequestStatus;
   created_at: string;
   updated_at: string;
@@ -81,13 +81,13 @@ export interface Topic {
   id: number;
   title: string;
   description: string;
-  created_by: number;
+  created_by: string;
   created_at: string;
   updated_at: string;
   
   // Client-specific additions
   headline?: string;
-  topicOwnerOrMod?: number;
+  topicOwnerOrMod?: string;
 }
 
 // Member profile with additional information
@@ -101,7 +101,7 @@ export interface MemberProfile extends BasicProfile {
   friendRequests?: FriendRequest[];
   followingMembers?: any[];
   unreadAlerts?: number;
-  age?: number | null;
+  age?: string | null;
   galleryImages?: string[];
   bio?: string;
   location?: string | null;
@@ -116,42 +116,43 @@ export interface MemberProfile extends BasicProfile {
 // Define the structure of dbHelpers
 export interface DbHelpers {
   users: {
-    getById: (userId: number) => User;
+    getById: (userId: string) => User;
     create: (user: {
+      userId?: string;
       username: string;
       email: string;
       password_hash: string;
       first_name: string;
       last_name: string;
     }) => any;
-    update: (userId: number, data: {
+    update: (userId: string, data: {
       first_name?: string;
       last_name?: string;
       bio?: string;
       avatar_url?: string | null;
     }) => any;
-    updateProfilePicture: (userId: number, filePath: string) => any;
+    updateProfilePicture: (userId: string, filePath: string) => any;
   };
   
   profiles: {
-    getByUserId: (userId: number) => Profile | undefined;
-    exists: (userId: number) => any;
-    update: (userId: number, data: {
+    getByUserId: (userId: string) => Profile | undefined;
+    exists: (userId: string) => any;
+    update: (userId: string, data: {
       location?: string;
       social_links?: string;
       relationship_status?: string;
-      age?: number | null;
+      age?: string | null;
       interests?: string;
       occupation?: string;
       company?: string;
       hobbies?: string;
       pets?: string;
     }) => any;
-    create: (userId: number, data: {
+    create: (userId: string, data: {
       location?: string;
       social_links?: string;
       relationship_status?: string;
-      age?: number | null;
+      age?: string | null;
       interests?: string;
       occupation?: string;
       company?: string;
@@ -161,24 +162,24 @@ export interface DbHelpers {
   };
   
   galleryImages: {
-    getByUserId: (userId: number) => GalleryImage[];
-    deleteAllForUser: (userId: number) => any;
-    create: (userId: number, imageUrl: string) => any;
+    getByUserId: (userId: string) => GalleryImage[];
+    deleteAllForUser: (userId: string) => any;
+    create: (userId: string, imageUrl: string) => any;
   };
   
   userFiles: {
-    getByUserId: (userId: number) => any[];
-    getFileCount: (userId: number) => { count: number };
+    getByUserId: (userId: string) => any[];
+    getFileCount: (userId: string) => { count: number };
     create: (file: {
-      userId: number;
+      userId: string;
       filename: string;
       original_name: string;
       file_path: string;
       size: number;
       mimetype: string;
     }) => any;
-    getById: (fileId: number) => any;
-    deleteById: (fileId: number) => any;
+    getById: (fileId: string) => any;
+    deleteById: (fileId: string) => any;
   };
   
   transaction: {

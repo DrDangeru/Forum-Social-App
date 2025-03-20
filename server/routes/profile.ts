@@ -11,32 +11,32 @@ router.get('/:userId', (req: Request, res: Response) => {
     const { userId } = req.params;
     
     // Check if user exists
-    const user = dbHelpers.users.getById(Number(userId)) as User;
+    const user = dbHelpers.users.getById(userId) as User;
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
     // Get extended profile data from profiles table
-    const profileData = dbHelpers.profiles.getByUserId(Number(userId)) as Profile;
+    const profileData = dbHelpers.profiles.getByUserId(userId) as Profile;
     
     // Get follower count
     const followerCountResult = db.prepare(`
       SELECT COUNT(*) as count FROM follows WHERE followingId = ?
-    `).get(Number(userId)) as { count: number };
+    `).get(userId) as { count: number };
     
     // Get following count
     const followingCountResult = db.prepare(`
       SELECT COUNT(*) as count FROM follows WHERE followerId = ?
-    `).get(Number(userId)) as { count: number };
+    `).get(userId) as { count: number };
     
     // Get gallery images
-    const galleryImagesResult = dbHelpers.galleryImages.getByUserId(Number(userId));
+    const galleryImagesResult = dbHelpers.galleryImages.getByUserId(userId);
     const galleryImages = galleryImagesResult.map((item: GalleryImage) => item.image_url);
     
     // Format response using the consolidated Profile type
     const response = {
-      userId: userId.toString(),
+      userId: userId,
       username: user.username,
       first_name: user.first_name,
       last_name: user.last_name,
@@ -80,7 +80,7 @@ router.put('/:userId', (req: Request, res: Response) => {
     
     try {
       // Update basic user information
-      dbHelpers.users.update(Number(userId), {
+      dbHelpers.users.update(userId, {
         first_name: profileData.first_name,
         last_name: profileData.last_name,
         bio: profileData.bio,
@@ -88,7 +88,7 @@ router.put('/:userId', (req: Request, res: Response) => {
       });
       
       // Check if profile exists
-      const profileExists = dbHelpers.profiles.exists(Number(userId));
+      const profileExists = dbHelpers.profiles.exists(userId);
       
       // Prepare profile data for database (convert arrays to JSON strings)
       const dbProfileData = {
@@ -114,23 +114,23 @@ router.put('/:userId', (req: Request, res: Response) => {
       if (profileExists) {
         // Update existing profile
         console.log('Updating existing profile with data:', dbProfileData);
-        dbHelpers.profiles.update(Number(userId), dbProfileData);
+        dbHelpers.profiles.update(userId, dbProfileData);
       } else {
         // Insert new profile
         console.log('Creating new profile with data:', dbProfileData);
-        dbHelpers.profiles.create(Number(userId), dbProfileData);
+        dbHelpers.profiles.create(userId, dbProfileData);
       }
       
       // Handle gallery images
       if (profileData.galleryImages && Array.isArray(profileData.galleryImages)) {
         // Clear existing gallery images
         console.log('Clearing existing gallery images for user:', userId);
-        dbHelpers.galleryImages.deleteAllForUser(Number(userId));
+        dbHelpers.galleryImages.deleteAllForUser(userId);
         
         // Insert new gallery images
         console.log('Adding gallery images:', profileData.galleryImages);
         profileData.galleryImages.forEach((imageUrl: string) => {
-          dbHelpers.galleryImages.create(Number(userId), imageUrl);
+          dbHelpers.galleryImages.create(userId, imageUrl);
         });
       }
       
@@ -141,7 +141,7 @@ router.put('/:userId', (req: Request, res: Response) => {
       // Return updated profile
       res.json({
         ...profileData,
-        userId: userId.toString()
+        userId: userId
       });
     } catch (dbError) {
       // Rollback transaction on error

@@ -9,6 +9,7 @@
 // Basic user type
 export interface User {
   id: number;
+  userId: string;
   username: string;
   email: string;
   password_hash: string;
@@ -37,7 +38,7 @@ export interface AuthState {
 
 // Basic profile information
 export interface Profile {
-  userId: number;
+  userId: string;
   location: string | null;
   social_links: string | null;
   relationship_status: string | null;
@@ -80,8 +81,8 @@ export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 // Friend request interface
 export interface FriendRequest {
   id: number;
-  sender_id: number;
-  receiver_id: number;
+  sender_id: string;
+  receiver_id: string;
   status: FriendRequestStatus;
   created_at: string;
   updated_at: string;
@@ -115,7 +116,7 @@ export interface MemberProfile {
 // Gallery Image type
 export interface GalleryImage {
   id: number;
-  userId: number;
+  userId: string;
   image_url: string;
   created_at: string;     
 }
@@ -125,7 +126,7 @@ export interface Topic {
   id: number;
   title: string;
   description: string;
-  created_by: number;
+  created_by: string;
   created_at: string;
   updated_at: string;
 }
@@ -135,7 +136,7 @@ export interface Post {
   id: number;
   topic_id: number;
   content: string;
-  created_by: number;
+  created_by: string;
   created_at: string;
   updated_at: string;
 }
@@ -145,15 +146,15 @@ export interface Comment {
   id: number;
   post_id: number;
   content: string;
-  created_by: number;
+  created_by: string;
   created_at: string;
   updated_at: string;
 }
 
 // Follow relationship
 export interface Follow {
-  follower_id: number;
-  following_id: number;
+  follower_id: string;
+  following_id: string;
   created_at: string;
 }
 
@@ -162,7 +163,7 @@ export interface Follow {
 // File related types
 export interface UserFile {
   id: number;
-  userId: number;
+  userId: string;
   filename: string;
   original_name: string;
   file_path: string;

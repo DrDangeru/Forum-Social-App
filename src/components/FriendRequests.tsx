@@ -11,7 +11,7 @@ import { FriendRequest } from '../types';
 
 // SendFriendRequest component for profile pages
 export const SendFriendRequest: React.FC<{
-  userId: string | number;
+  userId: string;
   className?: string;
 }> = ({ userId, className = '' }) => {
   const { 
@@ -29,7 +29,7 @@ export const SendFriendRequest: React.FC<{
   // Update friend request status when userId changes
   useEffect(() => {
     if (userId) {
-      const status = getFriendRequestStatus(Number(userId));
+      const status = getFriendRequestStatus(userId);
       setFriendRequestStatus(status);
     }
   }, [userId, getFriendRequestStatus, receivedRequests]);
@@ -40,7 +40,7 @@ export const SendFriendRequest: React.FC<{
 
     setIsRequestLoading(true);
     try {
-      await sendFriendRequest(Number(userId));
+      await sendFriendRequest(userId);
       setFriendRequestStatus('sent');
     } catch (error) {
       console.error('Failed to send friend request:', error);
@@ -56,9 +56,9 @@ export const SendFriendRequest: React.FC<{
     setIsRequestLoading(true);
     try {
       // Find the request ID from the received requests
-      const request = receivedRequests.find(req => req.sender_userId === Number(userId));
-      if (request && request.receiver_id) {
-        await acceptFriendRequest(request.receiver_id);
+      const request = receivedRequests.find(req => req.sender_userId === userId);
+      if (request && request.id) {
+        await acceptFriendRequest(request.id.toString());
         setFriendRequestStatus('friends');
       }
     } catch (error) {
@@ -75,9 +75,9 @@ export const SendFriendRequest: React.FC<{
     setIsRequestLoading(true);
     try {
       // Find the request ID from the received requests
-      const request = receivedRequests.find(req => req.sender_userId === Number(userId));
-      if (request && request.receiver_id) {
-        await rejectFriendRequest(request.receiver_id);
+      const request = receivedRequests.find(req => req.sender_userId === userId);
+      if (request && request.id) {
+        await rejectFriendRequest(request.id.toString());
         setFriendRequestStatus('none');
       }
     } catch (error) {
@@ -93,7 +93,7 @@ export const SendFriendRequest: React.FC<{
 
     setIsRequestLoading(true);
     try {
-      await removeFriend(Number(userId));
+      await removeFriend(userId);
       setFriendRequestStatus('none');
     } catch (error) {
       console.error('Failed to remove friend:', error);
@@ -250,25 +250,23 @@ const FriendRequests: React.FC = () => {
                     </div>
                     <div className="flex space-x-2">
                       <Button
-                        onClick={() => acceptFriendRequest(request.sender_userId)}
+                        onClick={() => request.id && acceptFriendRequest(request.id.toString())}
                         size="sm"
                         variant="outline"
                         className="
-                          text-green-600 border-green-600 hover:bg-green-50
+                          border-green-500 text-green-500 hover:bg-green-500 hover:text-white
                         "
                       >
-                        <UserCheck size={16} className="mr-1" />
                         Accept
                       </Button>
                       <Button
-                        onClick={() => rejectFriendRequest(request.sender_userId)}
+                        onClick={() => request.id && rejectFriendRequest(request.id.toString())}
                         size="sm"
                         variant="outline"
                         className="
-                          text-red-600 border-red-600 hover:bg-red-50
+                          border-red-500 text-red-500 hover:bg-red-500 hover:text-white
                         "
                       >
-                        <UserX size={16} className="mr-1" />
                         Reject
                       </Button>
                     </div>
@@ -321,7 +319,7 @@ const FriendRequests: React.FC = () => {
                     <div>
                       <Button
                         onClick={() => 
-                          request.receiver_id && rejectFriendRequest(request.receiver_id)
+                          request.receiver_id && rejectFriendRequest(request.receiver_id.toString())
                         }
                         size="sm"
                         variant="outline"

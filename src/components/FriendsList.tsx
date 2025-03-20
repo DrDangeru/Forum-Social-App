@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useFriends } from '../hooks/useFriends';
-import { BasicProfile } from '../types/Profile';
+import { BasicProfile } from '../types';
 import { getInitials } from '../lib/utils';
 import { UserX } from 'lucide-react';
 
@@ -73,15 +73,16 @@ const FriendItem: React.FC<FriendItemProps> = ({ friend, isOwner, onRemove }) =>
     <div className="flex items-center justify-between p-3 rounded-lg border">
       <div className="flex items-center space-x-3">
         <Avatar>
-          {friend.avatarUrl ? (
-            <AvatarImage src={friend.avatarUrl} alt={`${friend.firstName} ${friend.lastName}`} />
+          {friend.avatar_url ? (
+            <AvatarImage src={friend.avatar_url} alt={`${friend.first_name} ${friend.last_name}`} />
           ) : (
-            <AvatarFallback>{getInitials(`${friend.firstName} ${friend.lastName}`)}</AvatarFallback>
+            <AvatarFallback>{getInitials(`${friend.first_name} ${friend.last_name}`)}
+            </AvatarFallback>
           )}
         </Avatar>
         <div>
-          <p className="font-medium">{friend.firstName} {friend.lastName}</p>
-          <p className="text-sm text-muted-foreground">@{friend.userNickname}</p>
+          <p className="font-medium">{friend.first_name} {friend.last_name}</p>
+          <p className="text-sm text-muted-foreground">@{friend.username}</p>
         </div>
       </div>
       

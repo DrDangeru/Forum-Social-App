@@ -37,7 +37,7 @@ export interface AuthState {
 
 // Basic profile information
 export interface Profile {
-  userId: number;
+  userId: string;
   location: string | null;
   social_links: string | null;
   relationship_status: string | null;
@@ -75,8 +75,8 @@ export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 // Friend request interface
 export interface FriendRequest {
   id: number;
-  senderId: number;
-  receiverId: number;
+  senderId: string;
+  receiverId: string;
   status: FriendRequestStatus;
   created_at: string;
   updated_at: string;
@@ -105,7 +105,7 @@ export interface Topic {
 // Post interface
 export interface Post {
   id: number;
-  userId: number;
+  userId: string;
   content: string;
   createdBy: number;
   created_at: string;
@@ -124,8 +124,8 @@ export interface Comment {
 
 // Follow relationship
 export interface Follow {
-  followerId: number;
-  followingId: number;
+  followerId: string;
+  followingId: string;
   created_at: string;
 }
 
@@ -134,7 +134,7 @@ export interface Follow {
 // File related types
 export interface UserFile {
   id: number;
-  userId: number;
+  userId: string;
   filename: string;
   original_name: string;
   file_path: string;
@@ -146,7 +146,7 @@ export interface UserFile {
 // Gallery Image type
 export interface GalleryImage {
   id: number;
-  userId: number;
+  userId: string;
   imageUrl: string;
   created_at: string;
 }
@@ -160,69 +160,64 @@ export interface DbOperationResult {
 // Database helper types
 export interface DbHelpers {
   users: {
-    getById: (userId: number) => User;
+    getById: (userId: string) => User;
     create: (user: {
+      userId?: string;
       username: string;
       email: string;
       password_hash: string;
       first_name: string;
       last_name: string;
     }) => DbOperationResult;
-    update: (userId: number, data: {
+    update: (userId: string, data: {
       first_name?: string;
       last_name?: string;
       bio?: string;
       avatar_url?: string | null;
     }) => DbOperationResult;
-    updateProfilePicture: (userId: number, filePath: string) => DbOperationResult;
+    updateProfilePicture: (userId: string, filePath: string) => DbOperationResult;
   };
   
   profiles: {
-    getByUserId: (userId: number) => Profile | undefined;
-    exists: (userId: number) => boolean;
-    update: (userId: number, data: {
+    getByUserId: (userId: string) => Profile | undefined;
+    exists: (userId: string) => boolean;
+    update: (userId: string, data: {
       location?: string;
       social_links?: string;
       relationship_status?: string;
-      age?: number | null;
       interests?: string;
-      occupation?: string;
-      company?: string;
       hobbies?: string;
       pets?: string;
     }) => DbOperationResult;
-    create: (userId: number, data: {
+    create: (userId: string, data: {
       location?: string;
       social_links?: string;
       relationship_status?: string;
-      age?: number | null;
       interests?: string;
-      occupation?: string;
-      company?: string;
       hobbies?: string;
       pets?: string;
     }) => DbOperationResult;
   };
   
   galleryImages: {
-    getByUserId: (userId: number) => GalleryImage[];
-    deleteAllForUser: (userId: number) => DbOperationResult;
-    create: (userId: number, imageUrl: string) => DbOperationResult;
+    getByUserId: (userId: string) => GalleryImage[];
+    deleteAllForUser: (userId: string) => DbOperationResult;
+    create: (userId: string, imageUrl: string) => DbOperationResult;
   };
   
   userFiles: {
-    getByUserId: (userId: number) => UserFile[];
-    getFileCount: (userId: number) => { count: number };
+    getByUserId: (userId: string) => UserFile[];
+    getFileCount: (userId: string) => { count: number };
     create: (file: {
-      userId: number;
+      userId: string;
       filename: string;
       original_name: string;
       file_path: string;
       size: number;
       mimetype: string;
     }) => DbOperationResult;
-    getById: (fileId: number) => UserFile;
-    deleteById: (fileId: number) => DbOperationResult;
+    getById: (fileId: string) => UserFile;
+    deleteById: (fileId: string) => DbOperationResult;
   };
   
   transaction: {

@@ -212,11 +212,11 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
   
   try {
     // Validate user exists
-    const user = dbHelpers.users.getById(Number(userId));
+    const user = dbHelpers.users.getById((userId));
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     // Check file count limit
-    const fileCountResult = dbHelpers.userFiles.getFileCount(Number(userId));
+    const fileCountResult = dbHelpers.userFiles.getFileCount((userId));
 
     if (fileCountResult.count >= 10) {
       return res.status(400).json({ error: 'Maximum 10 photos allowed' });
@@ -258,7 +258,7 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
             
             // Create database record
             const result = dbHelpers.userFiles.create({
-              userId: Number(userId),
+              userId: userId,
               filename: file.filename,
               original_name: file.originalname,
               file_path: relativePath,
@@ -301,7 +301,7 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
 app.get('/api/files/:userId', (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
-    const files = dbHelpers.userFiles.getByUserId(Number(userId));
+    const files = dbHelpers.userFiles.getByUserId((userId));
     
     res.json(files);
   } catch (error) {
@@ -314,9 +314,9 @@ app.delete('/api/files/:fileId', (req: Request, res: Response) => {
     const { fileId } = req.params;
     
     // Get the file info to delete the physical file later
-    const fileInfo = dbHelpers.userFiles.getById(Number(fileId)) as {
-      id: number;
-      userId: number;
+    const fileInfo = dbHelpers.userFiles.getById(fileId) as {
+      id: string;
+      userId: string;
       filename: string;
       original_name: string;
       file_path: string;
@@ -329,7 +329,7 @@ app.delete('/api/files/:fileId', (req: Request, res: Response) => {
     }
     
     // Delete from database
-    dbHelpers.userFiles.deleteById(Number(fileId));
+    dbHelpers.userFiles.deleteById(fileId);
     
     // Delete the physical file
     const filePath = path.join(__dirname, '..', fileInfo.file_path);
@@ -349,7 +349,7 @@ app.patch('/api/users/:userId/profile-pic', (req: Request, res: Response) => {
     const { userId } = req.params;
     const { filePath } = req.body;
 
-    dbHelpers.users.updateProfilePicture(Number(userId), filePath);
+    dbHelpers.users.updateProfilePicture((userId), filePath);
     
     res.json({ message: 'Profile picture updated' });
   } catch (error) {

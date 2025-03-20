@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Post } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
-const Feed = ({ userId }: { userId: number }) => {
+const Feed = ({ userId }: { userId: string }) => {
   const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ['feed', userId],
     queryFn: async () => {
