@@ -19,10 +19,13 @@ export default function Topics() {
       const mockTopics: Topic[] = [
         {
           id: 1,
+          title: "Welcome to the Forum",
           headline: "Welcome to the Forum",
-          topicOwnerOrMod: user?.id || '',
+          topicOwnerOrMod: user?.userId || '',
           description: "Introduction and guidelines",
-          created_at: new Date().toISOString(),
+          createdBy: user?.userId || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           followers: [],
           posts: [],
           public: true
@@ -42,62 +45,70 @@ export default function Topics() {
     try {
       const newTopic: Topic = {
         id: topics.length + 1,
+        title: "New Topic",
         headline: "New Topic",
-        topicOwnerOrMod: user?.id || '',
+        topicOwnerOrMod: user?.userId || '',
         description: "New topic description",
-        created_at: new Date().toISOString(),
+        createdBy: user?.userId || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         followers: [],
         posts: [],
         public: true
       };
-      setTopics([...topics, newTopic]);
+      
+      setTopics(prev => [...prev, newTopic]);
     } catch (error) {
       console.error('Failed to create topic:', error);
     }
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Topics</CardTitle>
-            <Button onClick={handleCreateTopic}>Create Topic</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {topics.map(topic => (
-              <Card key={topic.id}>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold">{topic.headline}</h3>
-                      <p className="text-gray-600">{topic.description}</p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <span className="text-sm text-gray-500">
-                          Created: {new Date(topic.created_at).toLocaleDateString()}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          • {topic.public ? 'Public' : 'Private'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
-                        View Posts ({topic.posts.length})
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        Follow ({topic.followers.length})
-                      </Button>
-                    </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Topics</h1>
+        <Button onClick={handleCreateTopic}>Create Topic</Button>
+      </div>
+      
+      {topics.length === 0 ? (
+        <Card>
+          <CardContent className="py-10">
+            <p className="text-center text-gray-500">No topics found. Create one to get started!</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {topics.map(topic => (
+            <Card key={topic.id} className="h-full">
+              <CardHeader>
+                <CardTitle>{topic.title || topic.headline}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">{topic.headline}</h3>
+                  <p className="text-gray-600">{topic.description}</p>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <span className="text-sm text-gray-500">
+                      Created: {new Date(topic.createdAt).toLocaleDateString()}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      • {topic.public ? 'Public' : 'Private'}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                </div>
+                <div className="flex space-x-2 mt-4">
+                  <Button variant="outline" size="sm">
+                    View Posts ({topic.posts?.length || 0})
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Follow ({topic.followers?.length || 0})
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

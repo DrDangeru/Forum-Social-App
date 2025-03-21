@@ -33,19 +33,19 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
   const [details, setDetails] = useState<Profile>(
     profile || {
       userId: '',
-      first_name: '',
-      last_name: '',
+      firstName: '',
+      lastName: '',
       username: '',
       bio: '',
       location: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      social_links: null,
-      relationship_status: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      socialLinks: null,
+      relationshipStatus: null,
       interests: [],
       hobbies: [],
       pets: [],
-      avatar_url: null,
+      avatarUrl: null,
       galleryImages: []
     }
   );
@@ -60,7 +60,7 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
 
   const handleChange = (field: string, value: any) => {
     setDetails((prevDetails) => {
-      // Handle nested properties (e.g., 'profile.relationship_status')
+      // Handle nested properties (e.g., 'profile.relationshipStatus')
       if (field.includes('.')) {
         const [parent, child] = field.split('.');
         return {
@@ -103,12 +103,12 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
       if (response.data.files && response.data.files.length > 0) {
         // Use the returned file path for the avatar
         const filePath = response.data.files[0].path;
-        handleChange('avatar_url', filePath);
+        handleChange('avatarUrl', filePath);
         
         // Save the profile immediately to persist the change
         const updatedDetails = {
           ...details,
-          avatar_url: filePath
+          avatarUrl: filePath
         };
         await updateProfile(updatedDetails);
         console.log('Profile updated with new avatar:', filePath);
@@ -194,19 +194,19 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
     setIsEditing(false);
     setDetails(profile || {
       userId: '',
-      first_name: '',
-      last_name: '',
+      firstName: '',
+      lastName: '',
       username: '',
       bio: '',
       location: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      social_links: null,
-      relationship_status: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      socialLinks: null,
+      relationshipStatus: null,
       interests: [],
       hobbies: [],
       pets: [],
-      avatar_url: null,
+      avatarUrl: null,
       galleryImages: []
     });
     setGalleryImages(profile?.galleryImages || []);
@@ -247,11 +247,11 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
             <h3 className="text-lg font-semibold">Profile Picture</h3>
             <div className="flex items-center space-x-4">
               <Avatar className="h-24 w-24">
-                {details.avatar_url ? (
-                  <AvatarImage src={details.avatar_url} alt="Profile" />
+                {details.avatarUrl ? (
+                  <AvatarImage src={details.avatarUrl} alt="Profile" />
                 ) : (
                   <AvatarFallback className="text-lg">
-                    {details.first_name?.[0]}{details.last_name?.[0]}
+                    {details.firstName?.[0]}{details.lastName?.[0]}
                   </AvatarFallback>
                 )}
               </Avatar>
@@ -291,6 +291,51 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
               {isEditing ? (
                 <>
                   <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      value={details.firstName || ''}
+                      onChange={(e) => handleChange('firstName', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      value={details.lastName || ''}
+                      onChange={(e) => handleChange('lastName', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      type="text"
+                      value={details.username || ''}
+                      onChange={(e) => handleChange('username', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Input
+                      id="bio"
+                      type="text"
+                      value={details.bio || ''}
+                      onChange={(e) => handleChange('bio', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      type="text"
+                      value={details.location || ''}
+                      onChange={(e) => handleChange('location', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="age">Age</Label>
                     <Input
                       id="age"
@@ -302,9 +347,8 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                   <div className="space-y-2">
                     <Label htmlFor="relationshipStatus">Relationship Status</Label>
                     <Select
-                      value={details.relationship_status || ''}
-                      onValueChange={(value) => handleChange('relationship_status', 
-                        value as any)}
+                      value={details.relationshipStatus || ''}
+                      onValueChange={(value) => handleChange('relationshipStatus', value)}
                     >
                       <SelectTrigger id="relationshipStatus">
                         <SelectValue placeholder="Select status" />
@@ -321,14 +365,32 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
               ) : (
                 <>
                   <div>
+                    <Label>First Name</Label>
+                    <p className="text-gray-600">{details.firstName || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <Label>Last Name</Label>
+                    <p className="text-gray-600">{details.lastName || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <Label>Username</Label>
+                    <p className="text-gray-600">{details.username || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <Label>Bio</Label>
+                    <p className="text-gray-600">{details.bio || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <Label>Location</Label>
+                    <p className="text-gray-600">{details.location || 'Not specified'}</p>
+                  </div>
+                  <div>
                     <Label>Age</Label>
                     <p className="text-gray-600">{details.age || 'Not specified'}</p>
                   </div>
                   <div>
                     <Label>Relationship Status</Label>
-                    <p className="text-gray-600">
-                      {details.relationship_status || 'Not specified'}
-                    </p>
+                    <p className="text-gray-600">{details.relationshipStatus || 'Not specified'}</p>
                   </div>
                 </>
               )}
@@ -409,9 +471,9 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                 {details.pets?.map((pet, index) => (
                   <div key={index} className="flex items-end gap-4">
                     <div className="space-y-2 flex-1">
-                      <Label htmlFor={`pet-type-${index}`}>Pet Type</Label>
+                      <Label htmlFor={`petType-${index}`}>Pet Type</Label>
                       <Input
-                        id={`pet-type-${index}`}
+                        id={`petType-${index}`}
                         value={pet.type}
                         onChange={(e) => {
                           const newPets = [...(details.pets || [])];
@@ -421,9 +483,9 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                       />
                     </div>
                     <div className="space-y-2 flex-1">
-                      <Label htmlFor={`pet-name-${index}`}>Pet Name</Label>
+                      <Label htmlFor={`petName-${index}`}>Pet Name</Label>
                       <Input
-                        id={`pet-name-${index}`}
+                        id={`petName-${index}`}
                         value={pet.name}
                         onChange={(e) => {
                           const newPets = [...(details.pets || [])];

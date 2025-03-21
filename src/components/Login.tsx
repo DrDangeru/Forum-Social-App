@@ -3,21 +3,33 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
+interface FormData {
+  username: string;
+  password: string;
+  email: string;
+}
+
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
+  const [error, setError] = useState<string>('');
+  const [formData, setFormData] = useState<FormData>({
     username: '',
     password: '',
+    email: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     
     try {
-      await login(formData);
+      // Email is optional for login, use username if not provided
+      const loginData = { 
+        ...formData, 
+        email: formData.email || formData.username // Use username as email if not provided
+      };
+      await login(loginData);
       navigate('/'); // Navigate to home page after successful login
     } catch (error: any) {
       console.error('Login error:', error);
@@ -34,68 +46,138 @@ const Login = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div
+      className="
+        flex
+        items-center
+        justify-center
+        min-h-screen
+        bg-gray-100
+      "
+    >
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center">Login</CardTitle>
+          <CardTitle className="text-2xl text-center">Login</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              <div
+                className="
+                  p-3
+                  bg-red-100
+                  text-red-600
+                  rounded-md
+                  text-sm
+                "
+              >
                 {error}
               </div>
             )}
             
             <div className="space-y-2">
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="username"
+                className="text-sm font-medium"
+              >
                 Username
               </label>
               <input
                 id="username"
                 name="username"
                 type="text"
-                required
                 value={formData.username}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md 
-                shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                required
+                className="
+                  w-full
+                  p-2
+                  border
+                  border-gray-300
+                  rounded-md
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-500
+                "
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="
+                  w-full
+                  p-2
+                  border
+                  border-gray-300
+                  rounded-md
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-500
+                "
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium"
+              >
                 Password
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                required
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md 
-                shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                required
+                className="
+                  w-full
+                  p-2
+                  border
+                  border-gray-300
+                  rounded-md
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-500
+                "
               />
             </div>
             
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent 
-                rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600
-                 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2
-                  focus:ring-indigo-500"
-              >
-                Login
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="
+                w-full
+                p-2
+                bg-blue-600
+                text-white
+                rounded-md
+                hover:bg-blue-700
+                focus:outline-none
+                focus:ring-2
+                focus:ring-blue-500
+                focus:ring-offset-2
+              "
+            >
+              Login
+            </button>
             
             <div className="text-center text-sm">
               <span className="text-gray-600">Don't have an account? </span>
-              <a 
-                href="/register" 
-                className="font-medium text-indigo-600 hover:text-indigo-500"
+              <a
+                href="/register"
+                className="text-blue-600 hover:underline"
                 onClick={(e) => {
                   e.preventDefault();
                   navigate('/register');

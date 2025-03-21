@@ -19,14 +19,14 @@ router.get('/search', (req: Request, res: Response) => {
       SELECT 
         id as userId, 
         username as userNickname, 
-        first_name as firstName, 
-        last_name as lastName, 
-        avatar_url as avatarUrl
+        firstName, 
+        lastName, 
+        avatarUrl
       FROM users
       WHERE 
         username LIKE ? OR
-        first_name LIKE ? OR
-        last_name LIKE ?
+        firstName LIKE ? OR
+        lastName LIKE ?
       LIMIT 10
     `).all(searchTerm, searchTerm, searchTerm);
     
@@ -47,9 +47,9 @@ router.get('/:userId', (req: Request, res: Response) => {
       SELECT 
         id as userId, 
         username as userNickname, 
-        first_name as firstName, 
-        last_name as lastName, 
-        avatar_url as avatarUrl
+        firstName, 
+        lastName, 
+        avatarUrl
       FROM users
       WHERE id = ?
     `).get(userId);

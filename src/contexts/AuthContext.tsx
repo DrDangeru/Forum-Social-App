@@ -7,7 +7,7 @@ export interface AuthContextType extends AuthState {
     login: (arg: AuthCredentials) => Promise<User>; 
     logout: () => void;
     // eslint-disable-next-line no-unused-vars
-    register: (arg: AuthCredentials & { 
+    register: (arg: Omit<AuthCredentials, 'userId'> & { 
         firstName: string; 
         lastName: string 
     }) => Promise<User>;

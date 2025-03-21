@@ -1,19 +1,21 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import db from '../db';
+import crypto from 'crypto';
 // think its an error to use the whole user obj here. only need the data / id
 // and use adapter pattern to then instantiate the full user obj.
 
 // Define the database user type
 interface DbUser {
   id: number;
+  userId: string;
   username: string;
   email: string;
-  password_hash: string;
-  first_name: string;
-  last_name: string;
-  avatar_url?: string;
-  created_at?: string;
+  passwordHash: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl?: string;
+  createdAt?: string;
 }
 
 const router = Router();
@@ -43,24 +45,29 @@ router.post('/register', async (req, res) => {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
+    // Generate a unique userId
+    const userId = crypto.randomUUID();
+
     // Insert new user
     try {
       const insertStmt = db.prepare(`
-        INSERT INTO users (username, email, password_hash, first_name, last_name)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO users (userId, username, email, passwordHash, firstName, lastName)
+        VALUES (?, ?, ?, ?, ?, ?)
       `);
-      const result = insertStmt.run(username, email, passwordHash, firstName, lastName);
+      const result = insertStmt.run(userId, username, email, passwordHash, firstName, lastName);
       
       console.log('Insert result:', result);
       
       // Get the newly created user
       const newUser = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as DbUser;
       
-      console.log('User registered successfully:', { userId: newUser.id });
+      console.log('User registered successfully:', { 
+        userId: newUser.userId 
+      });
       res.setHeader('Content-Type', 'application/json');
       res.status(201).json({
         message: 'User registered successfully',
-        userId: newUser.id
+        userId: newUser.userId
       });
     } catch (dbError) {
       console.error('Database error during registration:', dbError);
@@ -90,22 +97,22 @@ router.post('/login', async (req, res) => {
     }
 
     // Check password
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    const passwordMatch = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Return user data (excluding password)
-    console.log('User logged in successfully:', { userId: user.id });
+    console.log('User logged in successfully:', { userId: user.userId });
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json({
       message: 'Login successful',
       user: {
-        id: user.id,
+        userId: user.userId,
         username: user.username,
         email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name
+        firstName: user.firstName,
+        lastName: user.lastName
       }
     });
   } catch (error) {

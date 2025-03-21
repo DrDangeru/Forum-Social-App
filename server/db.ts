@@ -19,47 +19,47 @@ function initializeDatabase() {
       userId TEXT UNIQUE NOT NULL,
       username TEXT UNIQUE NOT NULL,
       email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      first_name TEXT NOT NULL,
-      last_name TEXT NOT NULL,
-      avatar_url TEXT,
+      passwordHash TEXT NOT NULL,
+      firstName TEXT NOT NULL,
+      lastName TEXT NOT NULL,
+      avatarUrl TEXT,
       bio TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS profiles (
       userId TEXT PRIMARY KEY,
       location TEXT,
-      social_links TEXT,
-      relationship_status TEXT,
+      socialLinks TEXT,
+      relationshipStatus TEXT,
       age INTEGER,
       interests TEXT,
       occupation TEXT,
       company TEXT,
       hobbies TEXT,
       pets TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE
     );
 
-    CREATE TABLE IF NOT EXISTS gallery_images (
+    CREATE TABLE IF NOT EXISTS galleryImages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId TEXT NOT NULL,
-      image_url TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      imageUrl TEXT NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE
     );
 
-    CREATE TABLE IF NOT EXISTS user_files (
+    CREATE TABLE IF NOT EXISTS userFiles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId TEXT NOT NULL,
       filename TEXT NOT NULL,
-      original_name TEXT NOT NULL,
-      file_path TEXT NOT NULL,
+      originalName TEXT NOT NULL,
+      filePath TEXT NOT NULL,
       size INTEGER NOT NULL,
       mimetype TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE
     );
 
@@ -68,7 +68,7 @@ function initializeDatabase() {
       userId TEXT NOT NULL,
       friendId TEXT NOT NULL,
       status TEXT DEFAULT 'pending',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(userId, friendId),
       FOREIGN KEY (userId) REFERENCES users (userId),
       FOREIGN KEY (friendId) REFERENCES users (userId)
@@ -78,14 +78,14 @@ function initializeDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId TEXT NOT NULL,
       content TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users (userId)
     );
 
     CREATE TABLE IF NOT EXISTS follows (
       followerId TEXT NOT NULL,
       followingId TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (followerId, followingId),
       FOREIGN KEY (followerId) REFERENCES users (userId),
       FOREIGN KEY (followingId) REFERENCES users (userId)
@@ -97,7 +97,7 @@ function initializeDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
-    CREATE TABLE IF NOT EXISTS user_topics (
+    CREATE TABLE IF NOT EXISTS userTopics (
       userId TEXT NOT NULL,
       topicId INTEGER NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -125,34 +125,34 @@ const dbHelpers: DbHelpers = {
       const userId = user.userId || crypto.randomUUID();
       
       return db.prepare(`
-        INSERT INTO users (userId, username, email, password_hash, first_name, last_name)
+        INSERT INTO users (userId, username, email, passwordHash, firstName, lastName)
         VALUES (?, ?, ?, ?, ?, ?)
       `).run(
         userId,
         user.username,
         user.email,
-        user.password_hash,
-        user.first_name,
-        user.last_name
+        user.passwordHash,
+        user.firstName,
+        user.lastName
       );
     },
     
     update: (userId: string, data) => {
-      const { first_name, last_name, bio, avatar_url } = data;
+      const { firstName, lastName, bio, avatarUrl } = data;
       return db.prepare(`
         UPDATE users 
         SET 
-          first_name = COALESCE(?, first_name),
-          last_name = COALESCE(?, last_name),
+          firstName = COALESCE(?, firstName),
+          lastName = COALESCE(?, lastName),
           bio = COALESCE(?, bio),
-          avatar_url = COALESCE(?, avatar_url)
+          avatarUrl = COALESCE(?, avatarUrl)
         WHERE userId = ?
-      `).run(first_name, last_name, bio, avatar_url, userId);
+      `).run(firstName, lastName, bio, avatarUrl, userId);
     },
     
     updateProfilePicture: (userId: string, filePath) => {
       return db.prepare(`
-        UPDATE users SET avatar_url = ? WHERE userId = ?
+        UPDATE users SET avatarUrl = ? WHERE userId = ?
       `).run(filePath, userId);
     }
   },
@@ -175,8 +175,8 @@ const dbHelpers: DbHelpers = {
     
     update: (userId: string, data: {
       location?: string;
-      social_links?: string;
-      relationship_status?: string;
+      socialLinks?: string;
+      relationshipStatus?: string;
       interests?: string;
       hobbies?: string;
       pets?: string;
@@ -185,17 +185,17 @@ const dbHelpers: DbHelpers = {
         UPDATE profiles 
         SET 
           location = COALESCE(?, location),
-          social_links = COALESCE(?, social_links),
-          relationship_status = COALESCE(?, relationship_status),
+          socialLinks = COALESCE(?, socialLinks),
+          relationshipStatus = COALESCE(?, relationshipStatus),
           interests = COALESCE(?, interests),
           hobbies = COALESCE(?, hobbies),
           pets = COALESCE(?, pets),
-          updated_at = CURRENT_TIMESTAMP
+          updatedAt = CURRENT_TIMESTAMP
         WHERE userId = ?
       `).run(
         data.location,
-        data.social_links,
-        data.relationship_status,
+        data.socialLinks,
+        data.relationshipStatus,
         data.interests,
         data.hobbies,
         data.pets,
@@ -205,22 +205,22 @@ const dbHelpers: DbHelpers = {
     
     create: (userId: string, data: {
       location?: string;
-      social_links?: string;
-      relationship_status?: string;
+      socialLinks?: string;
+      relationshipStatus?: string;
       interests?: string;
       hobbies?: string;
       pets?: string;
     }) => {
       return db.prepare(`
         INSERT INTO profiles (
-          userId, location, social_links, relationship_status, 
+          userId, location, socialLinks, relationshipStatus, 
           interests, hobbies, pets
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
       `).run(
         userId,
         data.location,
-        data.social_links,
-        data.relationship_status,
+        data.socialLinks,
+        data.relationshipStatus,
         data.interests,
         data.hobbies,
         data.pets
@@ -232,7 +232,7 @@ const dbHelpers: DbHelpers = {
   galleryImages: {
     getByUserId: (userId: string) => {
       const results = db.prepare(`
-        SELECT * FROM gallery_images WHERE userId = ? ORDER BY created_at DESC
+        SELECT * FROM galleryImages WHERE userId = ? ORDER BY createdAt DESC
       `).all(userId);
       
       return results as GalleryImage[];
@@ -240,13 +240,13 @@ const dbHelpers: DbHelpers = {
     
     deleteAllForUser: (userId: string) => {
       return db.prepare(`
-        DELETE FROM gallery_images WHERE userId = ?
+        DELETE FROM galleryImages WHERE userId = ?
       `).run(userId);
     },
     
     create: (userId: string, imageUrl: string) => {
       return db.prepare(`
-        INSERT INTO gallery_images (userId, image_url)
+        INSERT INTO galleryImages (userId, imageUrl)
         VALUES (?, ?)
       `).run(userId, imageUrl);
     }
@@ -256,32 +256,32 @@ const dbHelpers: DbHelpers = {
   userFiles: {
     getByUserId: (userId: string) => {
       return db.prepare(`
-        SELECT * FROM user_files WHERE userId = ? ORDER BY created_at DESC
+        SELECT * FROM userFiles WHERE userId = ? ORDER BY createdAt DESC
       `).all(userId);
     },
     
     getFileCount: (userId: string) => {
       return db.prepare(`
-        SELECT COUNT(*) as count FROM user_files WHERE userId = ?
+        SELECT COUNT(*) as count FROM userFiles WHERE userId = ?
       `).get(userId) as { count: number };
     },
     
     create: (file: {
       userId: string;
       filename: string;
-      original_name: string;
-      file_path: string;
+      originalName: string;
+      filePath: string;
       size: number;
       mimetype: string;
     }) => {
       return db.prepare(`
-        INSERT INTO user_files (userId, filename, original_name, file_path, size, mimetype)
+        INSERT INTO userFiles (userId, filename, originalName, filePath, size, mimetype)
         VALUES (?, ?, ?, ?, ?, ?)
       `).run(
         file.userId,
         file.filename,
-        file.original_name,
-        file.file_path,
+        file.originalName,
+        file.filePath,
         file.size,
         file.mimetype
       );
@@ -289,23 +289,23 @@ const dbHelpers: DbHelpers = {
     
     getById: (fileId: string) => {
       return db.prepare(`
-        SELECT * FROM user_files WHERE id = ?
+        SELECT * FROM userFiles WHERE id = ?
       `).get(fileId);
     },
     
     deleteById: (fileId: string) => {
       const file = dbHelpers.userFiles.getById(fileId);
       
-      if (file && file.file_path) {
+      if (file && file.filePath) {
         try {
-          fs.unlinkSync(file.file_path);
+          fs.unlinkSync(file.filePath);
         } catch (err) {
           console.error('Error deleting file:', err);
         }
       }
       
       return db.prepare(`
-        DELETE FROM user_files WHERE id = ?
+        DELETE FROM userFiles WHERE id = ?
       `).run(fileId);
     }
   },

@@ -10,15 +10,15 @@ interface FriendRequest {
   senderId: string;
   receiverId: string;
   status: 'pending' | 'accepted' | 'rejected';
-  created_at: string;
+  createdAt: string;
 }
 
 interface Friend {
   id: number;
   username: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string;
 }
 
 interface ReceivedRequest {
@@ -26,11 +26,11 @@ interface ReceivedRequest {
   senderId: string;
   receiverId: string;
   status: 'pending' | 'accepted' | 'rejected';
-  created_at: string;
-  sender_username: string;
-  sender_first_name: string;
-  sender_last_name: string;
-  sender_avatar_url: string;
+  createdAt: string;
+  senderUsername: string;
+  senderFirstName: string;
+  senderLastName: string;
+  senderAvatarUrl: string;
 }
 
 interface SentRequest {
@@ -38,11 +38,11 @@ interface SentRequest {
   senderId: string;
   receiverId: string;
   status: 'pending' | 'accepted' | 'rejected';
-  created_at: string;
-  receiver_username: string;
-  receiver_first_name: string;
-  receiver_last_name: string;
-  receiver_avatar_url: string;
+  createdAt: string;
+  receiverUsername: string;
+  receiverFirstName: string;
+  receiverLastName: string;
+  receiverAvatarUrl: string;
 }
 
 // Ensure friend-related tables exist
@@ -54,7 +54,7 @@ function ensureFriendTablesExist() {
       senderId TEXT NOT NULL,
       receiverId TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
-      created_at TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
       UNIQUE(senderId, receiverId)
     )
   `).run();
@@ -66,7 +66,7 @@ function ensureFriendTablesExist() {
       userId TEXT NOT NULL,
       friendId TEXT NOT NULL,
       status TEXT DEFAULT 'pending',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(userId, friendId),
       FOREIGN KEY (userId) REFERENCES users (id),
       FOREIGN KEY (friendId) REFERENCES users (id)
@@ -83,7 +83,7 @@ router.get('/:userId', (req: Request, res: Response) => {
     
     // Get all friends
     const friends = db.prepare(`
-      SELECT u.id, u.username, u.first_name, u.last_name, u.avatar_url
+      SELECT u.id, u.username, u.firstName, u.lastName, u.avatarUrl
       FROM friendships f
       JOIN users u ON f.friendId = u.id
       WHERE f.userId = ?
@@ -93,47 +93,30 @@ router.get('/:userId', (req: Request, res: Response) => {
     res.json(friends);
   } catch (error) {
     console.error('Error getting friends:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: message });
+    res.status(500).json({ error: 'Failed to get friends' });
   }
 });
 
-// Get all friend requests for a user (both sent and received)
+// Get all friend requests for a user
 router.get('/:userId/requests', (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     
     ensureFriendTablesExist();
     
-    // Get received requests
+    // Get received friend requests
     const receivedRequests = db.prepare(`
-      SELECT 
-        fr.id, 
-        fr.senderId, 
-        fr.receiverId, 
-        fr.status, 
-        fr.created_at,
-        u.username as sender_username,
-        u.first_name as sender_first_name,
-        u.last_name as sender_last_name,
-        u.avatar_url as sender_avatar_url
+      SELECT fr.*, u.username as senderUsername, u.firstName as senderFirstName, 
+      u.lastName as senderLastName, u.avatarUrl as senderAvatarUrl
       FROM friend_requests fr
       JOIN users u ON fr.senderId = u.id
       WHERE fr.receiverId = ? AND fr.status = 'pending'
     `).all(userId) as ReceivedRequest[];
     
-    // Get sent requests
+    // Get sent friend requests
     const sentRequests = db.prepare(`
-      SELECT 
-        fr.id, 
-        fr.senderId, 
-        fr.receiverId, 
-        fr.status, 
-        fr.created_at,
-        u.username as receiver_username,
-        u.first_name as receiver_first_name,
-        u.last_name as receiver_last_name,
-        u.avatar_url as receiver_avatar_url
+      SELECT fr.*, u.username as receiverUsername, u.firstName as receiverFirstName, 
+      u.lastName as receiverLastName, u.avatarUrl as receiverAvatarUrl
       FROM friend_requests fr
       JOIN users u ON fr.receiverId = u.id
       WHERE fr.senderId = ? AND fr.status = 'pending'
@@ -145,8 +128,7 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error getting friend requests:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: message });
+    res.status(500).json({ error: 'Failed to get friend requests' });
   }
 });
 
@@ -156,82 +138,65 @@ router.post('/request', (req: Request, res: Response) => {
     const { senderId, receiverId } = req.body;
     
     if (!senderId || !receiverId) {
-      return res.status(400).json({ error: 'Sender ID and receiver ID are required' });
-    }
-    
-    if (senderId === receiverId) {
-      return res.status(400).json({ error: 'Cannot send friend request to yourself' });
+      return res.status(400).json({ error: 'Missing required fields' });
     }
     
     ensureFriendTablesExist();
     
-    // Check if users exist
-    const senderExists = db.prepare('SELECT id FROM users WHERE id = ?').get(senderId);
-    const receiverExists = db.prepare('SELECT id FROM users WHERE id = ?').get(receiverId);
-    
-    if (!senderExists) {
-      return res.status(404).json({ error: 'Sender not found' });
-    }
-    
-    if (!receiverExists) {
-      return res.status(404).json({ error: 'Receiver not found' });
-    }
-    
-    // Check if they are already friends
-    const alreadyFriends = db.prepare(`
-      SELECT * FROM friendships WHERE 
-      (userId = ? AND friendId = ?) OR
-      (userId = ? AND friendId = ?)
-    `).get(senderId, receiverId, receiverId, senderId);
-    
-    if (alreadyFriends) {
-      return res.status(400).json({ error: 'Already friends' });
-    }
-    
-    // Check if a request already exists
+    // Check if request already exists
     const existingRequest = db.prepare(`
-      SELECT * FROM friend_requests WHERE 
-      (senderId = ? AND receiverId = ?) OR
-      (senderId = ? AND receiverId = ?)
+      SELECT * FROM friend_requests 
+      WHERE (senderId = ? AND receiverId = ?) 
+      OR (senderId = ? AND receiverId = ?)
     `).get(senderId, receiverId, receiverId, senderId) as FriendRequest | undefined;
     
     if (existingRequest) {
-      if (existingRequest.status === 'pending') {
-        return res.status(400).json({ error: 'Friend request already exists' });
-      } else if (existingRequest.status === 'accepted') {
-        return res.status(400).json({ error: 'Already friends' });
-      }
+      return res.status(400).json({ error: 'Friend request already exists' });
+    }
+    
+    // Check if they are already friends
+    const existingFriendship = db.prepare(`
+      SELECT * FROM friendships 
+      WHERE (userId = ? AND friendId = ?) 
+      OR (userId = ? AND friendId = ?)
+    `).get(senderId, receiverId, receiverId, senderId);
+    
+    if (existingFriendship) {
+      return res.status(400).json({ error: 'Already friends' });
     }
     
     // Create friend request
-    db.prepare(`
-      INSERT INTO friend_requests (senderId, receiverId, created_at)
-      VALUES (?, ?, CURRENT_TIMESTAMP)
+    const result = db.prepare(`
+      INSERT INTO friend_requests (senderId, receiverId, status, createdAt)
+      VALUES (?, ?, 'pending', datetime('now'))
     `).run(senderId, receiverId);
     
-    res.status(201).json({ message: 'Friend request sent' });
+    res.status(201).json({ 
+      id: result.lastInsertRowid,
+      message: 'Friend request sent' 
+    });
   } catch (error) {
     console.error('Error sending friend request:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: message });
+    res.status(500).json({ error: 'Failed to send friend request' });
   }
 });
 
-// Respond to a friend request (accept or reject)
+// Accept or reject a friend request
 router.put('/request/:requestId', (req: Request, res: Response) => {
   try {
     const { requestId } = req.params;
     const { status, userId } = req.body;
     
     if (!status || !['accepted', 'rejected'].includes(status)) {
-      return res.status(400).json({ error: 'Valid status (accepted or rejected) is required' });
+      return res.status(400).json({ error: 'Invalid status' });
     }
     
     ensureFriendTablesExist();
     
     // Get the request
-    const request = db.prepare('SELECT * FROM friend_requests WHERE id = ?')
-      .get(requestId) as FriendRequest | undefined;
+    const request = db.prepare(`
+      SELECT * FROM friend_requests WHERE id = ?
+    `).get(requestId) as FriendRequest | undefined;
     
     if (!request) {
       return res.status(404).json({ error: 'Friend request not found' });
@@ -239,33 +204,33 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
     
     // Verify the user is the receiver of the request
     if (request.receiverId !== userId) {
-      return res.status(403).json({ error: 'Not authorized to respond to this request' });
+      return res.status(403).json({ error: 'Not authorized to update this request' });
     }
     
-    // Update request status
-    db.prepare('UPDATE friend_requests SET status = ? WHERE id = ?').run(status, requestId);
+    // Update the request status
+    db.prepare(`
+      UPDATE friend_requests SET status = ? WHERE id = ?
+    `).run(status, requestId);
     
-    // If accepted, add to friends list (both ways)
+    // If accepted, create friendship entries
     if (status === 'accepted') {
-      db.transaction(() => {
-        // Add friend relationship in both directions
-        db.prepare(`
-          INSERT INTO friendships (userId, friendId, created_at)
-          VALUES (?, ?, CURRENT_TIMESTAMP)
-        `).run(request.senderId, request.receiverId);
-        
-        db.prepare(`
-          INSERT INTO friendships (userId, friendId, created_at)
-          VALUES (?, ?, CURRENT_TIMESTAMP)
-        `).run(request.receiverId, request.senderId);
-      })();
+      // Create friendship entry for the requester
+      db.prepare(`
+        INSERT INTO friendships (userId, friendId, status, createdAt)
+        VALUES (?, ?, 'accepted', datetime('now'))
+      `).run(request.senderId, request.receiverId);
+      
+      // Create friendship entry for the receiver
+      db.prepare(`
+        INSERT INTO friendships (userId, friendId, status, createdAt)
+        VALUES (?, ?, 'accepted', datetime('now'))
+      `).run(request.receiverId, request.senderId);
     }
     
     res.json({ message: `Friend request ${status}` });
   } catch (error) {
-    console.error('Error responding to friend request:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: message });
+    console.error(`Error ${req.body.status} friend request:`, error);
+    res.status(500).json({ error: `Failed to ${req.body.status} friend request` });
   }
 });
 
@@ -276,17 +241,17 @@ router.delete('/:userId/friend/:friendId', (req: Request, res: Response) => {
     
     ensureFriendTablesExist();
     
-    // Remove friend relationship in both directions
-    db.transaction(() => {
-      db.prepare('DELETE FROM friendships WHERE userId = ? AND friendId = ?').run(userId, friendId);
-      db.prepare('DELETE FROM friendships WHERE userId = ? AND friendId = ?').run(friendId, userId);
-    })();
+    // Delete friendship entries
+    db.prepare(`
+      DELETE FROM friendships 
+      WHERE (userId = ? AND friendId = ?) 
+      OR (userId = ? AND friendId = ?)
+    `).run(userId, friendId, friendId, userId);
     
     res.json({ message: 'Friend removed' });
   } catch (error) {
     console.error('Error removing friend:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: message });
+    res.status(500).json({ error: 'Failed to remove friend' });
   }
 });
 

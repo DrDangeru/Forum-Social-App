@@ -11,16 +11,24 @@ interface UseFriendsReturn {
   error: string | null;
   
   // Friend request actions
+  // eslint-disable-next-line no-unused-vars
   sendFriendRequest: (userId: string) => Promise<void>;
+  // eslint-disable-next-line no-unused-vars
   acceptFriendRequest: (requestId: string) => Promise<void>;
+  // eslint-disable-next-line no-unused-vars
   rejectFriendRequest: (requestId: string) => Promise<void>;
+  // eslint-disable-next-line no-unused-vars
   removeFriend: (friendId: string) => Promise<void>;
   
   // Utility functions
   refreshFriends: () => Promise<void>;
+  // eslint-disable-next-line no-unused-vars
   isFriend: (userId: string) => boolean;
+  // eslint-disable-next-line no-unused-vars
   hasPendingRequestFrom: (userId: string) => boolean;
+  // eslint-disable-next-line no-unused-vars
   hasPendingRequestTo: (userId: string) => boolean;
+  // eslint-disable-next-line no-unused-vars
   getFriendRequestStatus: (userId: string) => 'none' | 'friends' | 'received' | 'sent';
 }
 
@@ -72,8 +80,20 @@ export function useFriends(): UseFriendsReturn {
         throw new Error('Failed to fetch friend requests');
       }
       const requestsData = await requestsResponse.json();
-      setReceivedRequests(requestsData.received);
-      setSentRequests(requestsData.sent);
+      
+      // Map received requests to ensure they use the correct field names
+      setReceivedRequests(requestsData.received.map((request: any) => ({
+        ...request,
+        senderId: request.sender_userId || request.senderId,
+        receiverId: request.receiver_id || request.receiverId
+      })));
+      
+      // Map sent requests to ensure they use the correct field names
+      setSentRequests(requestsData.sent.map((request: any) => ({
+        ...request,
+        senderId: request.sender_userId || request.senderId,
+        receiverId: request.receiver_id || request.receiverId
+      })));
     });
   }, [user, executeApiCall]);
 
@@ -181,12 +201,12 @@ export function useFriends(): UseFriendsReturn {
 
   // Utility function to check if there's a pending request from a user
   const hasPendingRequestFrom = useCallback((userId: string): boolean => {
-    return receivedRequests.some(request => request.sender_userId === userId);
+    return receivedRequests.some(request => request.senderId === userId);
   }, [receivedRequests]);
 
   // Utility function to check if there's a pending request to a user
   const hasPendingRequestTo = useCallback((userId: string): boolean => {
-    return sentRequests.some(request => request.receiver_id === userId);
+    return sentRequests.some(request => request.receiverId === userId);
   }, [sentRequests]);
 
   // Get the overall friend status with a user
@@ -209,13 +229,14 @@ export function useFriends(): UseFriendsReturn {
     [isFriend, hasPendingRequestFrom, hasPendingRequestTo]
   );
 
-  // Load friends and requests on mount or when user changes
+  // Initial fetch
   useEffect(() => {
     if (user) {
       fetchFriendsAndRequests();
     }
   }, [user, fetchFriendsAndRequests]);
 
+  // Return all the functions and data
   return {
     // Data
     friends,
@@ -224,7 +245,7 @@ export function useFriends(): UseFriendsReturn {
     isLoading,
     error,
     
-    // Actions
+    // Friend request actions
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,

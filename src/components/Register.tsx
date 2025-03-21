@@ -12,7 +12,7 @@ const Register = () => {
     email: '',
     password: '',
     firstName: '',
-    lastName: '',
+    lastName: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,6 +20,7 @@ const Register = () => {
     setError('');
     
     try {
+      // Send registration data without userId (server will generate it)
       await register(formData);
       navigate('/'); // Navigate to home page after successful registration
     } catch (error: any) {

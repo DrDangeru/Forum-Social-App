@@ -8,19 +8,19 @@ import { useAuth } from '../hooks/useAuth';
 const defaultProfile: Profile = {
   userId: '',
   username: '',
-  first_name: '',
-  last_name: '',
+  firstName: '',
+  lastName: '',
   bio: '',
   location: '',
   interests: [],
   following: [],
   followingMembers: [],
   unreadAlerts: 0,
-  social_links: null,
-  relationship_status: null,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  avatar_url: null,
+  socialLinks: null,
+  relationshipStatus: null,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  avatarUrl: null,
   galleryImages: []
 };
 

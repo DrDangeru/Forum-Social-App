@@ -32,21 +32,21 @@ router.get('/:userId', (req: Request, res: Response) => {
     
     // Get gallery images
     const galleryImagesResult = dbHelpers.galleryImages.getByUserId(userId);
-    const galleryImages = galleryImagesResult.map((item: GalleryImage) => item.image_url);
+    const galleryImages = galleryImagesResult.map((item: GalleryImage) => item.imageUrl);
     
     // Format response using the consolidated Profile type
     const response = {
       userId: userId,
       username: user.username,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      avatar_url: user.avatar_url,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarUrl: user.avatarUrl,
       bio: user.bio || '',
       location: profileData?.location || '',
-      created_at: user.created_at,
-      updated_at: profileData?.updated_at || user.created_at,
-      social_links: profileData?.social_links || null,
-      relationship_status: profileData?.relationship_status || null,
+      createdAt: user.createdAt,
+      updatedAt: profileData?.updatedAt || user.createdAt,
+      socialLinks: profileData?.socialLinks || null,
+      relationshipStatus: profileData?.relationshipStatus || null,
       age: profileData?.age || null,
       interests: profileData?.interests ? JSON.parse(profileData.interests) : [],
       occupation: profileData?.occupation || '',
@@ -81,10 +81,10 @@ router.put('/:userId', (req: Request, res: Response) => {
     try {
       // Update basic user information
       dbHelpers.users.update(userId, {
-        first_name: profileData.first_name,
-        last_name: profileData.last_name,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
         bio: profileData.bio,
-        avatar_url: profileData.avatar_url
+        avatarUrl: profileData.avatarUrl
       });
       
       // Check if profile exists
@@ -93,10 +93,10 @@ router.put('/:userId', (req: Request, res: Response) => {
       // Prepare profile data for database (convert arrays to JSON strings)
       const dbProfileData = {
         location: profileData.location || '',
-        social_links: typeof profileData.social_links === 'string' ? 
-          profileData.social_links : 
-          JSON.stringify(profileData.social_links || {}),
-        relationship_status: profileData.relationship_status || '',
+        socialLinks: typeof profileData.socialLinks === 'string' ? 
+          profileData.socialLinks : 
+          JSON.stringify(profileData.socialLinks || {}),
+        relationshipStatus: profileData.relationshipStatus || '',
         age: profileData.age || null,
         interests: Array.isArray(profileData.interests) ? 
           JSON.stringify(profileData.interests) : 

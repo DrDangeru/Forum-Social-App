@@ -45,19 +45,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .catch(() => setAuthState(defaultAuthState));
     }, []);
 
-    const register = useCallback(async (data: AuthCredentials & { 
+    const register = useCallback(async (data: Omit<AuthCredentials, 'userId'> & { 
         firstName: string; 
-        lastName: string 
+        lastName: string;
     }): Promise<User> => {
         try {
+            // Send registration data without userId (server will generate it)
             const response = await axios.post('/api/auth/register', data);
             
             const user: User = {
-                id: String(response.data.userId),
+                userId: String(response.data.userId), // Use server-generated userId
                 username: data.username,
-                email: data.email as string,
+                email: data.email,
+                passwordHash: '', // Don't store password hash on client
                 firstName: data.firstName,
-                lastName: data.lastName
+                lastName: data.lastName,
+                avatarUrl: null,
+                bio: null,
+                createdAt: new Date().toISOString()
             };
 
             setAuthState({

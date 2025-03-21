@@ -68,3 +68,4 @@ uploads/
 *.sqlite3
 *.sqlite-shm
 *.sqlite-wal
+/server/forum.db

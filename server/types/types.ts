@@ -8,21 +8,22 @@
 
 // Basic user type
 export interface User {
-  id: number;
+  userId: string;
   username: string;
   email: string;
-  password_hash: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
+  passwordHash: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
   bio: string | null;
-  created_at: string;
+  createdAt: string;
 }
 
 // Authentication credentials
 export interface AuthCredentials {
   username: string;
   password: string;
+  userId: string;
 }
 
 // Authentication state
@@ -39,16 +40,16 @@ export interface AuthState {
 export interface Profile {
   userId: string;
   location: string | null;
-  social_links: string | null;
-  relationship_status: string | null;
+  socialLinks: string | null;
+  relationshipStatus: string | null;
   age: number | null;
   interests: string | null;
   occupation: string | null;
   company: string | null;
   hobbies: string | null;
   pets: string | null;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   isFriend?: boolean;
   friendRequestStatus?: FriendRequestStatus;
   following?: Topic[];
@@ -78,17 +79,17 @@ export interface FriendRequest {
   senderId: string;
   receiverId: string;
   status: FriendRequestStatus;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Basic profile for display in lists
 export interface BasicProfile {
-  id: number;
+  userId: string;
   username: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
 }
 
 // ==================== CONTENT TYPES ====================
@@ -98,8 +99,14 @@ export interface Topic {
   id: number;
   title: string;
   description: string;
-  created_at: string;
-  updated_at: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  headline?: string;
+  topicOwnerOrMod?: string;
+  followers?: User[];
+  posts?: Post[];
+  public?: boolean;
 }
 
 // Post interface
@@ -107,9 +114,12 @@ export interface Post {
   id: number;
   userId: string;
   content: string;
-  createdBy: number;
-  created_at: string;
-  updated_at: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  author?: User | BasicProfile;
+  topic?: Topic | string;
+  comments?: Comment[];
 }
 
 // Comment definition
@@ -117,16 +127,17 @@ export interface Comment {
   id: number;
   postId: number;
   content: string;
-  createdBy: number;
-  created_at: string;
-  updated_at: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  author?: User | BasicProfile;
 }
 
 // Follow relationship
 export interface Follow {
   followerId: string;
   followingId: string;
-  created_at: string;
+  createdAt: string;
 }
 
 // ==================== UTILITY TYPES ====================
@@ -136,11 +147,11 @@ export interface UserFile {
   id: number;
   userId: string;
   filename: string;
-  original_name: string;
-  file_path: string;
+  originalName: string;
+  filePath: string;
   size: number;
   mimetype: string;
-  created_at: string;
+  createdAt: string;
 }
 
 // Gallery Image type
@@ -148,7 +159,8 @@ export interface GalleryImage {
   id: number;
   userId: string;
   imageUrl: string;
-  created_at: string;
+  createdAt: string;
+  fileName?: string;
 }
 
 // Database operation result type
@@ -165,15 +177,15 @@ export interface DbHelpers {
       userId?: string;
       username: string;
       email: string;
-      password_hash: string;
-      first_name: string;
-      last_name: string;
+      passwordHash: string;
+      firstName: string;
+      lastName: string;
     }) => DbOperationResult;
     update: (userId: string, data: {
-      first_name?: string;
-      last_name?: string;
+      firstName?: string;
+      lastName?: string;
       bio?: string;
-      avatar_url?: string | null;
+      avatarUrl?: string | null;
     }) => DbOperationResult;
     updateProfilePicture: (userId: string, filePath: string) => DbOperationResult;
   };
@@ -183,16 +195,16 @@ export interface DbHelpers {
     exists: (userId: string) => boolean;
     update: (userId: string, data: {
       location?: string;
-      social_links?: string;
-      relationship_status?: string;
+      socialLinks?: string;
+      relationshipStatus?: string;
       interests?: string;
       hobbies?: string;
       pets?: string;
     }) => DbOperationResult;
     create: (userId: string, data: {
       location?: string;
-      social_links?: string;
-      relationship_status?: string;
+      socialLinks?: string;
+      relationshipStatus?: string;
       interests?: string;
       hobbies?: string;
       pets?: string;
@@ -211,8 +223,8 @@ export interface DbHelpers {
     create: (file: {
       userId: string;
       filename: string;
-      original_name: string;
-      file_path: string;
+      originalName: string;
+      filePath: string;
       size: number;
       mimetype: string;
     }) => DbOperationResult;

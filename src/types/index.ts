@@ -10,19 +10,20 @@ export interface User {
   userId: string;
   username: string;
   email: string;
-  password_hash: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
+  passwordHash: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
   bio: string | null;
-  created_at: string;
+  createdAt: string;
 }
 
 // Authentication credentials
 export interface AuthCredentials {
   username: string;
   password: string;
-  userId: string;
+  userId?: string;
+  email: string;
 }
 
 // Authentication state
@@ -39,13 +40,13 @@ export interface AuthState {
 export interface Profile {
   userId: string; 
   username: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
-  social_links: string | null;
-  relationship_status: string | null;
-  created_at: string;
-  updated_at: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+  socialLinks: string | null;
+  relationshipStatus: string | null;
+  createdAt: string;
+  updatedAt: string;
   isFriend?: boolean;
   friendRequestStatus?: FriendRequestStatus;
   following?: Topic[];
@@ -93,32 +94,32 @@ export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 // Friend request interface
 export interface FriendRequest {
   id?: number;
-  receiver_id: User["userId"]; // userId of requested user
-  sender_userId: User["userId"]; // userId of requestor for fr
+  receiverId: User["userId"]; // userId of requested user
+  senderId: User["userId"]; // userId of requestor for fr
   status: FriendRequestStatus;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   
   // Sender information
-  sender_first_name?: string;
-  sender_last_name?: string;
-  sender_username?: string;
-  sender_avatar_url?: string | null;
+  senderFirstName?: string;
+  senderLastName?: string;
+  senderUsername?: string;
+  senderAvatarUrl?: string | null;
   
   // Receiver information
-  receiver_first_name?: string;
-  receiver_last_name?: string;
-  receiver_username?: string;
-  receiver_avatar_url?: string | null;
+  receiverFirstName?: string;
+  receiverLastName?: string;
+  receiverUsername?: string;
+  receiverAvatarUrl?: string | null;
 }
 
 // Basic profile for display in lists
 export interface BasicProfile {
   userId: string;
   username: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
 }
 
 // ==================== CONTENT TYPES ====================
@@ -127,9 +128,9 @@ export interface BasicProfile {
 export interface GalleryImage {
   id: number;
   userId: string;
-  image_url: string;
-  created_at: string;
-  file_name?: string;
+  imageUrl: string;
+  createdAt: string;
+  fileName?: string;
 }
 
 // Basic topic definition
@@ -137,9 +138,9 @@ export interface Topic {
   id: number;
   title: string;
   description: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
   
   // Client-specific additions
   headline?: string;
@@ -152,11 +153,11 @@ export interface Topic {
 // Post definition
 export interface Post {
   id: number;
-  topic_id: number;
+  topicId: number;
   content: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
   
   // Client-specific additions
   author?: User | BasicProfile;
@@ -167,11 +168,11 @@ export interface Post {
 // Comment definition
 export interface Comment {
   id: number;
-  post_id: number;
+  postId: number;
   content: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
   
   // Client-specific additions
   author?: User | BasicProfile;
@@ -179,9 +180,9 @@ export interface Comment {
 
 // Follow relationship
 export interface Follow {
-  follower_id: string;
-  following_id: string;
-  created_at: string;
+  followerId: string;
+  followingId: string;
+  createdAt: string;
 }
 
 // ==================== UTILITY TYPES ====================
@@ -191,11 +192,11 @@ export interface UserFile {
   id: number;
   userId: string;
   filename: string;
-  original_name: string;
-  file_path: string;
+  originalName: string;
+  filePath: string;
   size: number;
   mimetype: string;
-  created_at: string;
+  createdAt: string;
 }
 
 // Database operation result type

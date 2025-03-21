@@ -9,8 +9,8 @@ const Home: React.FC = () => {
   
   // Set current profile to the logged-in user's profile
   useEffect(() => {
-    if (user?.id) {
-      setCurrentProfile(user.id);
+    if (user?.userId) {
+      setCurrentProfile(user.userId);
     }
   }, [user, setCurrentProfile]);
   
