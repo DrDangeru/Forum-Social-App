@@ -23,7 +23,7 @@ export interface AuthCredentials {
   username: string;
   password: string;
   userId?: string;
-  email: string;
+  // email: string; // Email is not required for login
 }
 
 // Authentication state

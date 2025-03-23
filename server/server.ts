@@ -20,11 +20,10 @@ const app: Express = express();
 const port = 3001;
 
 // Configure Multer storage
-// as config, no  real file handling and req, so below is ok.
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const userId = _req.params.userId;
-    const uploadPath = path.join(__dirname, '../uploads', userId);
+    const uploadPath = path.join(__dirname, 'uploads', userId);
     
     fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
@@ -39,8 +38,8 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-    files: 3
+    fileSize: 15 * 1024 * 1024, // 15MB
+    files: 22
   },
   fileFilter: (_req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
@@ -55,8 +54,8 @@ app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-// Serve static files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve static files from server/uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -223,12 +222,18 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
     }
 
     // Ensure user upload directory exists
-    const userUploadDir = path.join(__dirname, '../uploads', userId);
+    const userUploadDir = path.join(__dirname, 'uploads', userId);
     if (!fs.existsSync(userUploadDir)) {
       fs.mkdirSync(userUploadDir, { recursive: true });
     }
 
     console.log(`Processing file upload for user ${userId}`);
+    console.log('Request Content-Type:', req.get('Content-Type'));
+    
+    // Debug log entire request
+    console.log('Request headers:', req.headers);
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
 
     // Handle file upload
     upload.array('files', 3)(req, res, async (err) => {
@@ -238,9 +243,13 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
           return res.status(400).json({ error: err.message });
         }
 
+        console.log('Request body:', req.body);
+        console.log('Request files:', req.files);
+        
         const files = req.files as Express.Multer.File[];
         
         if (!files || files.length === 0) {
+          console.error('No files received in the request');
           return res.status(400).json({ error: 'No files uploaded' });
         }
         
@@ -260,8 +269,8 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
             const result = dbHelpers.userFiles.create({
               userId: userId,
               filename: file.filename,
-              original_name: file.originalname,
-              file_path: relativePath,
+              originalName: file.originalname,
+              filePath: relativePath,
               size: file.size,
               mimetype: file.mimetype
             });
@@ -269,6 +278,7 @@ app.post('/api/upload/:userId', async (req: Request, res: Response) => {
             return {
               id: result.lastInsertRowid,
               path: relativePath,
+              filename: file.filename,
               originalName: file.originalname
             };
           });
@@ -318,8 +328,8 @@ app.delete('/api/files/:fileId', (req: Request, res: Response) => {
       id: string;
       userId: string;
       filename: string;
-      original_name: string;
-      file_path: string;
+      originalName: string;
+      filePath: string;
       size: number;
       mimetype: string;
     } | undefined;
@@ -332,7 +342,7 @@ app.delete('/api/files/:fileId', (req: Request, res: Response) => {
     dbHelpers.userFiles.deleteById(fileId);
     
     // Delete the physical file
-    const filePath = path.join(__dirname, '..', fileInfo.file_path);
+    const filePath = path.join(__dirname, '..', fileInfo.filePath);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
@@ -373,7 +383,7 @@ app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
   
   // Ensure uploads directory exists
-  const uploadsDir = path.join(__dirname, '../uploads');
+  const uploadsDir = path.join(__dirname, 'uploads');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }

@@ -97,7 +97,7 @@ router.put('/:userId', (req: Request, res: Response) => {
           profileData.socialLinks : 
           JSON.stringify(profileData.socialLinks || {}),
         relationshipStatus: profileData.relationshipStatus || '',
-        age: profileData.age || null,
+        age: profileData.age !== undefined ? profileData.age : null,
         interests: Array.isArray(profileData.interests) ? 
           JSON.stringify(profileData.interests) : 
           (profileData.interests || '[]'),
@@ -123,15 +123,26 @@ router.put('/:userId', (req: Request, res: Response) => {
       
       // Handle gallery images
       if (profileData.galleryImages && Array.isArray(profileData.galleryImages)) {
-        // Clear existing gallery images
-        console.log('Clearing existing gallery images for user:', userId);
-        dbHelpers.galleryImages.deleteAllForUser(userId);
+        // Get current gallery images
+        const currentImages = dbHelpers.galleryImages.getByUserId(userId);
+        const currentUrls = currentImages.map((img: GalleryImage) => img.imageUrl);
         
-        // Insert new gallery images
-        console.log('Adding gallery images:', profileData.galleryImages);
-        profileData.galleryImages.forEach((imageUrl: string) => {
-          dbHelpers.galleryImages.create(userId, imageUrl);
-        });
+        // Only update if the gallery has changed
+        if (JSON.stringify(currentUrls) !== JSON.stringify(profileData.galleryImages)) {
+          console.log('Gallery images have changed, updating...');
+          
+          // Clear existing gallery images
+          console.log('Clearing existing gallery images for user:', userId);
+          dbHelpers.galleryImages.deleteAllForUser(userId);
+          
+          // Insert new gallery images
+          console.log('Adding gallery images:', profileData.galleryImages);
+          profileData.galleryImages
+            .filter((imageUrl: string) => imageUrl && !imageUrl.includes('undefined'))
+            .forEach((imageUrl: string) => {
+              dbHelpers.galleryImages.create(userId, imageUrl);
+            });
+        }
       }
       
       // Commit transaction

@@ -92,29 +92,45 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
     try {
       setIsUploading(true);
       
-      // Create form data for upload
+      // Create form data for upload - use a single file
       const formData = new FormData();
       formData.append('files', file);
       
-      // Upload file to server
+      console.log('Uploading profile picture:', {
+        userId: user.userId,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
+      });
+      
+      // Upload file to server - don't specify content-type, let browser set it
       const response = await axios.post(`/api/upload/${user.userId}`, formData);
       console.log('Profile picture upload response:', response.data);
       
-      if (response.data.files && response.data.files.length > 0) {
-        // Use the returned file path for the avatar
-        const filePath = response.data.files[0].path;
-        handleChange('avatarUrl', filePath);
-        
-        // Save the profile immediately to persist the change
-        const updatedDetails = {
-          ...details,
-          avatarUrl: filePath
-        };
-        await updateProfile(updatedDetails);
-        console.log('Profile updated with new avatar:', filePath);
+      if (!response.data.files || response.data.files.length === 0) {
+        throw new Error('No files were uploaded');
       }
+      
+      // Get the file info from the response
+      const fileInfo = response.data.files[0];
+      
+      // Get the server-relative path for the avatar
+      // Use path if available, otherwise construct it from userId and filename
+      const filePath = fileInfo.path || `/uploads/${user.userId}/${fileInfo.filename}`;
+      
+      // Save the profile immediately to persist the change
+      const updatedDetails = {
+        ...details,
+        avatarUrl: filePath
+      };
+      await updateProfile(updatedDetails);
+      console.log('Profile updated with new avatar:', filePath);
+      
     } catch (error) {
       console.error('Failed to upload profile picture:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Server response error:', error.response.data);
+      }
     } finally {
       setIsUploading(false);
     }
@@ -122,7 +138,7 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
 
   const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files || !user?.userId) return;
+    if (!files || files.length === 0 || !user?.userId) return;
     
     try {
       setIsUploading(true);
@@ -133,26 +149,40 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
         formData.append('files', file);
       });
       
-      // Upload files to server
+      console.log('Uploading gallery images:', Array.from(files).map(file => ({
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
+      })));
+      
+      // Upload files to server - let browser set the Content-Type header
       const response = await axios.post(`/api/upload/${user.userId}`, formData);
       console.log('Gallery upload response:', response.data);
       
       if (response.data.files && response.data.files.length > 0) {
-        // Add the returned file paths to the gallery
-        const newPaths = response.data.files.map((file: any) => file.path);
-        const updatedGallery = [...galleryImages, ...newPaths];
-        setGalleryImages(updatedGallery);
+        // Add the server-relative paths to the gallery
+        const newPaths = response.data.files
+          .filter((file: any) => file && (file.path || file.filename))
+          .map((file: any) => file.path || `/uploads/${user.userId}/${file.filename}`);
         
-        // Save the profile immediately to persist the change
-        const updatedDetails = {
-          ...details,
-          galleryImages: updatedGallery
-        };
-        await updateProfile(updatedDetails);
-        console.log('Profile updated with new gallery images:', newPaths);
+        if (newPaths.length > 0) {
+          const updatedGallery = [...galleryImages, ...newPaths];
+          setGalleryImages(updatedGallery);
+          
+          // Save the profile immediately to persist the change
+          const updatedDetails = {
+            ...details,
+            galleryImages: updatedGallery
+          };
+          await updateProfile(updatedDetails);
+          console.log('Profile updated with new gallery images:', newPaths);
+        }
       }
     } catch (error) {
       console.error('Failed to upload gallery images:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Server response error:', error.response.data);
+      }
     } finally {
       setIsUploading(false);
     }

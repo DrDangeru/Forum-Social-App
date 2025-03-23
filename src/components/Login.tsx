@@ -101,8 +101,8 @@ const Login = () => {
                 "
               />
             </div>
-            
-            <div className="space-y-2">
+            {/* Email on login is not required. */}
+            {/* <div className="space-y-2">
               <label
                 htmlFor="email"
                 className="text-sm font-medium"
@@ -126,7 +126,7 @@ const Login = () => {
                   focus:ring-blue-500
                 "
               />
-            </div>
+            </div> */}
             
             <div className="space-y-2">
               <label

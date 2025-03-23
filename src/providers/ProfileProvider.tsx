@@ -28,39 +28,34 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   // Store profiles in a map, keyed by userId
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
-  const { user } = useAuth();
-  
-  // Set current profile to the logged-in user's profile
-  useEffect(() => {
-    if (user?.userId) {
-      setCurrentProfileId(user.userId);
-      // Load the user's profile if not already loaded
-      // if (!profiles[user.userId]) {
-      //   fetchProfile(user.userId);
-      // }  Think this wont work... and not registered users will not
-      // have a profile, thus probably best to leave this out
-    }
-  }, [user]);
+  const { user, isAuthenticated } = useAuth();
   
   // Fetch a profile by userId
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string) => {
     try {
-      const response = await axios.get(`/api/profiles/${userId}`);
+      const response = await axios.get(`/api/profile/${userId}`);
+      const profile = response.data;
+      
       setProfiles(prevProfiles => ({
         ...prevProfiles,
-        [userId]: response.data
+        [userId]: profile
       }));
-      return response.data;
+      return profile;
     } catch (error) {
       console.error('Error fetching profile:', error);
-      const newProfile = { ...defaultProfile, userId };
-      setProfiles(prevProfiles => ({
-        ...prevProfiles,
-        [userId]: newProfile
-      }));
-      return newProfile;
+      throw error;
     }
-  };
+  }, []); // should be triggered by a request and not   
+  // some sort of a auto refresh / trigger 
+  // Empty dependency array would prevent re-renders if uncalled.
+  
+  // Set current profile to the logged-in user's profile and ensure it's loaded
+  useEffect(() => {
+    if (user?.userId && isAuthenticated) {
+      setCurrentProfileId(user.userId);
+      fetchProfile(user.userId).catch(console.error);
+    }
+  }, [user, isAuthenticated, fetchProfile]);
   
   // Get a profile by userId, fetching it if not already loaded
   const getProfile = useCallback(async (userId: string): Promise<Profile> => {
@@ -69,7 +64,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     }
     
     return await fetchProfile(userId);
-  }, [profiles]);
+  }, [profiles, fetchProfile]);
   
   // Update profile information
   const updateProfile = useCallback(async (
@@ -90,28 +85,16 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       // Merge updates with existing profile
       const newProfile = { ...existingProfile, ...updatedProfile };
       
-      console.log('Sending profile update to server:', newProfile);
-      
       // Send update to server
-      const response = await axios.put(`/api/profiles/${targetUserId}`, newProfile);
-      const updatedData = response.data;
+      await axios.put(`/api/profile/${targetUserId}`, newProfile);
       
-      console.log('Received updated profile from server:', updatedData);
-      
-      // Update profiles map with the server response data
-      setProfiles(prevProfiles => ({
-        ...prevProfiles,
-        [targetUserId]: updatedData
-      }));
-      
-      return updatedData;
+      // Re-fetch the profile to ensure we have the latest data
+      return await fetchProfile(targetUserId);
     } catch (error) {
       console.error('Error updating profile:', error);
-      
-      // Don't update local state if server update failed - this ensures we don't get out of sync
       throw error;
     }
-  }, [profiles, currentProfileId]);
+  }, [profiles, currentProfileId, fetchProfile]);
 
   // Set which profile is currently being viewed
   const setCurrentProfile = useCallback((userId: string) => {
@@ -119,9 +102,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     
     // Load the profile if not already loaded
     if (!profiles[userId]) {
-      fetchProfile(userId);
+      fetchProfile(userId).catch(console.error);
     }
-  }, [profiles]);
+  }, [profiles, fetchProfile]);
 
   // Create the context value object
   const contextValue: ProfileContextType = {
