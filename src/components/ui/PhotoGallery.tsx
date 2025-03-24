@@ -96,7 +96,7 @@ export default function PhotoGalleryPage() {
         <div className="flex items-center gap-6">
           <div className="relative group">
             <img
-              src={user.avatar_url || '/default-avatar.jpg'}
+              src={user.avatarUrl || '/default-avatar.jpg'}
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
             />
@@ -175,7 +175,7 @@ export default function PhotoGalleryPage() {
             </div>
             
             {/* Current Profile Badge */}
-            {user.avatar_url === photo.file_path && (
+            {user.avatarUrl === photo.file_path && (
               <div className="absolute top-2 left-2 bg-blue-500 
               text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
                 <User className="w-3 h-3" />

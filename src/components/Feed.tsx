@@ -12,19 +12,20 @@ const Feed = ({ userId }: { userId: string }) => {
   });
 
   if (isLoading) return <div className="text-lg">Loading...</div>;
+  if (!posts) return <div className="text-lg">No posts found. Follow stuff for posts.</div>;
 
   return (
     <div className="max-w-[600px] mx-auto">
       {posts?.map((post) => (
         <Card key={post.id} className="mb-4">
           <CardHeader>
-            <CardTitle className="text-xl">{post.author?.first_name} 
-              {post.author?.last_name}</CardTitle>
+            <CardTitle className="text-xl">{post.author?.firstName} 
+              {post.author?.lastName}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-base">{post.content}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {new Date(post.created_at).toLocaleString()}
+              {new Date(post.createdAt).toLocaleString()}
             </p>
           </CardContent>
         </Card>

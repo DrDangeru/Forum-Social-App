@@ -22,7 +22,7 @@ export interface Profile {
   location: string | null;
   socialLinks: string | null;
   relationshipStatus: string | null;
-  age: string | null;
+  age: number | null;
   interests: string | null;
   occupation: string | null;
   company: string | null;
@@ -135,7 +135,7 @@ export interface DbHelpers {
       location?: string;
       socialLinks?: string;
       relationshipStatus?: string;
-      age?: string | null;
+      age: number | null;
       interests?: string;
       occupation?: string;
       company?: string;
@@ -146,7 +146,7 @@ export interface DbHelpers {
       location?: string;
       socialLinks?: string;
       relationshipStatus?: string;
-      age?: string | null;
+      age?: number | null;
       interests?: string;
       occupation?: string;
       company?: string;

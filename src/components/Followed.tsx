@@ -78,7 +78,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
                 hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarImage src={user.avatarUrl || undefined} />
                       <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -110,7 +110,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
                  hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarImage src={user.avatarUrl || undefined} />
                       <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>

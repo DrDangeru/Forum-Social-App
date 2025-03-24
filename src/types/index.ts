@@ -99,6 +99,7 @@ export interface FriendRequest {
   status: FriendRequestStatus;
   createdAt: string;
   updatedAt: string;
+  message?: string; // Optional message with friend request
   
   // Sender information
   senderFirstName?: string;

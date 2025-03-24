@@ -76,16 +76,16 @@ const AddFriend: React.FC = () => {
                  p-3 rounded-lg border">
                   <div className="flex items-center space-x-3">
                     <Avatar>
-                      {user.avatar_url ? (
-                        <AvatarImage src={user.avatar_url} 
-                        alt={`${user.first_name} ${user.last_name}`} />
+                      {user.avatarUrl ? (
+                        <AvatarImage src={user.avatarUrl} 
+                        alt={`${user.firstName} ${user.lastName}`} />
                       ) : (
-                        <AvatarFallback>{getInitials(`${user.first_name} ${user.last_name}`)}
+                        <AvatarFallback>{getInitials(`${user.firstName} ${user.lastName}`)}
                         </AvatarFallback>
                       )}
                     </Avatar>
                     <div>
-                      <p className="font-medium">{user.first_name} {user.last_name}</p>
+                      <p className="font-medium">{user.firstName} {user.lastName}</p>
                       <p className="text-sm text-muted-foreground">@{user.username}</p>
                     </div>
                   </div>

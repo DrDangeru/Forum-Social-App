@@ -177,7 +177,10 @@ const dbHelpers: DbHelpers = {
       location?: string;
       socialLinks?: string;
       relationshipStatus?: string;
+      age: number | null;
       interests?: string;
+      occupation?: string;
+      company?: string;
       hobbies?: string;
       pets?: string;
     }) => {
@@ -187,7 +190,10 @@ const dbHelpers: DbHelpers = {
           location = COALESCE(?, location),
           socialLinks = COALESCE(?, socialLinks),
           relationshipStatus = COALESCE(?, relationshipStatus),
+          age = COALESCE(?, age),
           interests = COALESCE(?, interests),
+          occupation = COALESCE(?, occupation),
+          company = COALESCE(?, company),
           hobbies = COALESCE(?, hobbies),
           pets = COALESCE(?, pets),
           updatedAt = CURRENT_TIMESTAMP
@@ -196,7 +202,10 @@ const dbHelpers: DbHelpers = {
         data.location,
         data.socialLinks,
         data.relationshipStatus,
+        data.age,
         data.interests,
+        data.occupation,
+        data.company,
         data.hobbies,
         data.pets,
         userId
@@ -207,23 +216,37 @@ const dbHelpers: DbHelpers = {
       location?: string;
       socialLinks?: string;
       relationshipStatus?: string;
+      age?: number | null;
       interests?: string;
+      occupation?: string;
+      company?: string;
       hobbies?: string;
       pets?: string;
     }) => {
       return db.prepare(`
         INSERT INTO profiles (
-          userId, location, socialLinks, relationshipStatus, 
-          interests, hobbies, pets
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+          userId, 
+          location, 
+          socialLinks, 
+          relationshipStatus,
+          age,
+          interests,
+          occupation,
+          company,
+          hobbies,
+          pets
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         userId,
-        data.location,
-        data.socialLinks,
-        data.relationshipStatus,
-        data.interests,
-        data.hobbies,
-        data.pets
+        data.location || null,
+        data.socialLinks || null,
+        data.relationshipStatus || null,
+        data.age,
+        data.interests || null,
+        data.occupation || null,
+        data.company || null,
+        data.hobbies || null,
+        data.pets || null
       );
     }
   },

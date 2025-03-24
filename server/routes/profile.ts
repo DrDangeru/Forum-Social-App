@@ -47,12 +47,16 @@ router.get('/:userId', (req: Request, res: Response) => {
       updatedAt: profileData?.updatedAt || user.createdAt,
       socialLinks: profileData?.socialLinks || null,
       relationshipStatus: profileData?.relationshipStatus || null,
-      age: profileData?.age || null,
-      interests: profileData?.interests ? JSON.parse(profileData.interests) : [],
+      age: profileData?.age === null || profileData?.age === undefined ? 
+        'Not specified' : profileData.age,
+      interests: profileData?.interests ? 
+        JSON.parse(profileData.interests) : [],
       occupation: profileData?.occupation || '',
       company: profileData?.company || '',
-      hobbies: profileData?.hobbies ? JSON.parse(profileData.hobbies) : [],
-      pets: profileData?.pets ? JSON.parse(profileData.pets) : [],
+      hobbies: profileData?.hobbies ? 
+        JSON.parse(profileData.hobbies) : [],
+      pets: profileData?.pets ? 
+        JSON.parse(profileData.pets) : [],
       galleryImages,
       followerCount: followerCountResult.count,
       followingCount: followingCountResult.count
@@ -97,7 +101,8 @@ router.put('/:userId', (req: Request, res: Response) => {
           profileData.socialLinks : 
           JSON.stringify(profileData.socialLinks || {}),
         relationshipStatus: profileData.relationshipStatus || '',
-        age: profileData.age !== undefined ? profileData.age : null,
+        age: profileData.age !== undefined && profileData.age !== null && profileData.age !== '' ? 
+          Number(profileData.age) : null,
         interests: Array.isArray(profileData.interests) ? 
           JSON.stringify(profileData.interests) : 
           (profileData.interests || '[]'),
@@ -116,7 +121,7 @@ router.put('/:userId', (req: Request, res: Response) => {
         console.log('Updating existing profile with data:', dbProfileData);
         dbHelpers.profiles.update(userId, dbProfileData);
       } else {
-        // Insert new profile
+        // Create new profile
         console.log('Creating new profile with data:', dbProfileData);
         dbHelpers.profiles.create(userId, dbProfileData);
       }

@@ -28,9 +28,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <ProfileProvider>
-        <Router>
+    <Router>
+      <AuthProvider>
+        <ProfileProvider>
           <div className="min-h-screen bg-gray-50">
             <Navbar />
             <main className="pt-16">
@@ -59,16 +59,16 @@ function App() {
                   } 
                 />
                 <Route 
-            path="/photos"
-            
-            element={
-              <ProtectedRoute>
-                <PhotoGalleryPage />
-              </ProtectedRoute>
-
-
-            }
-            />              
+                  path="/photos"
+                  
+                  element={
+                    <ProtectedRoute>
+                      <PhotoGalleryPage />
+                    </ProtectedRoute>
+  
+  
+                  }
+                  />              
                 {/* <Route 
                   path="/followed" 
                   element={
@@ -104,9 +104,9 @@ function App() {
               </Routes>
             </main>
           </div>
-        </Router>
-      </ProfileProvider>
-    </AuthProvider>
+        </ProfileProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

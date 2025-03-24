@@ -197,7 +197,10 @@ export interface DbHelpers {
       location?: string;
       socialLinks?: string;
       relationshipStatus?: string;
+      age?: number | string | null;
       interests?: string;
+      occupation?: string;
+      company?: string;
       hobbies?: string;
       pets?: string;
     }) => DbOperationResult;
@@ -205,7 +208,10 @@ export interface DbHelpers {
       location?: string;
       socialLinks?: string;
       relationshipStatus?: string;
+      age?: number | string | null;
       interests?: string;
+      occupation?: string;
+      company?: string;
       hobbies?: string;
       pets?: string;
     }) => DbOperationResult;
