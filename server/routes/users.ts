@@ -1,10 +1,11 @@
 import express from 'express';
 import type { Request, Response } from 'express';
 import db from '../db';
+import type { BasicProfile } from '../types';
 
 const router = express.Router();
 
-// Search for users by name or username
+// Search for users by name, email, or username
 router.get('/search', (req: Request, res: Response) => {
   try {
     const { q } = req.query;
@@ -18,7 +19,7 @@ router.get('/search', (req: Request, res: Response) => {
     const users = db.prepare(`
       SELECT 
         id as userId, 
-        username as userNickname, 
+        username, 
         firstName, 
         lastName, 
         avatarUrl
@@ -26,9 +27,10 @@ router.get('/search', (req: Request, res: Response) => {
       WHERE 
         username LIKE ? OR
         firstName LIKE ? OR
-        lastName LIKE ?
+        lastName LIKE ? OR
+        email LIKE ?
       LIMIT 10
-    `).all(searchTerm, searchTerm, searchTerm);
+    `).all(searchTerm, searchTerm, searchTerm, searchTerm) as BasicProfile[];
     
     res.json(users);
   } catch (error) {

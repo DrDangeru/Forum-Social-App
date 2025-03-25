@@ -47,9 +47,9 @@ interface SentRequest {
 
 // Ensure friend-related tables exist
 function ensureFriendTablesExist() {
-  // Create friend_requests table if it doesn't exist
+  // Create friendRequests table if it doesn't exist
   db.prepare(`
-    CREATE TABLE IF NOT EXISTS friend_requests (
+    CREATE TABLE IF NOT EXISTS friendRequests (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       senderId TEXT NOT NULL,
       receiverId TEXT NOT NULL,
@@ -108,7 +108,7 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
     const receivedRequests = db.prepare(`
       SELECT fr.*, u.username as senderUsername, u.firstName as senderFirstName, 
       u.lastName as senderLastName, u.avatarUrl as senderAvatarUrl
-      FROM friend_requests fr
+      FROM friendRequests fr
       JOIN users u ON fr.senderId = u.id
       WHERE fr.receiverId = ? AND fr.status = 'pending'
     `).all(userId) as ReceivedRequest[];
@@ -117,7 +117,7 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
     const sentRequests = db.prepare(`
       SELECT fr.*, u.username as receiverUsername, u.firstName as receiverFirstName, 
       u.lastName as receiverLastName, u.avatarUrl as receiverAvatarUrl
-      FROM friend_requests fr
+      FROM friendRequests fr
       JOIN users u ON fr.receiverId = u.id
       WHERE fr.senderId = ? AND fr.status = 'pending'
     `).all(userId) as SentRequest[];
@@ -145,7 +145,7 @@ router.post('/request', (req: Request, res: Response) => {
     
     // Check if request already exists
     const existingRequest = db.prepare(`
-      SELECT * FROM friend_requests 
+      SELECT * FROM friendRequests 
       WHERE (senderId = ? AND receiverId = ?) 
       OR (senderId = ? AND receiverId = ?)
     `).get(senderId, receiverId, receiverId, senderId) as FriendRequest | undefined;
@@ -167,14 +167,20 @@ router.post('/request', (req: Request, res: Response) => {
     
     // Create friend request
     const result = db.prepare(`
-      INSERT INTO friend_requests (senderId, receiverId, status, createdAt)
+      INSERT INTO friendRequests (senderId, receiverId, status, createdAt)
       VALUES (?, ?, 'pending', datetime('now'))
     `).run(senderId, receiverId);
+
+    // Get the created request with user details
+    const request = db.prepare(`
+      SELECT fr.*, u.username as receiverUsername, u.firstName as receiverFirstName, 
+      u.lastName as receiverLastName, u.avatarUrl as receiverAvatarUrl
+      FROM friendRequests fr
+      JOIN users u ON fr.receiverId = u.id
+      WHERE fr.id = ?
+    `).get(result.lastInsertRowid) as SentRequest;
     
-    res.status(201).json({ 
-      id: result.lastInsertRowid,
-      message: 'Friend request sent' 
-    });
+    res.status(201).json(request);
   } catch (error) {
     console.error('Error sending friend request:', error);
     res.status(500).json({ error: 'Failed to send friend request' });
@@ -195,7 +201,7 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
     
     // Get the request
     const request = db.prepare(`
-      SELECT * FROM friend_requests WHERE id = ?
+      SELECT * FROM friendRequests WHERE id = ?
     `).get(requestId) as FriendRequest | undefined;
     
     if (!request) {
@@ -209,7 +215,7 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
     
     // Update the request status
     db.prepare(`
-      UPDATE friend_requests SET status = ? WHERE id = ?
+      UPDATE friendRequests SET status = ? WHERE id = ?
     `).run(status, requestId);
     
     // If accepted, create friendship entries

@@ -14,6 +14,7 @@ import './App.css';
 import PhotoGalleryPage from './components/ui/PhotoGallery';
 import Home from './components/Home';
 // import { MemberProfile } from './types/profile';
+import { UserSearch } from './components/UserSearch';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -98,6 +99,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <PersonalDetails isOwner={false} />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/add-friend" 
+                  element={
+                    <ProtectedRoute>
+                      <UserSearch />
                     </ProtectedRoute>
                   } 
                 />

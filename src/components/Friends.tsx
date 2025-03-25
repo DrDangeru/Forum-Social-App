@@ -7,6 +7,8 @@ import { useFriends } from "../hooks/useFriends";
 import { getInitials } from "../lib/utils";
 import { UserCheck, UserX, Clock } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { UserSearch } from './UserSearch';
+import type { BasicProfile } from '../types';
 
 export default function Friends() {
   const { 
@@ -17,6 +19,7 @@ export default function Friends() {
     rejectFriendRequest,
     removeFriend,
     getFriendRequestStatus,
+    sendFriendRequest,
     isLoading,
     error: friendsError 
   } = useFriends();
@@ -24,211 +27,163 @@ export default function Friends() {
   if (isLoading) return <div className="p-4">Loading...</div>;
   if (friendsError) return <div className="p-4 text-red-500">Error: {friendsError}</div>;
 
-  const getStatusBadge = (userId: string) => {
-    const status = getFriendRequestStatus(userId);
-    switch (status) {
-      case 'friends':
-        return <Badge variant="success">Friends</Badge>;
-      case 'received':
-        return <Badge variant="warning">Request Received</Badge>;
-      case 'sent':
-        return <Badge variant="secondary">Request Sent</Badge>;
-      default:
-        return null;
+  const handleUserSelect = async (user: BasicProfile) => {
+    const status = getFriendRequestStatus(user.userId);
+    if (!status) {
+      await sendFriendRequest(user.userId);
     }
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-3xl font-bold">Friends</h1>
-      
-      <Tabs defaultValue="friends" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="friends">
-            Friends
-            {friends.length > 0 && (
-              <span 
-                className="ml-2 rounded-full bg-primary text-primary-foreground 
-                px-2 py-0.5 text-xs"
-              >
-                {friends.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="received">
-            Received
-            {receivedRequests.length > 0 && (
-              <span 
-                className="ml-2 rounded-full bg-primary text-primary-foreground 
-                px-2 py-0.5 text-xs"
-              >
-                {receivedRequests.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="sent">
-            Sent
-            {sentRequests.length > 0 && (
-              <span 
-                className="ml-2 rounded-full bg-primary text-primary-foreground 
-                px-2 py-0.5 text-xs"
-              >
-                {sentRequests.length}
-              </span>
-            )}
-          </TabsTrigger>
-        </TabsList>
+    <div className="container mx-auto p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Friends</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="search" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="search">Search</TabsTrigger>
+              <TabsTrigger value="friends">Friends ({friends.length})</TabsTrigger>
+              <TabsTrigger value="received">
+                Received ({receivedRequests.length})
+              </TabsTrigger>
+              <TabsTrigger value="sent">Sent ({sentRequests.length})</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="friends" className="mt-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {friends.length === 0 ? (
-              <div className="col-span-full text-center text-muted-foreground">
-                No friends yet. Start connecting with others!
+            <TabsContent value="search" className="mt-4">
+              <div className="space-y-4">
+                <UserSearch 
+                  onUserSelect={handleUserSelect}
+                  getFriendStatus={(userId: string) => getFriendRequestStatus(userId)}
+                  className="w-full"
+                />
               </div>
-            ) : (
-              friends.map((friend) => (
-                <Card key={friend.userId}>
-                  <CardHeader className="flex flex-row items-center gap-4">
-                    <Avatar>
-                      <AvatarImage src={friend.avatarUrl || ""} alt={friend.username} />
-                      <AvatarFallback>
-                        {friend.firstName ? getInitials(friend.firstName) : "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <CardTitle className="text-lg">
-                        {friend.firstName} {friend.lastName}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">@{friend.username}</p>
-                      {getStatusBadge(friend.userId)}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex justify-between items-center">
-                    <Link to={`/profile/${friend.userId}`}>
-                      <Button variant="outline" size="sm">View Profile</Button>
-                    </Link>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => removeFriend(friend.userId)}
-                    >
-                      <UserX className="w-4 h-4 mr-2" />
-                      Remove
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </TabsContent>
+            </TabsContent>
 
-        <TabsContent value="received" className="mt-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {receivedRequests.length === 0 ? (
-              <div className="col-span-full text-center text-muted-foreground">
-                No pending friend requests
+            <TabsContent value="friends">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {friends.map((friend) => (
+                  <Card key={friend.userId}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-4">
+                        <Avatar>
+                          <AvatarImage src={friend.avatarUrl || undefined} />
+                          <AvatarFallback>
+                            {getInitials(`${friend.firstName} ${friend.lastName}`)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <Link 
+                            to={`/profile/${friend.userId}`} 
+                            className="text-sm font-medium text-gray-900 hover:underline"
+                          >
+                            {friend.firstName} {friend.lastName}
+                          </Link>
+                          <p className="text-sm text-gray-500 truncate">
+                            @{friend.username}
+                          </p>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeFriend(friend.userId)}
+                        >
+                          <UserX className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            ) : (
-              receivedRequests.map((request) => (
-                <Card key={request.id}>
-                  <CardHeader className="flex flex-row items-center gap-4">
-                    <Avatar>
-                      <AvatarImage 
-                        src={request.senderAvatarUrl || ""} 
-                        alt={request.senderUsername || ""}
-                      />
-                      <AvatarFallback>
-                        {request.senderFirstName ? getInitials(request.senderFirstName) : "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <CardTitle className="text-lg">
-                        {request.senderFirstName} {request.senderLastName}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        @{request.senderUsername}
-                      </p>
-                      <Badge variant="warning" className="mt-1">Pending</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground italic">
-                      {request.message || "No message"}
-                    </p>
-                    <div className="flex justify-between gap-2">
-                      <Button 
-                        className="flex-1"
-                        onClick={() => request.id && acceptFriendRequest(request.id.toString())}
-                      >
-                        <UserCheck className="w-4 h-4 mr-2" />
-                        Accept
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => request.id && rejectFriendRequest(request.id.toString())}
-                      >
-                        <UserX className="w-4 h-4 mr-2" />
-                        Decline
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </TabsContent>
+            </TabsContent>
 
-        <TabsContent value="sent" className="mt-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sentRequests.length === 0 ? (
-              <div className="col-span-full text-center text-muted-foreground">
-                No sent friend requests
+            <TabsContent value="received">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {receivedRequests.map((request) => (
+                  <Card key={request.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-4">
+                        <Avatar>
+                          <AvatarImage src={request.senderAvatarUrl || undefined} />
+                          <AvatarFallback>
+                            {getInitials(
+                              `${request.senderFirstName} ${request.senderLastName}`
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <Link 
+                            to={`/profile/${request.senderId}`} 
+                            className="text-sm font-medium text-gray-900 hover:underline"
+                          >
+                            {request.senderFirstName} {request.senderLastName}
+                          </Link>
+                          <p className="text-sm text-gray-500 truncate">
+                            @{request.senderUsername}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => acceptFriendRequest(request.id as any)}
+                          >
+                            <UserCheck className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => rejectFriendRequest(request.id as any)}
+                          >
+                            <UserX className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            ) : (
-              sentRequests.map((request) => (
-                <Card key={request.id}>
-                  <CardHeader className="flex flex-row items-center gap-4">
-                    <Avatar>
-                      <AvatarImage 
-                        src={request.receiverAvatarUrl || ""} 
-                        alt={request.receiverUsername || ""}
-                      />
-                      <AvatarFallback>
-                        {request.receiverFirstName ? getInitials(request.receiverFirstName) : "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <CardTitle className="text-lg">
-                        {request.receiverFirstName} {request.receiverLastName}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        @{request.receiverUsername}
-                      </p>
-                      <Badge variant="secondary" className="mt-1">Sent</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground italic">
-                      {request.message || "No message"}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <Button 
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => request.id && rejectFriendRequest(request.id.toString())}
-                      >
-                        Cancel Request
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+
+            <TabsContent value="sent">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {sentRequests.map((request) => (
+                  <Card key={request.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-4">
+                        <Avatar>
+                          <AvatarImage src={request.receiverAvatarUrl || undefined} />
+                          <AvatarFallback>
+                            {getInitials(
+                              `${request.receiverFirstName} ${request.receiverLastName}`
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <Link 
+                            to={`/profile/${request.receiverId}`} 
+                            className="text-sm font-medium text-gray-900 hover:underline"
+                          >
+                            {request.receiverFirstName} {request.receiverLastName}
+                          </Link>
+                          <p className="text-sm text-gray-500 truncate">
+                            @{request.receiverUsername}
+                          </p>
+                          <Badge variant="secondary" className="mt-1">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Pending
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }

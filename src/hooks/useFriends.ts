@@ -118,10 +118,11 @@ export function useFriends(): UseFriendsReturn {
         throw new Error(errorData.error || 'Failed to send friend request');
       }
       
-      // Refresh friend requests
-      await fetchFriendsAndRequests();
+      // Add the new request to the sent requests list
+      const newRequest = await response.json();
+      setSentRequests(prev => [...prev, newRequest]);
     });
-  }, [user, executeApiCall, fetchFriendsAndRequests]);
+  }, [user, executeApiCall]);
 
   // Accept a friend request
   const acceptFriendRequest = useCallback(async (requestId: string): Promise<void> => {
@@ -144,10 +145,23 @@ export function useFriends(): UseFriendsReturn {
         throw new Error(errorData.error || 'Failed to accept friend request');
       }
       
-      // Refresh friends and requests
-      await fetchFriendsAndRequests();
+      // Find the request that was accepted
+      const request = receivedRequests.find(r => r.id?.toString() === requestId);
+      if (request) {
+        // Remove from received requests
+        setReceivedRequests(prev => prev.filter(r => r.id?.toString() !== requestId));
+        
+        // Add to friends list
+        setFriends(prev => [...prev, {
+          userId: request.senderId,
+          username: request.senderUsername || '',
+          firstName: request.senderFirstName || '',
+          lastName: request.senderLastName || '',
+          avatarUrl: request.senderAvatarUrl || null,
+        }]);
+      }
     });
-  }, [user, executeApiCall, fetchFriendsAndRequests]);
+  }, [user, executeApiCall, receivedRequests]);
 
   // Reject a friend request
   const rejectFriendRequest = useCallback(async (requestId: string): Promise<void> => {
@@ -170,10 +184,10 @@ export function useFriends(): UseFriendsReturn {
         throw new Error(errorData.error || 'Failed to reject friend request');
       }
       
-      // Refresh friend requests
-      await fetchFriendsAndRequests();
+      // Remove from received requests
+      setReceivedRequests(prev => prev.filter(r => r.id?.toString() !== requestId));
     });
-  }, [user, executeApiCall, fetchFriendsAndRequests]);
+  }, [user, executeApiCall]);
 
   // Remove a friend
   const removeFriend = useCallback(async (friendId: string): Promise<void> => {
