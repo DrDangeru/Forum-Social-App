@@ -7,6 +7,7 @@ const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -18,11 +19,15 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     
     try {
       // Send registration data without userId (server will generate it)
       await register(formData);
-      navigate('/'); // Navigate to home page after successful registration
+      setSuccess('Registration successful! Please log in.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000); // Give user time to see success message before redirect
     } catch (error: any) {
       console.error('Registration error:', error);
       setError(error.message || 'Registration failed');
@@ -48,6 +53,9 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
+            {success && (
+              <div className="text-green-500 text-sm text-center">{success}</div>
             )}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">

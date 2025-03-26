@@ -76,8 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const user = response.data.user;
             setAuthState({
-                user,
-                isAuthenticated: true,
+                user: null,
+                isAuthenticated: false,
                 loading: false,
                 error: null
             });

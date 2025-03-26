@@ -55,7 +55,7 @@ function ensureFriendTablesExist() {
       receiverId TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
       createdAt TEXT NOT NULL,
-      UNIQUE(senderId, receiverId)
+      UNIQUE(senderId, receiverId, status)
     )
   `).run();
 
@@ -65,7 +65,6 @@ function ensureFriendTablesExist() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId TEXT NOT NULL,
       friendId TEXT NOT NULL,
-      status TEXT DEFAULT 'pending',
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(userId, friendId),
       FOREIGN KEY (userId) REFERENCES users (id),
@@ -87,7 +86,7 @@ router.get('/:userId', (req: Request, res: Response) => {
       FROM friendships f
       JOIN users u ON f.friendId = u.id
       WHERE f.userId = ?
-      AND f.status = 'accepted'
+      AND f.createdAt IS NOT NULL
     `).all(userId) as Friend[];
     
     res.json(friends);
@@ -201,11 +200,11 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
     
     // Get the request
     const request = db.prepare(`
-      SELECT * FROM friendRequests WHERE id = ?
+      SELECT * FROM friendRequests WHERE id = ? AND status = 'pending'
     `).get(requestId) as FriendRequest | undefined;
     
     if (!request) {
-      return res.status(404).json({ error: 'Friend request not found' });
+      return res.status(404).json({ error: 'Friend request not found or already processed' });
     }
     
     // Verify the user is the receiver of the request
@@ -213,27 +212,46 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Not authorized to update this request' });
     }
     
-    // Update the request status
-    db.prepare(`
-      UPDATE friendRequests SET status = ? WHERE id = ?
-    `).run(status, requestId);
+    // Begin transaction
+    db.prepare('BEGIN').run();
     
-    // If accepted, create friendship entries
-    if (status === 'accepted') {
-      // Create friendship entry for the requester
+    try {
+      // Update the request status
       db.prepare(`
-        INSERT INTO friendships (userId, friendId, status, createdAt)
-        VALUES (?, ?, 'accepted', datetime('now'))
-      `).run(request.senderId, request.receiverId);
+        UPDATE friendRequests SET status = ? WHERE id = ?
+      `).run(status, requestId);
       
-      // Create friendship entry for the receiver
-      db.prepare(`
-        INSERT INTO friendships (userId, friendId, status, createdAt)
-        VALUES (?, ?, 'accepted', datetime('now'))
-      `).run(request.receiverId, request.senderId);
+      // If accepted, create friendship entries
+      if (status === 'accepted') {
+        // Dont see any need. Any cleanup will be handled when deleting friendships.
+        // Delete any existing friendship entries first
+        // db.prepare(` 
+        //   DELETE FROM friendships 
+        //   WHERE (userId = ? AND friendId = ?) 
+        //   OR (userId = ? AND friendId = ?)
+        // `).run(request.senderId, request.receiverId, request.receiverId, request.senderId);
+        
+        // Create friendship entry for the requester
+        db.prepare(`
+          INSERT INTO friendships (userId, friendId, createdAt)
+          VALUES (?, ?, datetime('now'))
+        `).run(request.senderId, request.receiverId);
+        
+        // Create friendship entry for the receiver
+        db.prepare(`
+          INSERT INTO friendships (userId, friendId, createdAt)
+          VALUES (?, ?, datetime('now'))
+        `).run(request.receiverId, request.senderId);
+      }
+      
+      // Commit transaction
+      db.prepare('COMMIT').run();
+      res.json({ message: `Friend request ${status}` });
+    } catch (error) {
+      // Rollback transaction on error
+      db.prepare('ROLLBACK').run();
+      throw error;
     }
-    
-    res.json({ message: `Friend request ${status}` });
   } catch (error) {
     console.error(`Error ${req.body.status} friend request:`, error);
     res.status(500).json({ error: `Failed to ${req.body.status} friend request` });

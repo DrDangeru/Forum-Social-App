@@ -67,7 +67,13 @@ router.post('/register', async (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       res.status(201).json({
         message: 'User registered successfully',
-        userId: newUser.userId
+        user: {
+          userId: newUser.userId,
+          username: newUser.username,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName
+        }
       });
     } catch (dbError) {
       console.error('Database error during registration:', dbError);
