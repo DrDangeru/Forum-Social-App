@@ -18,7 +18,7 @@ router.get('/search', (req: Request, res: Response) => {
     
     const users = db.prepare(`
       SELECT 
-        id as userId, 
+        userId,
         username, 
         firstName, 
         lastName, 
@@ -47,13 +47,15 @@ router.get('/:userId', (req: Request, res: Response) => {
     
     const user = db.prepare(`
       SELECT 
-        id as userId, 
+        userId,
         username as userNickname, 
         firstName, 
         lastName, 
-        avatarUrl
+        email,
+        avatarUrl,
+        createdAt
       FROM users
-      WHERE id = ?
+      WHERE userId = ?
     `).get(userId);
     
     if (!user) {

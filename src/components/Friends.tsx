@@ -29,7 +29,10 @@ export default function Friends() {
 
   const handleUserSelect = async (user: BasicProfile) => {
     const status = getFriendRequestStatus(user.userId);
-    if (!status) {
+    console.log('[Frontend] Friend status check:',
+       { userId: user.userId, status });
+    if (status === 'none') {
+      console.log('[Frontend] Initiating friend request for:', user);
       await sendFriendRequest(user.userId);
     }
   };

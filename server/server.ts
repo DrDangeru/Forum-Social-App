@@ -19,6 +19,12 @@ const __dirname = path.dirname(__filename);
 const app: Express = express();
 const port = 3001;
 
+// Add request logging middleware
+app.use((req: Request, _res: Response, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Configure Multer storage
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {

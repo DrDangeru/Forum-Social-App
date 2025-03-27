@@ -56,7 +56,7 @@ export const SendFriendRequest: React.FC<{
     setIsRequestLoading(true);
     try {
       // Find the request ID from the received requests
-      const request = receivedRequests.find(req => req.sender_userId === userId);
+      const request = receivedRequests.find(req => req.senderId === userId);
       if (request && request.id) {
         await acceptFriendRequest(request.id.toString());
         setFriendRequestStatus('friends');
@@ -75,7 +75,7 @@ export const SendFriendRequest: React.FC<{
     setIsRequestLoading(true);
     try {
       // Find the request ID from the received requests
-      const request = receivedRequests.find(req => req.sender_userId === userId);
+      const request = receivedRequests.find(req => req.senderId === userId);
       if (request && request.id) {
         await rejectFriendRequest(request.id.toString());
         setFriendRequestStatus('none');
@@ -130,7 +130,7 @@ export const SendFriendRequest: React.FC<{
         <div className="flex space-x-2">
           <Button 
             onClick={handleAcceptRequest}
-            disabled={isRequestLoading}
+            disabled={isRequestLoading} 
             className="flex items-center"
             variant="default"
           >
@@ -220,31 +220,31 @@ const FriendRequests: React.FC = () => {
               <div className="space-y-4 mt-2">
                 {receivedRequests.map((request: FriendRequest) => (
                   <div
-                    key={request.sender_userId}
+                    key={request.senderId}
                     className="flex items-center justify-between p-3 rounded-lg border"
                   >
                     <div className="flex items-center space-x-3">
                       <Avatar>
-                        {request.sender_avatar_url ? (
+                        {request.senderAvatarUrl ? (
                           <AvatarImage
-                            src={request.sender_avatar_url || ''}
-                            alt={`${request.sender_first_name || ''} 
-                            ${request.sender_last_name || ''}`}
+                            src={request.senderAvatarUrl || ''}
+                            alt={`${request.senderFirstName || ''} 
+                            ${request.senderLastName || ''}`}
                           />
                         ) : (
                           <AvatarFallback>
                             {getInitials(
-                              `${request.sender_first_name || ''} ${request.sender_last_name || ''}`
+                              `${request.senderFirstName || ''} ${request.senderLastName || ''}`
                             )}
                           </AvatarFallback>
                         )}
                       </Avatar>
                       <div>
                         <p className="font-medium">
-                          {request.sender_first_name} {request.sender_last_name}
+                          {request.senderFirstName} {request.senderLastName}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          @{request.sender_username}
+                          @{request.senderUsername}
                         </p>
                       </div>
                     </div>
@@ -287,39 +287,39 @@ const FriendRequests: React.FC = () => {
               <div className="space-y-4 mt-2">
                 {sentRequests.map((request: FriendRequest) => (
                   <div
-                    key={request.receiver_id}
+                    key={request.receiverId}
                     className="flex items-center justify-between p-3 rounded-lg border"
                   >
                     <div className="flex items-center space-x-3">
                       <Avatar>
-                        {request.receiver_avatar_url ? (
+                        {request.receiverAvatarUrl ? (
                           <AvatarImage
-                            src={request.receiver_avatar_url || ''}
-                            alt={`${request.receiver_first_name || ''} 
-                            ${request.receiver_last_name || ''}`}
+                            src={request.receiverAvatarUrl || ''}
+                            alt={`${request.receiverFirstName || ''} 
+                            ${request.receiverLastName || ''}`}
                           />
                         ) : (
                           <AvatarFallback>
                             {getInitials(
-                              `${request.receiver_first_name || ''}
-                               ${request.receiver_last_name || ''}`
+                              `${request.receiverFirstName || ''}
+                               ${request.receiverLastName || ''}`
                             )}
                           </AvatarFallback>
                         )}
                       </Avatar>
                       <div>
                         <p className="font-medium">
-                          {request.receiver_first_name} {request.receiver_last_name}
+                          {request.receiverFirstName} {request.receiverLastName}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          @{request.receiver_username}
+                          @{request.receiverUsername}
                         </p>
                       </div>
                     </div>
                     <div>
                       <Button
                         onClick={() => 
-                          request.receiver_id && rejectFriendRequest(request.receiver_id.toString())
+                          request.receiverId && rejectFriendRequest(request.receiverId.toString())
                         }
                         size="sm"
                         variant="outline"

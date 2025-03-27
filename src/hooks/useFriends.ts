@@ -60,28 +60,26 @@ export function useFriends(): UseFriendsReturn {
     }
   }, [user]);
 
-  // Fetch friends and friend requests
-  const fetchFriendsAndRequests = useCallback(async (): Promise<void> => {
+  // Fetch friends and requests
+  const fetchFriendsAndRequests = useCallback(async () => {
     if (!user) return;
-    
+
     await executeApiCall(async () => {
-      // Fetch friends
-      const friendsResponse = await fetch(`/api/friends/${user.userId}`);
-      if (!friendsResponse.ok) {
-        throw new Error('Failed to fetch friends');
+      const [friendsRes, requestsRes] = await Promise.all([
+        fetch(`/api/friends/${user.userId}`),
+        fetch(`/api/friends/${user.userId}/requests`)
+      ]);
+
+      if (!friendsRes.ok || !requestsRes.ok) {
+        throw new Error('Failed to fetch friends data');
       }
-      const friendsData = await friendsResponse.json();
+
+      const friendsData = await friendsRes.json();
+      const requestsData = await requestsRes.json();
+
       setFriends(friendsData);
-      
-      // Fetch friend requests
-      const requestsResponse = await fetch(`/api/friends/${user.userId}/requests`);
-      if (!requestsResponse.ok) {
-        throw new Error('Failed to fetch friend requests');
-      }
-      const requestsData = await requestsResponse.json();
-      
-      setReceivedRequests(requestsData.received);
-      setSentRequests(requestsData.sent);
+      setReceivedRequests(requestsData.received || []);
+      setSentRequests(requestsData.sent || []);
     });
   }, [user, executeApiCall]);
 
@@ -89,11 +87,18 @@ export function useFriends(): UseFriendsReturn {
   const sendFriendRequest = useCallback(async (targetUserId: string): Promise<void> => {
     if (!user) return;
     
+    console.log('[Frontend] Sending friend request:', { 
+      senderId: user.userId, 
+      receiverId: targetUserId 
+    });
+    
     await executeApiCall(async () => {
       const response = await fetch('/api/friends/request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         },
         body: JSON.stringify({
           senderId: user.userId,
@@ -103,79 +108,67 @@ export function useFriends(): UseFriendsReturn {
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('[Frontend] Friend request failed:', errorData);
         throw new Error(errorData.error || 'Failed to send friend request');
       }
       
       // Add the new request to the sent requests list
       const newRequest = await response.json();
+      console.log('[Frontend] Friend request successful:', newRequest);
       setSentRequests(prev => [...prev, newRequest]);
+
+      // Force refresh of friend requests
+      await fetchFriendsAndRequests();
     });
-  }, [user, executeApiCall]);
+  }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Accept a friend request
   const acceptFriendRequest = useCallback(async (requestId: string): Promise<void> => {
     if (!user) return;
-    
+
     await executeApiCall(async () => {
       const response = await fetch(`/api/friends/request/${requestId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
+        body: JSON.stringify({ 
           status: 'accepted',
-          userId: user.userId,
+          userId: user.userId 
         }),
       });
-      
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to accept friend request');
+        throw new Error('Failed to accept friend request');
       }
-      
-      // Find the request that was accepted
-      const request = receivedRequests.find(r => r.id?.toString() === requestId);
-      if (request) {
-        // Remove from received requests
-        setReceivedRequests(prev => prev.filter(r => r.id?.toString() !== requestId));
-        
-        // Add to friends list
-        setFriends(prev => [...prev, {
-          userId: request.senderId,
-          username: request.senderUsername || '',
-          firstName: request.senderFirstName || '',
-          lastName: request.senderLastName || '',
-          avatarUrl: request.senderAvatarUrl || null,
-        }]);
-      }
+
+      await fetchFriendsAndRequests();
     });
-  }, [user, executeApiCall, receivedRequests]);
+  }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Reject a friend request
   const rejectFriendRequest = useCallback(async (requestId: string): Promise<void> => {
     if (!user) return;
-    
+
     await executeApiCall(async () => {
       const response = await fetch(`/api/friends/request/${requestId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
+        body: JSON.stringify({ 
           status: 'rejected',
-          userId: user.userId,
+          userId: user.userId 
         }),
       });
-      
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to reject friend request');
+        throw new Error('Failed to reject friend request');
       }
-      
-      // Remove from received requests
-      setReceivedRequests(prev => prev.filter(r => r.id?.toString() !== requestId));
+
+      await fetchFriendsAndRequests();
     });
-  }, [user, executeApiCall]);
+  }, [user, executeApiCall, fetchFriendsAndRequests]);
 
   // Remove a friend
   const removeFriend = useCallback(async (friendId: string): Promise<void> => {

@@ -14,7 +14,7 @@ interface FriendRequest {
 }
 
 interface Friend {
-  id: number;
+  userId: string;
   username: string;
   firstName: string;
   lastName: string;
@@ -82,9 +82,9 @@ router.get('/:userId', (req: Request, res: Response) => {
     
     // Get all friends
     const friends = db.prepare(`
-      SELECT u.id, u.username, u.firstName, u.lastName, u.avatarUrl
+      SELECT u.userId, u.username, u.firstName, u.lastName, u.avatarUrl
       FROM friendships f
-      JOIN users u ON f.friendId = u.id
+      JOIN users u ON f.friendId = u.userId
       WHERE f.userId = ?
       AND f.createdAt IS NOT NULL
     `).all(userId) as Friend[];
@@ -108,7 +108,7 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
       SELECT fr.*, u.username as senderUsername, u.firstName as senderFirstName, 
       u.lastName as senderLastName, u.avatarUrl as senderAvatarUrl
       FROM friendRequests fr
-      JOIN users u ON fr.senderId = u.id
+      JOIN users u ON fr.senderId = u.userId
       WHERE fr.receiverId = ? AND fr.status = 'pending'
     `).all(userId) as ReceivedRequest[];
     
@@ -117,7 +117,7 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
       SELECT fr.*, u.username as receiverUsername, u.firstName as receiverFirstName, 
       u.lastName as receiverLastName, u.avatarUrl as receiverAvatarUrl
       FROM friendRequests fr
-      JOIN users u ON fr.receiverId = u.id
+      JOIN users u ON fr.receiverId = u.userId
       WHERE fr.senderId = ? AND fr.status = 'pending'
     `).all(userId) as SentRequest[];
     
@@ -135,21 +135,37 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
 router.post('/request', (req: Request, res: Response) => {
   try {
     const { senderId, receiverId } = req.body;
+    console.log('[Friend Request] Attempting to send request:', { senderId, receiverId });
     
     if (!senderId || !receiverId) {
+      console.log('[Friend Request] Error: Missing required fields');
       return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    // Ensure IDs are strings
+    const senderIdStr = String(senderId);
+    const receiverIdStr = String(receiverId);
     
     ensureFriendTablesExist();
+    
+    // Debug: Check if receiver exists
+    const receiver = db.prepare('SELECT * FROM users WHERE userId = ?').get(receiverIdStr);
+    console.log('[Friend Request] Receiver check:', { receiverIdStr, receiver });
+    
+    if (!receiver) {
+      console.log('[Friend Request] Error: Receiver not found');
+      return res.status(404).json({ error: 'Receiver not found' });
+    }
     
     // Check if request already exists
     const existingRequest = db.prepare(`
       SELECT * FROM friendRequests 
       WHERE (senderId = ? AND receiverId = ?) 
       OR (senderId = ? AND receiverId = ?)
-    `).get(senderId, receiverId, receiverId, senderId) as FriendRequest | undefined;
+    `).get(senderIdStr, receiverIdStr, receiverIdStr, senderIdStr) as FriendRequest | undefined;
     
     if (existingRequest) {
+      console.log('[Friend Request] Error: Request already exists:', existingRequest);
       return res.status(400).json({ error: 'Friend request already exists' });
     }
     
@@ -158,9 +174,10 @@ router.post('/request', (req: Request, res: Response) => {
       SELECT * FROM friendships 
       WHERE (userId = ? AND friendId = ?) 
       OR (userId = ? AND friendId = ?)
-    `).get(senderId, receiverId, receiverId, senderId);
+    `).get(senderIdStr, receiverIdStr, receiverIdStr, senderIdStr);
     
     if (existingFriendship) {
+      console.log('[Friend Request] Error: Users are already friends');
       return res.status(400).json({ error: 'Already friends' });
     }
     
@@ -168,20 +185,27 @@ router.post('/request', (req: Request, res: Response) => {
     const result = db.prepare(`
       INSERT INTO friendRequests (senderId, receiverId, status, createdAt)
       VALUES (?, ?, 'pending', datetime('now'))
-    `).run(senderId, receiverId);
+    `).run(senderIdStr, receiverIdStr);
+
+    console.log('[Friend Request] Successfully created request:',
+       { requestId: result.lastInsertRowid });
 
     // Get the created request with user details
     const request = db.prepare(`
-      SELECT fr.*, u.username as receiverUsername, u.firstName as receiverFirstName, 
-      u.lastName as receiverLastName, u.avatarUrl as receiverAvatarUrl
+      SELECT fr.*, 
+      u.username as receiverUsername, 
+      u.firstName as receiverFirstName, 
+      u.lastName as receiverLastName, 
+      u.avatarUrl as receiverAvatarUrl
       FROM friendRequests fr
-      JOIN users u ON fr.receiverId = u.id
+      JOIN users u ON fr.receiverId = u.userId
       WHERE fr.id = ?
     `).get(result.lastInsertRowid) as SentRequest;
     
+    console.log('[Friend Request] Returning created request with user details:', request);
     res.status(201).json(request);
   } catch (error) {
-    console.error('Error sending friend request:', error);
+    console.error('[Friend Request] Error sending friend request:', error);
     res.status(500).json({ error: 'Failed to send friend request' });
   }
 });
@@ -191,8 +215,10 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
   try {
     const { requestId } = req.params;
     const { status, userId } = req.body;
+    console.log('[Friend Request Update] Processing request:', { requestId, status, userId });
     
     if (!status || !['accepted', 'rejected'].includes(status)) {
+      console.log('[Friend Request Update] Error: Invalid status:', status);
       return res.status(400).json({ error: 'Invalid status' });
     }
     
@@ -204,56 +230,59 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
     `).get(requestId) as FriendRequest | undefined;
     
     if (!request) {
+      console.log(`[Friend Request Update] Error: Request not found or
+         already processed:`, { requestId });
       return res.status(404).json({ error: 'Friend request not found or already processed' });
     }
     
     // Verify the user is the receiver of the request
     if (request.receiverId !== userId) {
+      console.log(`[Friend Request Update] Error: Unauthorized update attempt:`,
+         { requestId, userId, receiverId: request.receiverId });
       return res.status(403).json({ error: 'Not authorized to update this request' });
     }
     
     // Begin transaction
     db.prepare('BEGIN').run();
+    console.log('[Friend Request Update] Starting transaction for request:', { requestId, status });
     
     try {
       // Update the request status
       db.prepare(`
         UPDATE friendRequests SET status = ? WHERE id = ?
       `).run(status, requestId);
+      console.log('[Friend Request Update] Updated request status:', { requestId, status });
       
       // If accepted, create friendship entries
       if (status === 'accepted') {
-        // Dont see any need. Any cleanup will be handled when deleting friendships.
-        // Delete any existing friendship entries first
-        // db.prepare(` 
-        //   DELETE FROM friendships 
-        //   WHERE (userId = ? AND friendId = ?) 
-        //   OR (userId = ? AND friendId = ?)
-        // `).run(request.senderId, request.receiverId, request.receiverId, request.senderId);
-        
-        // Create friendship entry for the requester
-        db.prepare(`
+        // Create friendship entries for both users
+        const createFriendship = db.prepare(`
           INSERT INTO friendships (userId, friendId, createdAt)
           VALUES (?, ?, datetime('now'))
-        `).run(request.senderId, request.receiverId);
+        `);
+
+        // Create entries for both users
+        createFriendship.run(request.senderId, request.receiverId);
+        createFriendship.run(request.receiverId, request.senderId);
         
-        // Create friendship entry for the receiver
-        db.prepare(`
-          INSERT INTO friendships (userId, friendId, createdAt)
-          VALUES (?, ?, datetime('now'))
-        `).run(request.receiverId, request.senderId);
+        console.log('[Friend Request Update] Created friendship entries for users:', {
+          user1: request.senderId,
+          user2: request.receiverId
+        });
       }
       
       // Commit transaction
       db.prepare('COMMIT').run();
+      console.log('[Friend Request Update] Successfully committed transaction');
       res.json({ message: `Friend request ${status}` });
     } catch (error) {
       // Rollback transaction on error
       db.prepare('ROLLBACK').run();
+      console.error('[Friend Request Update] Transaction failed, rolling back:', error);
       throw error;
     }
   } catch (error) {
-    console.error(`Error ${req.body.status} friend request:`, error);
+    console.error(`[Friend Request Update] Error ${req.body.status} friend request:`, error);
     res.status(500).json({ error: `Failed to ${req.body.status} friend request` });
   }
 });
@@ -262,19 +291,26 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
 router.delete('/:userId/friend/:friendId', (req: Request, res: Response) => {
   try {
     const { userId, friendId } = req.params;
+    console.log('[Friend Remove] Attempting to remove friendship:', { userId, friendId });
     
     ensureFriendTablesExist();
     
     // Delete friendship entries
-    db.prepare(`
+    const result = db.prepare(`
       DELETE FROM friendships 
       WHERE (userId = ? AND friendId = ?) 
       OR (userId = ? AND friendId = ?)
     `).run(userId, friendId, friendId, userId);
     
+    console.log('[Friend Remove] Friendship removal result:', { 
+      userId, 
+      friendId, 
+      rowsAffected: result.changes 
+    });
+    
     res.json({ message: 'Friend removed' });
   } catch (error) {
-    console.error('Error removing friend:', error);
+    console.error('[Friend Remove] Error removing friend:', error);
     res.status(500).json({ error: 'Failed to remove friend' });
   }
 });
