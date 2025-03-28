@@ -53,7 +53,7 @@ const Navbar = () => {
                 <div className="flex items-center space-x-4">
                   <Link to="/personal-details" className="flex items-center space-x-2">
                     <Avatar>
-                      <AvatarImage src={profile?.avatarUrl} alt={user?.username} />
+                      <AvatarImage src={profile?.avatarUrl || undefined} alt={user?.username} />
                       <AvatarFallback>{user?.username?.[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium">{user?.username}</span>

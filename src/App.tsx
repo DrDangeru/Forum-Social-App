@@ -8,11 +8,13 @@ import PersonalDetails from './components/PersonalDetails';
 import { AuthProvider } from './providers/AuthProvider';
 import { ProfileProvider } from './providers/ProfileProvider';
 import { useAuth } from './hooks/useAuth';
+import Topics from './components/Topics';
 import './App.css';
 import PhotoGalleryPage from './components/ui/PhotoGallery';
 import Home from './components/Home';
 import { UserSearch } from './components/UserSearch';
 import ProfilePage from './components/ProfilePage';
+
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -39,6 +41,7 @@ function App() {
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Home />
+                    <Topics />
                   </ProtectedRoute>
                 } />
                 <Route path="/friends" element={

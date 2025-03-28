@@ -75,19 +75,6 @@ export interface SocialLinks {
   website?: string;
 }
 
-// Personal details structure Duplicate of MemberProfile .. delete
-// export interface PersonalDetails {
-//   location?: string;
-//   socialLinks?: SocialLinks;
-//   relationshipStatus?: string;
-//   age?: number | null;
-//   interests?: string[];
-//   occupation?: string;
-//   company?: string;
-//   hobbies?: string[];
-//   pets?: any[];
-// }
-
 // Friend request status
 export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 

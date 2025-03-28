@@ -73,15 +73,15 @@ const FriendItem: React.FC<FriendItemProps> = ({ friend, isOwner, onRemove }) =>
     <div className="flex items-center justify-between p-3 rounded-lg border">
       <div className="flex items-center space-x-3">
         <Avatar>
-          {friend.avatar_url ? (
-            <AvatarImage src={friend.avatar_url} alt={`${friend.first_name} ${friend.last_name}`} />
+          {friend.avatarUrl ? (
+            <AvatarImage src={friend.avatarUrl} alt={`${friend.firstName} ${friend.lastName}`} />
           ) : (
-            <AvatarFallback>{getInitials(`${friend.first_name} ${friend.last_name}`)}
+            <AvatarFallback>{getInitials(`${friend.firstName} ${friend.lastName}`)}
             </AvatarFallback>
           )}
         </Avatar>
         <div>
-          <p className="font-medium">{friend.first_name} {friend.last_name}</p>
+          <p className="font-medium">{friend.firstName} {friend.lastName}</p>
           <p className="text-sm text-muted-foreground">@{friend.username}</p>
         </div>
       </div>

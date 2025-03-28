@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useFriends } from '../hooks/useFriends';
 import type { MemberProfile, BasicProfile } from '../../server/types';
+import { Button } from './ui/button';
 
 const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -11,6 +12,7 @@ const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -33,6 +35,10 @@ const ProfilePage: React.FC = () => {
       fetchProfile();
     }
   }, [userId]);
+
+  const handleStartTopic = () => {
+    navigate('/topics');
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -73,11 +79,21 @@ const ProfilePage: React.FC = () => {
             {profile.bio && (
               <p className="text-gray-700 mb-4">{profile.bio}</p>
             )}
-            {userId && !isFriend(userId) && user?.userId !== userId && (
-              <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                Add Friend
-              </button>
-            )}
+            <div className="flex space-x-3">
+              {userId && !isFriend(userId) && user?.userId !== userId && (
+                <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                  Add Friend
+                </button>
+              )}
+              {user?.userId === userId && (
+                <Button 
+                  onClick={handleStartTopic} 
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  Start a Topic
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
