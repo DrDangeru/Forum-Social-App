@@ -131,11 +131,22 @@ export interface Topic {
   updatedAt: string;
   
   // Client-specific additions
-  headline?: string;
   topicOwnerOrMod?: string;
   followers?: User[];
   posts?: Post[];
   public?: boolean;
+  
+  // New fields for enhanced functionality
+  isPublic?: boolean;
+  creatorUsername?: string;
+  //creatorFirstName?: string;
+  //creatorLastName?: string;
+  firstPost?: Post & {
+    authorUsername?: string;
+    //authorFirstName?: string;
+    //authorLastName?: string;
+    authorAvatarUrl?: string | null;
+  };
 }
 
 // Post definition
@@ -151,6 +162,12 @@ export interface Post {
   author?: User | BasicProfile;
   topic?: Topic | string;
   comments?: Comment[];
+  
+  // New fields for enhanced functionality
+  authorUsername?: string;
+  //authorFirstName?: string;
+ //authorLastName?: string;
+  authorAvatarUrl?: string | null;
 }
 
 // Comment definition

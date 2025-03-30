@@ -10,6 +10,7 @@ import authRoutes from './routes/auth';
 import profileRoutes from './routes/profile';
 import friendsRoutes from './routes/friends';
 import usersRoutes from './routes/users';
+import topicsRoutes from './routes/topics';
 
 // Configure ES modules path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -68,6 +69,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/topics', topicsRoutes);
 
 // Social Features
 app.get('/api/feed', (req: Request, res: Response) => {

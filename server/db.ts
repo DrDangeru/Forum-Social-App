@@ -74,12 +74,26 @@ function initializeDatabase() {
       FOREIGN KEY (friendId) REFERENCES users (userId)
     );
 
+    CREATE TABLE IF NOT EXISTS topics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      createdBy TEXT NOT NULL,
+      isPublic INTEGER DEFAULT 1,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (createdBy) REFERENCES users (userId)
+    );
+
     CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId TEXT NOT NULL,
+      topicId INTEGER,
       content TEXT NOT NULL,
+      createdBy TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES users (userId)
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (topicId) REFERENCES topics (id),
+      FOREIGN KEY (createdBy) REFERENCES users (userId)
     );
 
     CREATE TABLE IF NOT EXISTS follows (
@@ -89,12 +103,6 @@ function initializeDatabase() {
       PRIMARY KEY (followerId, followingId),
       FOREIGN KEY (followerId) REFERENCES users (userId),
       FOREIGN KEY (followingId) REFERENCES users (userId)
-    );
-
-    CREATE TABLE IF NOT EXISTS topics (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT UNIQUE NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS userTopics (

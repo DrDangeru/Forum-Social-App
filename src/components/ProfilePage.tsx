@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useFriends } from '../hooks/useFriends';
 import type { MemberProfile, BasicProfile } from '../../server/types';
 import { Button } from './ui/button';
+import UserTopics from './UserTopics';
 
 const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -58,6 +59,9 @@ const ProfilePage: React.FC = () => {
     username: '',
     avatarUrl: null
   };
+
+  // Check if the current user can view topics (own profile or friend)
+  const canViewTopics = user?.userId === userId || (userId && isFriend(userId));
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -186,6 +190,17 @@ const ProfilePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* User Topics Section - Only shown for own profile or friends */}
+      {canViewTopics && userId && (
+        <div className="col-span-1 md:col-span-2">
+          <UserTopics 
+            userId={userId} 
+            showCreateButton={user?.userId === userId}
+            onCreateTopic={handleStartTopic}
+          />
+        </div>
+      )}
     </div>
   );
 };

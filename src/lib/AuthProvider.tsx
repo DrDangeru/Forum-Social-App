@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const register = useCallback(async (data: Omit<AuthCredentials, 'userId'> & { 
         firstName: string; 
         lastName: string;
+        email: string;
     }): Promise<User> => {
         try {
             // Send registration data without userId (server will generate it)

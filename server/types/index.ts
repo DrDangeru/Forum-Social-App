@@ -139,16 +139,7 @@ export interface Post {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
-}
-
-// Comment definition
-export interface Comment {
-  id: number;
-  postId: number;
-  content: string;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
+  authorUsername?: string;
 }
 
 // Follow relationship

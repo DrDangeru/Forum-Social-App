@@ -119,18 +119,6 @@ export interface Post {
   updatedAt: string;
   author?: User | BasicProfile;
   topic?: Topic | string;
-  comments?: Comment[];
-}
-
-// Comment definition
-export interface Comment {
-  id: number;
-  postId: number;
-  content: string;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  author?: User | BasicProfile;
 }
 
 // Follow relationship
