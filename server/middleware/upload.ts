@@ -34,14 +34,14 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter
+// File filter multer.File lint error but confirmed working
 const fileFilter = (
   _req: Request, 
   file: multer.File, 
   cb: multer.FileFilterCallback
 ) => {
-  // Accept images and common document types
-  const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+  // Accept images and maybe add document types 'application/pdf' later/ risk of security issues
+  const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
@@ -56,6 +56,6 @@ export const upload = multer({
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB file size limit
-    files: 10 // Maximum 10 files
+    files: 35 // Maximum 35 files
   }
 });

@@ -140,6 +140,7 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
   authorUsername?: string;
+  authorAvatarUrl?: string | null;
 }
 
 // Follow relationship

@@ -1,44 +1,22 @@
 import express from 'express';
 import type { Request, Response } from 'express';
 import db from '../db';
+import { 
+  FriendRequest, 
+  BasicProfile as Friend 
+} from '../types';
 
 const router = express.Router();
 
-// Define types for database results
-interface FriendRequest {
-  id: number;
-  senderId: string;
-  receiverId: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  createdAt: string;
-}
-
-interface Friend {
-  userId: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  avatarUrl: string;
-}
-
-interface ReceivedRequest {
-  id: number;
-  senderId: string;
-  receiverId: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  createdAt: string;
+// Define types for database results that extend the base types
+interface ReceivedRequest extends FriendRequest {
   senderUsername: string;
   senderFirstName: string;
   senderLastName: string;
   senderAvatarUrl: string;
 }
-
-interface SentRequest {
-  id: number;
-  senderId: string;
-  receiverId: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  createdAt: string;
+// Could be added in types.ts, but used just here...
+interface SentRequest extends FriendRequest {
   receiverUsername: string;
   receiverFirstName: string;
   receiverLastName: string;
@@ -148,16 +126,17 @@ router.post('/request', (req: Request, res: Response) => {
     
     ensureFriendTablesExist();
     
-    // Debug: Check if receiver exists
-    const receiver = db.prepare('SELECT * FROM users WHERE userId = ?').get(receiverIdStr);
-    console.log('[Friend Request] Receiver check:', { receiverIdStr, receiver });
+    // Debug: Check if receiver exists. Receiver would be selected already.. no need for
+    // rechecking every time / step (Lookup from the users table prior to this)
+    // const receiver = db.prepare('SELECT * FROM users WHERE userId = ?').get(receiverIdStr);
+    // console.log('[Friend Request] Receiver check:', { receiverIdStr, receiver });
     
-    if (!receiver) {
-      console.log('[Friend Request] Error: Receiver not found');
-      return res.status(404).json({ error: 'Receiver not found' });
-    }
+    // if (!receiver) {
+    //   console.log('[Friend Request] Error: Receiver not found');
+    //   return res.status(404).json({ error: 'Receiver not found' });
+    // }
     
-    // Check if request already exists
+    // Check if request already exists (confirm if needed)
     const existingRequest = db.prepare(`
       SELECT * FROM friendRequests 
       WHERE (senderId = ? AND receiverId = ?) 
@@ -169,7 +148,8 @@ router.post('/request', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Friend request already exists' });
     }
     
-    // Check if they are already friends
+    // Check if they are already friends .. confirm this for delete. Existing 
+    // friends should not show for requests anyway...
     const existingFriendship = db.prepare(`
       SELECT * FROM friendships 
       WHERE (userId = ? AND friendId = ?) 

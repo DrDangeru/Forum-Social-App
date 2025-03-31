@@ -7,6 +7,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea.tsx';
 import axios from 'axios';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 
 export default function Topics() {
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -286,14 +287,29 @@ export default function Topics() {
                           )
                           .map((post: Post) => (
                             <div key={post.id} className="bg-gray-50 p-3 rounded-md">
-                              <p className="text-gray-800">{post.content}</p>
-                              <div className="flex justify-between mt-2">
-                                <span className="text-xs text-gray-500">
-                                  By: {post.authorUsername}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {new Date(post.createdAt).toLocaleString()}
-                                </span>
+                              <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0">
+                                  <Avatar className="h-24 w-24">
+                                    <AvatarImage 
+                                      src={post.authorAvatarUrl || undefined} 
+                                      alt={post.authorUsername} 
+                                    />
+                                    <AvatarFallback className="text-lg">
+                                      {post.authorUsername?.[0]?.toUpperCase() || '?'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-gray-800">{post.content}</p>
+                                  <div className="flex justify-between mt-2">
+                                    <span className="text-xs text-gray-500">
+                                      By: {post.authorUsername}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {new Date(post.createdAt).toLocaleString()}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ))}

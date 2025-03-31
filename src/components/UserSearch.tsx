@@ -8,6 +8,7 @@ import { Button } from './ui/button';
 import type { BasicProfile } from '../types';
 
 interface UserSearchProps {
+  // eslint-disable-next-line no-unused-vars 
   onUserSelect?: (user: BasicProfile) => void;
   // eslint-disable-next-line no-unused-vars
   getFriendStatus?: (targetUserId: string) => 'none' | 'friends' | 'received' | 'sent';

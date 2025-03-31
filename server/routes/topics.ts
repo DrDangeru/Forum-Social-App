@@ -6,6 +6,38 @@ import { Post } from '../types/index';
 
 const router = express.Router();
 
+// Helper function to get posts for a topic
+const getPostsForTopic = (topicId: number): Post[] => {
+  let posts: Post[] = [];
+  try {
+    const rawPosts = db.prepare(`
+      SELECT p.id, p.topicId, p.content, p.createdBy, p.createdAt, p.updatedAt,
+             u.username as authorUsername, u.avatarUrl as authorAvatarUrl
+      FROM posts p
+      JOIN users u ON p.createdBy = u.userId
+      WHERE p.topicId = ?
+      ORDER BY p.createdAt ASC
+    `).all(topicId) as 
+    { id: number; topicId: number; content: string; createdBy: string; createdAt: string; 
+      updatedAt: string; authorUsername: string; authorAvatarUrl: string | null }[];
+
+    posts = rawPosts.map((post) => ({
+      id: post.id,
+      topicId: post.topicId,
+      content: post.content,
+      createdBy: post.createdBy,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      authorUsername: post.authorUsername,
+      authorAvatarUrl: post.authorAvatarUrl,
+    }));
+  } catch (err) {
+    // If posts table doesn't exist, use an empty array
+    console.log('Posts table may not exist yet:', err);
+  }
+  return posts;
+};
+
 // Get all topics
 router.get('/', (_req: Request, res: Response) => {
   try {
@@ -21,34 +53,7 @@ router.get('/', (_req: Request, res: Response) => {
 
     // Get posts for each topic
     const topicsWithPosts = topics.map((topic) => {
-      // Try to get posts from the posts table if it exists
-      let posts: Post[] = [];
-      try {
-        const rawPosts = db.prepare(`
-          SELECT p.id, p.topicId, p.content, p.createdBy, p.createdAt, p.updatedAt,
-                 u.username as authorUsername
-          FROM posts p
-          JOIN users u ON p.createdBy = u.userId
-          WHERE p.topicId = ?
-          ORDER BY p.createdAt ASC
-        `).all(topic.id) as 
-        { id: number; topicId: number; content: string; createdBy: string; createdAt: string; 
-          updatedAt: string; authorUsername: string }[];
-
-        posts = rawPosts.map((post) => ({
-          id: post.id,
-          topicId: post.topicId,
-          content: post.content,
-          createdBy: post.createdBy,
-          createdAt: post.createdAt,
-          updatedAt: post.updatedAt,
-          authorUsername: post.authorUsername,
-        }));
-      } catch (err) {
-        // If posts table doesn't exist, use an empty array
-        console.log('Posts table may not exist yet:', err);
-      }
-
+      const posts = getPostsForTopic(topic.id);
       return {
         ...topic,
         description: topic.title, // Use title as description for now
@@ -82,34 +87,7 @@ router.get('/user/:userId', (req: Request, res: Response) => {
 
     // Get posts for each topic
     const topicsWithPosts = topics.map((topic) => {
-      // Try to get posts from the posts table if it exists
-      let posts: Post[] = [];
-      try {
-        const rawPosts = db.prepare(`
-          SELECT p.id, p.topicId, p.content, p.createdBy, p.createdAt, p.updatedAt,
-                 u.username as authorUsername
-          FROM posts p
-          JOIN users u ON p.createdBy = u.userId
-          WHERE p.topicId = ?
-          ORDER BY p.createdAt ASC
-        `).all(topic.id) as 
-        { id: number; topicId: number; content: string; createdBy: string; createdAt: string; 
-          updatedAt: string; authorUsername: string }[];
-
-        posts = rawPosts.map((post) => ({
-          id: post.id,
-          topicId: post.topicId,
-          content: post.content,
-          createdBy: post.createdBy,
-          createdAt: post.createdAt,
-          updatedAt: post.updatedAt,
-          authorUsername: post.authorUsername,
-        }));
-      } catch (err) {
-        // If posts table doesn't exist, use an empty array
-        console.log('Posts table may not exist yet:', err);
-      }
-
+      const posts = getPostsForTopic(topic.id);
       return {
         ...topic,
         description: topic.title, // Use title as description for now
@@ -152,34 +130,7 @@ router.get('/friends/:userId', (req: Request, res: Response) => {
 
     // Get posts for each topic
     const topicsWithPosts = topics.map((topic) => {
-      // Try to get posts from the posts table if it exists
-      let posts: Post[] = [];
-      try {
-        const rawPosts = db.prepare(`
-          SELECT p.id, p.topicId, p.content, p.createdBy, p.createdAt, p.updatedAt,
-                 u.username as authorUsername
-          FROM posts p
-          JOIN users u ON p.createdBy = u.userId
-          WHERE p.topicId = ?
-          ORDER BY p.createdAt ASC
-        `).all(topic.id) as 
-        { id: number; topicId: number; content: string; createdBy: string; createdAt: string; 
-          updatedAt: string; authorUsername: string }[];
-
-        posts = rawPosts.map((post) => ({
-          id: post.id,
-          topicId: post.topicId,
-          content: post.content,
-          createdBy: post.createdBy,
-          createdAt: post.createdAt,
-          updatedAt: post.updatedAt,
-          authorUsername: post.authorUsername,
-        }));
-      } catch (err) {
-        // If posts table doesn't exist, use an empty array
-        console.log('Posts table may not exist yet:', err);
-      }
-
+      const posts = getPostsForTopic(topic.id);
       return {
         ...topic,
         description: topic.title, // Use title as description for now
@@ -216,35 +167,9 @@ router.get('/:topicId', (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Topic not found' });
     }
 
-    // Get posts for this topic
-    let posts: Post[] = [];
-    try {
-      const rawPosts = db.prepare(`
-        SELECT p.id, p.topicId, p.content, p.createdBy, p.createdAt, p.updatedAt,
-               u.username as authorUsername
-        FROM posts p
-        JOIN users u ON p.createdBy = u.userId
-        WHERE p.topicId = ?
-        ORDER BY p.createdAt ASC
-      `).all(topicId) as 
-      { id: number; topicId: number; content: string; createdBy: string;
-        createdAt: string; updatedAt: string; authorUsername: string }[];
+    const posts = getPostsForTopic(topic.id);
 
-      posts = rawPosts.map((post) => ({
-        id: post.id,
-        topicId: Number(topicId),
-        content: post.content,
-        createdBy: post.createdBy,
-        createdAt: post.createdAt,
-        updatedAt: post.updatedAt,
-        authorUsername: post.authorUsername,
-      }));
-    } catch (err) {
-      console.log('Posts table may not exist yet:', err);
-    }
-
-    // Format the topic to match our new schema
-    const formattedTopic = {
+    const topicWithPosts = {
       ...topic,
       description: topic.title, // Use title as description for now
       createdBy: '',
@@ -253,7 +178,7 @@ router.get('/:topicId', (req: Request, res: Response) => {
       posts: posts
     };
 
-    res.json(formattedTopic);
+    res.json(topicWithPosts);
   } catch (error) {
     handleServerError(res, error, 'Failed to get topic');
   }
@@ -282,8 +207,26 @@ router.post('/', (req: Request, res: Response) => {
         VALUES (?, ?, CURRENT_TIMESTAMP)
       `).run(createdBy, topicId);
       
-      // Create posts table if it doesn't exist
+      // Drop and recreate posts table to ensure it has the correct schema
       try {
+        // First check if the posts table exists
+        const tableExists = db.prepare(`
+          SELECT name FROM sqlite_master WHERE type='table' AND name='posts'
+        `).get();
+        
+        if (tableExists) {
+          // Check if the table has the topicId column
+          const hasTopicId = db.prepare(`
+            PRAGMA table_info(posts)
+          `).all().some((col: any) => col.name === 'topicId');
+          
+          if (!hasTopicId) {
+            // Drop the table if it doesn't have the topicId column
+            db.prepare(`DROP TABLE IF EXISTS posts`).run();
+          }
+        }
+        
+        // Create the posts table with the correct schema
         db.prepare(`
           CREATE TABLE IF NOT EXISTS posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -313,8 +256,8 @@ router.post('/', (req: Request, res: Response) => {
           
           // Get user info
           const user = db.prepare(`
-            SELECT username FROM users WHERE userId = ?
-          `).get(createdBy) as { username: string } | null;
+            SELECT username, avatarUrl FROM users WHERE userId = ?
+          `).get(createdBy) as { username: string; avatarUrl: string | null } | undefined;
           
           // Add the post to the posts array
           const newPost: Post = {
@@ -324,7 +267,8 @@ router.post('/', (req: Request, res: Response) => {
             createdBy: createdBy,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            authorUsername: user ? user.username : ''
+            authorUsername: user?.username ?? '',
+            authorAvatarUrl: user?.avatarUrl ?? ''
           };
           
           posts.push(newPost);
@@ -338,8 +282,8 @@ router.post('/', (req: Request, res: Response) => {
       
       // Get user info
       const user = db.prepare(`
-        SELECT username FROM users WHERE userId = ?
-      `).get(createdBy) as { username: string } | null;
+        SELECT username, avatarUrl FROM users WHERE userId = ?
+      `).get(createdBy) as { username: string; avatarUrl: string | null } | undefined;
       
       // Create a formatted response
       const newTopic = {
@@ -350,7 +294,8 @@ router.post('/', (req: Request, res: Response) => {
         isPublic: isPublic,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        creatorUsername: user ? user.username : '',
+        creatorUsername: user?.username ?? '',
+        creatorAvatarUrl: user?.avatarUrl ?? '',
         posts: posts
       };
       
@@ -378,8 +323,26 @@ router.post('/:topicId/posts', (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Topic not found' });
     }
     
-    // Create posts table if it doesn't exist
+    // Check if the posts table exists and has the correct schema
     try {
+      // First check if the posts table exists
+      const tableExists = db.prepare(`
+        SELECT name FROM sqlite_master WHERE type='table' AND name='posts'
+      `).get();
+      
+      if (tableExists) {
+        // Check if the table has the topicId column
+        const hasTopicId = db.prepare(`
+          PRAGMA table_info(posts)
+        `).all().some((col: any) => col.name === 'topicId');
+        
+        if (!hasTopicId) {
+          // Drop the table if it doesn't have the topicId column
+          db.prepare(`DROP TABLE IF EXISTS posts`).run();
+        }
+      }
+      
+      // Create the posts table with the correct schema
       db.prepare(`
         CREATE TABLE IF NOT EXISTS posts (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -412,8 +375,8 @@ router.post('/:topicId/posts', (req: Request, res: Response) => {
     
     // Get user info
     const user = db.prepare(`
-      SELECT username FROM users WHERE userId = ?
-    `).get(createdBy) as { username: string } | null;
+      SELECT username, avatarUrl FROM users WHERE userId = ?
+    `).get(createdBy) as { username: string; avatarUrl: string | null } | undefined;
     
     // Create a formatted response
     const newPost: Post = {
@@ -423,7 +386,8 @@ router.post('/:topicId/posts', (req: Request, res: Response) => {
       createdBy: createdBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      authorUsername: user ? user.username : ''
+      authorUsername: user?.username ?? '',
+      authorAvatarUrl: user?.avatarUrl ?? ''
     };
     
     res.status(201).json(newPost);

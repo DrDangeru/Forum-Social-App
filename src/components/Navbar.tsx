@@ -3,6 +3,7 @@ import { Bell } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
+import TopicsDropdown from './TopicsDropdown';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -28,11 +29,12 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <Link
-                  to="/friends" // maybe non needed
+                  to="/friends"
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
                 >
-                  Friends ({profile?.following?.length || 0})
+                  Friends ({profile?.friends?.length || 0})
                 </Link>
+                <TopicsDropdown />
                 <Link
                   to="/followed"
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
