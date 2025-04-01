@@ -42,24 +42,26 @@ const getPostsForTopic = (topicId: number): Post[] => {
 router.get('/', (_req: Request, res: Response) => {
   try {
     const topics = db.prepare(`
-      SELECT t.id, t.name as title, t.created_at as createdAt, 
-             u.username as creatorUsername
+      SELECT DISTINCT t.id, t.title, t.description, t.createdAt, 
+             u.username as creatorUsername, ut.userId as createdBy,
+             t.isPublic, t.updatedAt
       FROM topics t
-      JOIN users u ON t.id IN (
-        SELECT topicId FROM userTopics WHERE userId = u.userId
-      )
-      ORDER BY t.created_at DESC
-    `).all() as { id: number; title: string; createdAt: string; creatorUsername: string }[];
+      JOIN userTopics ut ON t.id = ut.topicId
+      JOIN users u ON ut.userId = u.userId
+      WHERE t.isPublic = 1
+      ORDER BY t.createdAt DESC
+    `).all() as { id: number; title: string; createdAt: string; 
+      creatorUsername: string; createdBy: string; description: string | null; 
+      isPublic: number | null; updatedAt: string | null }[];
 
     // Get posts for each topic
     const topicsWithPosts = topics.map((topic) => {
       const posts = getPostsForTopic(topic.id);
       return {
         ...topic,
-        description: topic.title, // Use title as description for now
-        createdBy: '',
-        isPublic: true,
-        updatedAt: topic.createdAt,
+        description: topic.description ?? topic.title,
+        isPublic: topic.isPublic === 1,
+        updatedAt: topic.updatedAt ?? topic.createdAt,
         posts: posts
       };
     });
@@ -76,24 +78,26 @@ router.get('/user/:userId', (req: Request, res: Response) => {
     const { userId } = req.params;
     
     const topics = db.prepare(`
-      SELECT t.id, t.name as title, t.created_at as createdAt,
-             u.username as creatorUsername
+      SELECT DISTINCT t.id, t.title, t.description, t.createdAt,
+             u.username as creatorUsername, ut.userId as createdBy,
+             t.isPublic, t.updatedAt
       FROM topics t
       JOIN userTopics ut ON t.id = ut.topicId
       JOIN users u ON ut.userId = u.userId
       WHERE ut.userId = ?
-      ORDER BY t.created_at DESC
-    `).all(userId) as { id: number; title: string; createdAt: string; creatorUsername: string }[];
+      ORDER BY t.createdAt DESC
+    `).all(userId) as { id: number; title: string; createdAt: string; 
+      creatorUsername: string; createdBy: string; description: string | null; 
+      isPublic: number | null; updatedAt: string | null }[];
 
     // Get posts for each topic
     const topicsWithPosts = topics.map((topic) => {
       const posts = getPostsForTopic(topic.id);
       return {
         ...topic,
-        description: topic.title, // Use title as description for now
-        createdBy: userId,
-        isPublic: true,
-        updatedAt: topic.createdAt,
+        description: topic.description ?? topic.title,
+        isPublic: topic.isPublic === 1,
+        updatedAt: topic.updatedAt ?? topic.createdAt,
         posts: posts
       };
     });
@@ -110,33 +114,39 @@ router.get('/friends/:userId', (req: Request, res: Response) => {
     const { userId } = req.params;
     
     const topics = db.prepare(`
-      SELECT t.id, t.name as title, t.created_at as createdAt,
-             u.username as creatorUsername
+      SELECT DISTINCT t.id, t.title, t.description, t.createdAt,
+             u.username as creatorUsername, ut.userId as createdBy,
+             t.isPublic, t.updatedAt
       FROM topics t
       JOIN userTopics ut ON t.id = ut.topicId
       JOIN users u ON ut.userId = u.userId
-      WHERE ut.userId IN (
-        SELECT f1.friendId
-        FROM friendships f1
-        WHERE f1.userId = ? AND f1.status = 'accepted'
-        UNION
-        SELECT f2.userId
-        FROM friendships f2
-        WHERE f2.friendId = ? AND f2.status = 'accepted'
+      JOIN friendships f ON (
+        (f.userId = ? AND f.friendId = ut.userId) OR
+        (f.friendId = ? AND f.userId = ut.userId)
       )
-      ORDER BY t.created_at DESC
-    `).all(userId, userId) as { id: number; title: string; 
-      createdAt: string; creatorUsername: string }[];
+      WHERE f.status = 'accepted'
+        AND (t.isPublic = 1 OR ut.userId IN (
+          SELECT f2.friendId
+          FROM friendships f2
+          WHERE f2.userId = ? AND f2.status = 'accepted'
+          UNION
+          SELECT f3.userId
+          FROM friendships f3
+          WHERE f3.friendId = ? AND f3.status = 'accepted'
+        ))
+      ORDER BY t.createdAt DESC
+    `).all(userId, userId, userId, userId) as { id: number; title: string; createdAt: string; 
+      creatorUsername: string; createdBy: string; description: string | null; 
+      isPublic: number | null; updatedAt: string | null }[];
 
     // Get posts for each topic
     const topicsWithPosts = topics.map((topic) => {
       const posts = getPostsForTopic(topic.id);
       return {
         ...topic,
-        description: topic.title, // Use title as description for now
-        createdBy: '',
-        isPublic: true,
-        updatedAt: topic.createdAt,
+        description: topic.description ?? topic.title,
+        isPublic: topic.isPublic === 1,
+        updatedAt: topic.updatedAt ?? topic.createdAt,
         posts: posts
       };
     });
@@ -153,15 +163,17 @@ router.get('/:topicId', (req: Request, res: Response) => {
     const { topicId } = req.params;
     
     const topic = db.prepare(`
-      SELECT t.id, t.name as title, t.created_at as createdAt,
-             u.username as creatorUsername
+      SELECT t.id, t.title, t.description, t.createdAt,
+             u.username as creatorUsername, ut.userId as createdBy,
+             t.isPublic, t.updatedAt
       FROM topics t
       JOIN userTopics ut ON t.id = ut.topicId
       JOIN users u ON ut.userId = u.userId
       WHERE t.id = ?
       LIMIT 1
-    `).get(topicId) as { id: number; title: string; createdAt: 
-      string; creatorUsername: string } | null;
+    `).get(topicId) as { id: number; title: string; createdAt: string;
+      creatorUsername: string; createdBy: string; description: string | null;
+      isPublic: number | null; updatedAt: string | null } | null;
     
     if (!topic) {
       return res.status(404).json({ error: 'Topic not found' });
@@ -171,10 +183,9 @@ router.get('/:topicId', (req: Request, res: Response) => {
 
     const topicWithPosts = {
       ...topic,
-      description: topic.title, // Use title as description for now
-      createdBy: '',
-      isPublic: true,
-      updatedAt: topic.createdAt,
+      description: topic.description ?? topic.title,
+      isPublic: topic.isPublic === 1,
+      updatedAt: topic.updatedAt ?? topic.createdAt,
       posts: posts
     };
 
@@ -189,124 +200,83 @@ router.post('/', (req: Request, res: Response) => {
   try {
     const { title, description, createdBy, isPublic, firstPostContent } = req.body;
     
+    if (!title?.trim() || !description?.trim() || !createdBy) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
     // Start transaction
     db.prepare('BEGIN').run();
-    
+
     try {
       // Insert the topic
       const topicResult = db.prepare(`
-        INSERT INTO topics (name, created_at)
-        VALUES (?, CURRENT_TIMESTAMP)
-      `).run(title);
-      
+        INSERT INTO topics (title, description, createdBy, isPublic, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `).run(title, description, createdBy, isPublic ? 1 : 0);
+
       const topicId = Number(topicResult.lastInsertRowid);
-      
+
       // Associate the topic with the user
       db.prepare(`
-        INSERT INTO userTopics (userId, topicId, created_at)
+        INSERT INTO userTopics (userId, topicId, createdAt)
         VALUES (?, ?, CURRENT_TIMESTAMP)
       `).run(createdBy, topicId);
-      
-      // Drop and recreate posts table to ensure it has the correct schema
-      try {
-        // First check if the posts table exists
-        const tableExists = db.prepare(`
-          SELECT name FROM sqlite_master WHERE type='table' AND name='posts'
-        `).get();
-        
-        if (tableExists) {
-          // Check if the table has the topicId column
-          const hasTopicId = db.prepare(`
-            PRAGMA table_info(posts)
-          `).all().some((col: any) => col.name === 'topicId');
-          
-          if (!hasTopicId) {
-            // Drop the table if it doesn't have the topicId column
-            db.prepare(`DROP TABLE IF EXISTS posts`).run();
-          }
-        }
-        
-        // Create the posts table with the correct schema
-        db.prepare(`
-          CREATE TABLE IF NOT EXISTS posts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            topicId INTEGER NOT NULL,
-            content TEXT NOT NULL,
-            createdBy TEXT NOT NULL,
-            createdAt TEXT NOT NULL,
-            updatedAt TEXT NOT NULL,
-            FOREIGN KEY (topicId) REFERENCES topics(id) ON DELETE CASCADE,
-            FOREIGN KEY (createdBy) REFERENCES users(userId) ON DELETE CASCADE
-          )
-        `).run();
-      } catch (err) {
-        console.log('Error creating posts table:', err);
-      }
-      
-      // Insert the first post if provided
-      let posts: Post[] = [];
-      if (firstPostContent) {
-        try {
-          const postResult = db.prepare(`
-            INSERT INTO posts (topicId, content, createdBy, createdAt, updatedAt)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-          `).run(topicId, firstPostContent, createdBy);
-          
-          const postId = Number(postResult.lastInsertRowid);
-          
-          // Get user info
-          const user = db.prepare(`
-            SELECT username, avatarUrl FROM users WHERE userId = ?
-          `).get(createdBy) as { username: string; avatarUrl: string | null } | undefined;
-          
-          // Add the post to the posts array
-          const newPost: Post = {
-            id: postId,
-            topicId: topicId,
-            content: firstPostContent,
-            createdBy: createdBy,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            authorUsername: user?.username ?? '',
-            authorAvatarUrl: user?.avatarUrl ?? ''
-          };
-          
-          posts.push(newPost);
-        } catch (err) {
-          console.log('Error inserting first post:', err);
-        }
-      }
-      
-      // Commit transaction
-      db.prepare('COMMIT').run();
-      
+
       // Get user info
       const user = db.prepare(`
         SELECT username, avatarUrl FROM users WHERE userId = ?
       `).get(createdBy) as { username: string; avatarUrl: string | null } | undefined;
-      
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Insert the first post if provided
+      let posts: Post[] = [];
+      if (firstPostContent?.trim()) {
+        const postResult = db.prepare(`
+          INSERT INTO posts (topicId, content, createdBy, createdAt, updatedAt)
+          VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `).run(topicId, firstPostContent, createdBy);
+
+        const postId = Number(postResult.lastInsertRowid);
+        
+        posts.push({
+          id: postId,
+          topicId,
+          content: firstPostContent,
+          createdBy,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          authorUsername: user.username,
+          authorAvatarUrl: user.avatarUrl
+        });
+      }
+
+      // Commit transaction
+      db.prepare('COMMIT').run();
+
       // Create a formatted response
       const newTopic = {
         id: topicId,
-        title: title,
-        description: description,
-        createdBy: createdBy,
-        isPublic: isPublic,
+        title,
+        description,
+        createdBy,
+        isPublic,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        creatorUsername: user?.username ?? '',
-        creatorAvatarUrl: user?.avatarUrl ?? '',
-        posts: posts
+        creatorUsername: user.username,
+        posts
       };
-      
+
       res.status(201).json(newTopic);
     } catch (error) {
       // Rollback on error
       db.prepare('ROLLBACK').run();
-      throw error;
+      handleServerError(res, error, 'Failed to create topic');
     }
   } catch (error) {
-    handleServerError(res, error, 'Failed to create topic');
+    handleServerError(res, error, 'Failed to process request');
   }
 });
 

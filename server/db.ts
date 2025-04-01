@@ -74,7 +74,21 @@ function initializeDatabase() {
       FOREIGN KEY (friendId) REFERENCES users (userId)
     );
 
-    CREATE TABLE IF NOT EXISTS topics (
+    CREATE TABLE IF NOT EXISTS follows (
+      followerId TEXT NOT NULL,
+      followingId TEXT NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (followerId, followingId),
+      FOREIGN KEY (followerId) REFERENCES users (userId),
+      FOREIGN KEY (followingId) REFERENCES users (userId)
+    );
+  `);
+}
+
+// Function to reset topics-related tables
+function resetTopicsTables() {
+  db.exec(`
+      CREATE TABLE IF NOT EXISTS topics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       description TEXT NOT NULL,
@@ -85,9 +99,18 @@ function initializeDatabase() {
       FOREIGN KEY (createdBy) REFERENCES users (userId)
     );
 
+    CREATE TABLE IF NOT EXISTS userTopics (
+      userId TEXT NOT NULL,
+      topicId INTEGER NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (userId, topicId),
+      FOREIGN KEY (userId) REFERENCES users (userId),
+      FOREIGN KEY (topicId) REFERENCES topics (id)
+    );
+
     CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      topicId INTEGER,
+      topicId INTEGER NOT NULL,
       content TEXT NOT NULL,
       createdBy TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -95,26 +118,14 @@ function initializeDatabase() {
       FOREIGN KEY (topicId) REFERENCES topics (id),
       FOREIGN KEY (createdBy) REFERENCES users (userId)
     );
-
-    CREATE TABLE IF NOT EXISTS follows (
-      followerId TEXT NOT NULL,
-      followingId TEXT NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (followerId, followingId),
-      FOREIGN KEY (followerId) REFERENCES users (userId),
-      FOREIGN KEY (followingId) REFERENCES users (userId)
-    );
-
-    CREATE TABLE IF NOT EXISTS userTopics (
-      userId TEXT NOT NULL,
-      topicId INTEGER NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (userId, topicId),
-      FOREIGN KEY (userId) REFERENCES users (userId),
-      FOREIGN KEY (topicId) REFERENCES topics (id)
-    );
   `);
 }
+
+// Initialize the database
+initializeDatabase();
+
+// Reset topics tables on startup
+resetTopicsTables();
 
 // Database helper functions
 const dbHelpers: DbHelpers = {
@@ -348,9 +359,6 @@ const dbHelpers: DbHelpers = {
     rollback: () => db.prepare('ROLLBACK').run()
   }
 };
-
-// Initialize the database
-initializeDatabase();
 
 // Set journal mode for better performance
 db.pragma('journal_mode = WAL');

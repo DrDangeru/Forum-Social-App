@@ -6,30 +6,34 @@ import { useAuth } from './useAuth';
 export function useTopics() {
   const [userTopics, setUserTopics] = useState<Topic[]>([]);
   const [friendTopics, setFriendTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [userTopicsLoading, setUserTopicsLoading] = useState(false);
+  const [friendTopicsLoading, setFriendTopicsLoading] = useState(false);
+  const [userTopicsError, setUserTopicsError] = useState<string | null>(null);
+  const [friendTopicsError, setFriendTopicsError] = useState<string | null>(null);
   const { user } = useAuth();
 
   const fetchUserTopics = useCallback(async () => {
     if (!user) return;
     
     try {
-      setLoading(true);
-      setError(null);
+      setUserTopicsLoading(true);
+      setUserTopicsError(null);
       const response = await axios.get(`/api/topics/user/${user.userId}`);
       
-      // Ensure each topic has a posts array
+      // Ensure each topic has a posts array and correct isPublic field
       const processedTopics = response.data.map((topic: any) => ({
         ...topic,
-        posts: topic.posts || []
+        posts: topic.posts || [],
+        isPublic: topic.isPublic === 1 || topic.isPublic === true
       }));
       
       setUserTopics(processedTopics);
     } catch (err) {
       console.error('Failed to fetch user topics:', err);
-      setError('Failed to fetch your topics');
+      setUserTopicsError('Failed to fetch your topics');
+      setUserTopics([]);
     } finally {
-      setLoading(false);
+      setUserTopicsLoading(false);
     }
   }, [user]);
 
@@ -37,38 +41,48 @@ export function useTopics() {
     if (!user) return;
     
     try {
-      setLoading(true);
-      setError(null);
+      setFriendTopicsLoading(true);
+      setFriendTopicsError(null);
       const response = await axios.get(`/api/topics/friends/${user.userId}`);
       
-      // Ensure each topic has a posts array
+      // Ensure each topic has a posts array and correct isPublic field
       const processedTopics = response.data.map((topic: any) => ({
         ...topic,
-        posts: topic.posts || []
+        posts: topic.posts || [],
+        isPublic: topic.isPublic === 1 || topic.isPublic === true
       }));
       
       setFriendTopics(processedTopics);
     } catch (err) {
       console.error('Failed to fetch friend topics:', err);
-      setError('Failed to fetch friend topics');
+      setFriendTopicsError('Failed to fetch friend topics');
+      setFriendTopics([]);
     } finally {
-      setLoading(false);
+      setFriendTopicsLoading(false);
     }
   }, [user]);
 
-  useEffect(() => {
+  const refreshTopics = useCallback(() => {
     fetchUserTopics();
     fetchFriendTopics();
   }, [fetchUserTopics, fetchFriendTopics]);
 
+  useEffect(() => {
+    if (user) {
+      refreshTopics();
+    } else {
+      setUserTopics([]);
+      setFriendTopics([]);
+    }
+  }, [user, refreshTopics]);
+
   return {
     userTopics,
     friendTopics,
-    loading,
-    error,
-    refreshTopics: useCallback(() => {
-      fetchUserTopics();
-      fetchFriendTopics();
-    }, [fetchUserTopics, fetchFriendTopics])
+    userTopicsLoading,
+    friendTopicsLoading,
+    userTopicsError,
+    friendTopicsError,
+    refreshTopics
   };
 }

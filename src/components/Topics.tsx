@@ -10,7 +10,7 @@ import axios from 'axios';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 
 export default function Topics() {
-  const [topics, setTopics] = useState<Topic[]>([]);
+  const [userTopics, setUserTopics] = useState<Topic[]>([]);
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -28,13 +28,13 @@ export default function Topics() {
       // Fetch user's topics
       const response = await axios.get(`/api/topics/user/${user.userId}`);
       
-      // Ensure each topic has a posts array
+      // Process topics
       const processedTopics = response.data.map((topic: any) => ({
         ...topic,
         posts: topic.posts || []
       }));
       
-      setTopics(processedTopics);
+      setUserTopics(processedTopics);
     } catch (error) {
       console.error('Failed to fetch topics:', error);
     } finally {
@@ -74,7 +74,7 @@ export default function Topics() {
         posts: response.data.posts || []
       };
       
-      setTopics(prev => [newTopic, ...prev]);
+      setUserTopics(prev => [newTopic, ...prev]);
       resetForm();
       setShowForm(false);
     } catch (error) {
@@ -106,7 +106,7 @@ export default function Topics() {
       });
       
       // Update the topics state with the new post
-      setTopics(prev => 
+      setUserTopics(prev => 
         prev.map(topic => {
           if (topic.id === topicId) {
             return {
@@ -139,22 +139,16 @@ export default function Topics() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Topics</h1>
-        <Button 
-          onClick={() => setShowForm(true)}
-          className="bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-2"
-          size="lg"
-          disabled={loading}
-        >
-          Start a New Topic
+    <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Cancel' : 'Create New Topic'}
         </Button>
       </div>
-      
+
       {showForm && (
-        <Card className="mb-6 border-2 border-green-200 shadow-lg">
-          <CardHeader className="bg-green-50">
+        <Card className="mb-4">
+          <CardHeader>
             <CardTitle>Create New Topic</CardTitle>
           </CardHeader>
           <CardContent>
@@ -228,29 +222,13 @@ export default function Topics() {
           </CardContent>
         </Card>
       )}
-      
-      {!showForm && topics.length === 0 ? (
-        <Card className="border border-dashed border-gray-300 bg-gray-50">
-          <CardContent className="py-10 text-center">
-            {loading ? (
-              <p className="text-gray-500 mb-4">Loading topics...</p>
-            ) : (
-              <>
-                <p className="text-gray-500 mb-4">No topics found. Create one to get started!</p>
-                <Button 
-                  onClick={() => setShowForm(true)}
-                  className="bg-green-500 hover:bg-green-600"
-                >
-                  Start Your First Topic
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
+
+      {loading ? (
+        <div>Loading topics...</div>
       ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {topics.map(topic => (
-            <Card key={topic.id} className="w-full">
+        <div className="space-y-4">
+          {userTopics.map((topic) => (
+            <Card key={topic.id}>
               <CardHeader>
                 <CardTitle>{topic.title}</CardTitle>
               </CardHeader>
@@ -355,6 +333,11 @@ export default function Topics() {
               </CardContent>
             </Card>
           ))}
+          {userTopics.length === 0 && (
+            <div className="text-center text-gray-500">
+              No topics yet
+            </div>
+          )}
         </div>
       )}
     </div>

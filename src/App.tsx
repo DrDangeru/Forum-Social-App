@@ -9,6 +9,7 @@ import { AuthProvider } from './providers/AuthProvider';
 import { ProfileProvider } from './providers/ProfileProvider';
 import { useAuth } from './hooks/useAuth';
 import Topics from './components/Topics';
+import FriendTopics from './components/FriendTopics';
 import './App.css';
 import PhotoGalleryPage from './components/ui/PhotoGallery';
 import Home from './components/Home';
@@ -41,7 +42,16 @@ function App() {
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Home />
+                  </ProtectedRoute>
+                } />
+                <Route path="/topics" element={
+                  <ProtectedRoute>
                     <Topics />
+                  </ProtectedRoute>
+                } />
+                <Route path="/friend-topics" element={
+                  <ProtectedRoute>
+                    <FriendTopics />
                   </ProtectedRoute>
                 } />
                 <Route path="/friends" element={
