@@ -10,6 +10,7 @@ import { ProfileProvider } from './providers/ProfileProvider';
 import { useAuth } from './hooks/useAuth';
 import Topics from './components/Topics';
 import FriendTopics from './components/FriendTopics';
+import TopicView from './components/TopicView';
 import './App.css';
 import PhotoGalleryPage from './components/ui/PhotoGallery';
 import Home from './components/Home';
@@ -47,6 +48,11 @@ function App() {
                 <Route path="/topics" element={
                   <ProtectedRoute>
                     <Topics />
+                  </ProtectedRoute>
+                } />
+                <Route path="/topics/:topicId" element={
+                  <ProtectedRoute>
+                    <TopicView />
                   </ProtectedRoute>
                 } />
                 <Route path="/friend-topics" element={

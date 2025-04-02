@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { useTopics } from '../hooks/useTopics';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { useNavigate } from 'react-router-dom';
 
 export default function FriendTopics() {
   const { 
@@ -8,6 +9,7 @@ export default function FriendTopics() {
     friendTopicsLoading: loading,
     friendTopicsError: error
   } = useTopics();
+  const navigate = useNavigate();
 
   if (loading) {
     return <div>Loading friend topics...</div>;
@@ -28,7 +30,11 @@ export default function FriendTopics() {
       ) : (
         <div className="space-y-4">
           {friendTopics.map((topic) => (
-            <Card key={topic.id}>
+            <Card 
+              key={topic.id}
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate(`/topics/${topic.id}`)}
+            >
               <CardHeader>
                 <CardTitle>{topic.title}</CardTitle>
               </CardHeader>

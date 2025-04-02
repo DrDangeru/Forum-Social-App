@@ -213,6 +213,7 @@ export const TopicsDropdown: React.FC = () => {
               <Button
                 type="submit"
                 disabled={isSubmitting || !title.trim() || !description.trim()}
+                className="bg-blue-400 hover:bg-blue-500 text-white"
               >
                 {isSubmitting ? 'Creating...' : 'Create Topic'}
               </Button>

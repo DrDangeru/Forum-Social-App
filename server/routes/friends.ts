@@ -43,10 +43,11 @@ function ensureFriendTablesExist() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId TEXT NOT NULL,
       friendId TEXT NOT NULL,
+      status TEXT DEFAULT 'pending',
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(userId, friendId),
-      FOREIGN KEY (userId) REFERENCES users (id),
-      FOREIGN KEY (friendId) REFERENCES users (id)
+      FOREIGN KEY (userId) REFERENCES users (userId),
+      FOREIGN KEY (friendId) REFERENCES users (userId)
     );
   `).run();
 }
@@ -64,7 +65,7 @@ router.get('/:userId', (req: Request, res: Response) => {
       FROM friendships f
       JOIN users u ON f.friendId = u.userId
       WHERE f.userId = ?
-      AND f.createdAt IS NOT NULL
+      AND f.status = 'accepted'
     `).all(userId) as Friend[];
     
     res.json(friends);
@@ -237,8 +238,8 @@ router.put('/request/:requestId', (req: Request, res: Response) => {
       if (status === 'accepted') {
         // Create friendship entries for both users
         const createFriendship = db.prepare(`
-          INSERT INTO friendships (userId, friendId, createdAt)
-          VALUES (?, ?, datetime('now'))
+          INSERT INTO friendships (userId, friendId, status, createdAt)
+          VALUES (?, ?, 'accepted', datetime('now'))
         `);
 
         // Create entries for both users

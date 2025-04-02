@@ -139,6 +139,7 @@ export interface Topic {
   // New fields for enhanced functionality
   isPublic?: boolean;
   creatorUsername?: string;
+  creatorAvatarUrl?: string | null;
   //creatorFirstName?: string;
   //creatorLastName?: string;
   firstPost?: Post & {

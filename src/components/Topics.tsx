@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Topic, Post } from '../types';
@@ -19,6 +20,7 @@ export default function Topics() {
   const [showForm, setShowForm] = useState(false);
   const [postContents, setPostContents] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const fetchTopics = useCallback(async () => {
     if (!user) return;
@@ -228,7 +230,13 @@ export default function Topics() {
       ) : (
         <div className="space-y-4">
           {userTopics.map((topic) => (
-            <Card key={topic.id}>
+            <Card 
+              key={topic.id} 
+              className={
+                "cursor-pointer hover:shadow-lg transition-shadow"
+              } 
+              onClick={() => navigate(`/topics/${topic.id}`)}
+            >
               <CardHeader>
                 <CardTitle>{topic.title}</CardTitle>
               </CardHeader>

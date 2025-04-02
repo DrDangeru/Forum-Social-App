@@ -113,31 +113,44 @@ router.get('/friends/:userId', (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     
+    // Debug: Check friendships
+    const friendships = db.prepare(`
+      SELECT f.*, 
+             u1.username as userUsername,
+             u2.username as friendUsername
+      FROM friendships f
+      JOIN users u1 ON f.userId = u1.userId
+      JOIN users u2 ON f.friendId = u2.userId
+      WHERE (f.userId = ? OR f.friendId = ?)
+        AND f.status = 'accepted'
+    `).all(userId, userId);
+    
+    console.log('Debug - Friendships for user:', friendships);
+    
     const topics = db.prepare(`
       SELECT DISTINCT t.id, t.title, t.description, t.createdAt,
              u.username as creatorUsername, ut.userId as createdBy,
-             t.isPublic, t.updatedAt
+             t.isPublic, t.updatedAt, u.avatarUrl as creatorAvatarUrl
       FROM topics t
       JOIN userTopics ut ON t.id = ut.topicId
       JOIN users u ON ut.userId = u.userId
       JOIN friendships f ON (
-        (f.userId = ? AND f.friendId = ut.userId) OR
-        (f.friendId = ? AND f.userId = ut.userId)
+        (f.userId = ? AND f.friendId = ut.userId AND f.status = 'accepted') OR
+        (f.friendId = ? AND f.userId = ut.userId AND f.status = 'accepted')
       )
-      WHERE f.status = 'accepted'
-        AND (t.isPublic = 1 OR ut.userId IN (
-          SELECT f2.friendId
-          FROM friendships f2
-          WHERE f2.userId = ? AND f2.status = 'accepted'
-          UNION
-          SELECT f3.userId
-          FROM friendships f3
-          WHERE f3.friendId = ? AND f3.status = 'accepted'
-        ))
+      WHERE t.isPublic = 1 OR ut.userId IN (
+        SELECT f2.friendId
+        FROM friendships f2
+        WHERE f2.userId = ? AND f2.status = 'accepted'
+        UNION
+        SELECT f3.userId
+        FROM friendships f3
+        WHERE f3.friendId = ? AND f3.status = 'accepted'
+      )
       ORDER BY t.createdAt DESC
     `).all(userId, userId, userId, userId) as { id: number; title: string; createdAt: string; 
       creatorUsername: string; createdBy: string; description: string | null; 
-      isPublic: number | null; updatedAt: string | null }[];
+      isPublic: number | null; updatedAt: string | null; creatorAvatarUrl: string | null }[];
 
     // Get posts for each topic
     const topicsWithPosts = topics.map((topic) => {
@@ -367,3 +380,4 @@ router.post('/:topicId/posts', (req: Request, res: Response) => {
 });
 
 export default router;
+
