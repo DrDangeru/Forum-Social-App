@@ -69,3 +69,9 @@ uploads/
 *.sqlite-shm
 *.sqlite-wal
 /server/forum.db
+
+# ENV Variables
+.env
+.env.local
+.env.example
+.env.test

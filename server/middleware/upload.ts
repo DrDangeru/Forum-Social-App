@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Request } from 'express';
+import { Buffer } from 'buffer';
 
 // Get directory path using ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -34,10 +35,22 @@ const storage = multer.diskStorage({
   }
 });
 
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  destination: string;
+  filename: string;
+  path: string;
+  buffer: Buffer;
+}
+
 // File filter multer.File lint error but confirmed working
 const fileFilter = (
   _req: Request, 
-  file: multer.File, 
+  file: MulterFile,
   cb: multer.FileFilterCallback
 ) => {
   // Accept images and maybe add document types 'application/pdf' later/ risk of security issues

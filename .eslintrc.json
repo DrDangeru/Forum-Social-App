@@ -8,11 +8,20 @@
   "rules": {
     "tailwindcss/classnames-order": "warn",
     "tailwindcss/no-custom-classname": "warn",
-    "tailwindcss/no-contradicting-classname": "error"
+    "tailwindcss/no-contradicting-classname": "error",
+    "no-undef": "off"
   },
   "settings": {
     "tailwindcss": {
       "config": "tailwind.config.js"
     }
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2021": true
+  },
+  "globals": {
+    "process": true
   }
 }

@@ -1,26 +1,41 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import bcrypt from 'bcrypt';
 import db from '../db';
 import crypto from 'crypto';
-// think its an error to use the whole user obj here. only need the data / id
-// and use adapter pattern to then instantiate the full user obj.
+import { generateToken } from '../middleware/auth';
+import dotenv from 'dotenv';
+import { User } from '../types';
+import cookieParser from 'cookie-parser';
 
-// Define the database user type
-interface DbUser {
-  id: number;
-  userId: string;
+dotenv.config();
+
+/* global process */
+
+interface LoginCredentials {
   username: string;
-  email: string;
-  passwordHash: string;
-  firstName: string;
-  lastName: string;
-  avatarUrl?: string;
-  createdAt?: string;
+  password: string;
+}
+
+// Extend Request type to include user
+interface AuthRequest extends Request {
+  user?: {
+    userId: string;
+    username: string;
+  };
 }
 
 const router = Router();
+router.use(cookieParser());
 
-router.post('/register', async (req, res) => {
+// Cookie configuration
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production', // Only send cookie over HTTPS in production
+  sameSite: 'strict' as const,
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+};
+
+router.post('/register', async (req: AuthRequest, res) => {
   try {
     console.log('Registration request received:', req.body);
     const { email, password, firstName, lastName, username } = req.body;
@@ -35,7 +50,7 @@ router.post('/register', async (req, res) => {
 
     // Check if user already exists
     const existingUser = db.prepare('SELECT * FROM users WHERE email = ? OR username = ?').
-    get(email, username) as DbUser | undefined;
+    get(email, username) as User | undefined;
     if (existingUser) {
       console.log('User already exists:', { email, username });
       return res.status(400).json({ error: 'User with this email or username already exists' });
@@ -59,11 +74,13 @@ router.post('/register', async (req, res) => {
       console.log('Insert result:', result);
       
       // Get the newly created user
-      const newUser = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as DbUser;
+      const newUser = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as User;
       
-      console.log('User registered successfully:', { 
-        userId: newUser.userId 
-      });
+      // Generate JWT token and set as cookie
+      const token = generateToken({ userId: newUser.userId, username: newUser.username });
+      res.cookie('token', token, COOKIE_OPTIONS);
+
+      console.log('User registered successfully:', { userId: newUser.userId });
       res.setHeader('Content-Type', 'application/json');
       res.status(201).json({
         message: 'User registered successfully',
@@ -86,9 +103,9 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: AuthRequest, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password } = req.body as LoginCredentials;
 
     // Validate required fields
     if (!username || !password) {
@@ -97,22 +114,22 @@ router.post('/login', async (req, res) => {
 
     // Find user
     const user = db.prepare('SELECT * FROM users WHERE username = ?').
-    get(username) as DbUser | undefined;
+    get(username) as User | undefined;
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    // Check password
-    const passwordMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!passwordMatch) {
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    // Return user data (excluding password)
-    console.log('User logged in successfully:', { userId: user.userId });
-    res.setHeader('Content-Type', 'application/json');
-    res.status(200).json({
-      message: 'Login successful',
+    // Generate JWT token and set as cookie
+    const token = generateToken({ userId: user.userId, username: user.username });
+    res.cookie('token', token, COOKIE_OPTIONS);
+
+    res.json({
       user: {
         userId: user.userId,
         username: user.username,
@@ -127,10 +144,29 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/logout', (_req, res) => {
-  // In a real app with sessions or JWT, you would invalidate the token/session here
-  console.log('User logged out');
-  res.status(200).json({ message: 'Logout successful' });
+router.get('/me', async (req: AuthRequest, res) => {
+  try {
+    // Token verification will be handled by auth middleware
+    const user = db
+      .prepare(
+        'SELECT userId, username, email, firstName, lastName FROM users WHERE userId = ?'
+      )
+      .get(req.user?.userId) as Omit<User, 'passwordHash'> | undefined;
+
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/logout', (_req: AuthRequest, res) => {
+  res.clearCookie('token', COOKIE_OPTIONS);
+  res.json({ message: 'Logged out successfully' });
 });
 
 export default router;
