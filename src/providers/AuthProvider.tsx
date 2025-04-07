@@ -5,7 +5,6 @@ import { AuthContext } from '../contexts/AuthContext';
 import axios from 'axios';
 
 // Configure axios defaults
-axios.defaults.baseURL = 'http://localhost:3001';
 axios.defaults.withCredentials = true; // Important for cookies
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

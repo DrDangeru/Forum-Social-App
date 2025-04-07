@@ -1,7 +1,7 @@
 import { Router, Request } from 'express';
 import bcrypt from 'bcrypt';
 import db from '../db';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { generateToken } from '../middleware/auth';
 import dotenv from 'dotenv';
 import { User } from '../types';

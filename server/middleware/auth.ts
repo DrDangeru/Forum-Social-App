@@ -25,7 +25,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 // --- Auth Module (e.g., auth.ts) ---
 
 export interface AuthRequest extends Request {
-  user?: { // Consider a more specific type if possible
+  user?: { // more specific type(s) could be implemented
     userId: string;
     username: string;
     // Add other relevant, non-sensitive user fields if needed (e.g., roles)
@@ -45,20 +45,15 @@ export const verifyToken = (
   res: Response, 
   next: NextFunction
 ): Response | void => {
-  const authHeader = req.headers.authorization;
-  // More robust split with Bearer check
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+  const token = req.cookies.token;
 
   if (!token) {
-    // Use return to ensure function exits
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
 
   try {
-    // jwt.verify returns object | string - needs type assertion or checking
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-    // Optional: Add a basic runtime check for payload structure if needed
     if (typeof decoded !== 'object' || !decoded.userId || !decoded.username) {
       throw new Error('Invalid token payload structure');
     }
@@ -69,10 +64,8 @@ export const verifyToken = (
     };
     next();
   } catch (error) {
-    // Log the error reason for debugging (consider logging levels for prod)
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error('Token verification failed:', errorMsg);
-    // Slightly more user-friendly message
     return res.status(401).json({ error: 'Invalid or expired token.' });
   }
 };

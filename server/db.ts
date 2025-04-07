@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 const db = new Database(path.join(__dirname, 'forum.db')) as Database.Database;
 
 // Initialize database schema
+// Initializes tables for read/write use in the application
 function initializeDatabase() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -85,8 +86,9 @@ function initializeDatabase() {
   `);
 }
 
-// Function to reset topics-related tables
-function resetTopicsTables() {
+// Function to initialize topics-related tables
+// should create only if not exists and ready topic table contents
+function initTopicsTables() {
   db.exec(`
       CREATE TABLE IF NOT EXISTS topics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -124,8 +126,8 @@ function resetTopicsTables() {
 // Initialize the database
 initializeDatabase();
 
-// Reset topics tables on startup
-resetTopicsTables();
+// Initialize topics tables on startup
+initTopicsTables(); 
 
 // Database helper functions
 const dbHelpers: DbHelpers = {

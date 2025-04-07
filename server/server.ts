@@ -13,7 +13,8 @@ import friendsRoutes from './routes/friends';
 import usersRoutes from './routes/users';
 import topicsRoutes from './routes/topics';
 import { verifyToken, AuthRequest } from './middleware/auth';
-import process from 'process';
+import process from 'node:process';
+import cookieParser from 'cookie-parser'; // Import express cookie-parser
 
 // Load environment variables
 dotenv.config();
@@ -62,15 +63,16 @@ const upload = multer({
   }
 });
 
-// Middleware
+// Core middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // React app URL
+  origin: ['http://localhost:3000', 'http://localhost:3001'], // Allow both client and server URLs
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use(cookieParser()); // Add cookie-parser middleware before routes
+app.use(express.json({ limit: '16mb' }));
+app.use(express.urlencoded({ extended: true, limit: '16mb' }));
 
 // Serve static files from server/uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -84,7 +86,8 @@ app.use('/api/friends', verifyToken, friendsRoutes);
 app.use('/api/users', verifyToken, usersRoutes);
 app.use('/api/topics', verifyToken, topicsRoutes);
 
-// Social Features
+// Social Features 
+// Think for now feed would be friends topics/posts
 app.get('/api/feed', (req: Request, res: Response) => {
   try {
     const userId = req.query.userId as string;
@@ -98,7 +101,7 @@ app.get('/api/feed', (req: Request, res: Response) => {
         WHERE followerId = ?
       )
       ORDER BY p.created_at DESC
-      LIMIT 20
+      LIMIT 10
     `).all(userId);
     
     res.json(posts);
@@ -120,7 +123,7 @@ app.post('/api/posts', (req: Request, res: Response) => {
   }
 });
 
-// Follow System
+// Follow System, just a shell for now
 app.post('/api/follow', (req: Request, res: Response) => {
   try {
     const { followerId, followingId } = req.body;
@@ -135,6 +138,7 @@ app.post('/api/follow', (req: Request, res: Response) => {
   }
 });
 
+// Remove follow
 app.delete('/api/follow', (req: Request, res: Response) => {
   try {
     const { followerId, followingId } = req.body;
@@ -149,7 +153,7 @@ app.delete('/api/follow', (req: Request, res: Response) => {
   }
 });
 
-// User Relationships
+// User who follow current user, just a shell for now
 app.get('/api/followers/:userId', (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -166,6 +170,7 @@ app.get('/api/followers/:userId', (req: Request, res: Response) => {
   }
 });
 
+// Who(users) current user follows, just a shell for now
 app.get('/api/following/:userId', (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -203,7 +208,8 @@ app.get('/api/friends/:userId', (req: Request, res: Response) => {
   }
 });
 
-// User Management
+// User search (Get user by ID) who follows current user/
+// (threads maybe added later with just thread id)
 app.get('/api/users/:userId', (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
@@ -243,8 +249,8 @@ app.post('/api/upload/:userId', verifyToken, async (req: AuthRequest, res: Respo
     // Check file count limit
     const fileCountResult = dbHelpers.userFiles.getFileCount((userId));
 
-    if (fileCountResult.count >= 10) {
-      return res.status(400).json({ error: 'Maximum 10 photos allowed' });
+    if (fileCountResult.count >= 15) {
+      return res.status(400).json({ error: 'Maximum 15 photos allowed' });
     }
 
     // Ensure user upload directory exists
@@ -419,3 +425,4 @@ app.listen(port, () => {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 });
+// move file uploading to separate file
