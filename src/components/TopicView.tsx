@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import type { Topic } from '../types';
 import { useAuth } from '../hooks/useAuth';
-import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Posts } from './ui/Posts';
 import axios from 'axios';
 
 export default function TopicView() {
@@ -13,7 +13,6 @@ export default function TopicView() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [topic, setTopic] = useState<Topic | null>(null);
-  const [newPostContent, setNewPostContent] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -33,13 +32,13 @@ export default function TopicView() {
     fetchTopic();
   }, [topicId, navigate]);
 
-  const handleCreatePost = async () => {
+  const handleCreatePost = async (content: string) => {
     if (!user || !topic) return;
 
     try {
       setLoading(true);
       const response = await axios.post(`/api/topics/${topicId}/posts`, {
-        content: newPostContent,
+        content,
         createdBy: user.userId
       });
 
@@ -50,7 +49,6 @@ export default function TopicView() {
           posts: [...(prev.posts || []), response.data]
         };
       });
-      setNewPostContent('');
     } catch (error) {
       console.error('Failed to create post:', error);
     } finally {
@@ -58,7 +56,71 @@ export default function TopicView() {
     }
   };
 
-  if (loading) {
+  const handleEditPost = async (postId: number, content: string) => {
+    if (!user || !topic) return;
+
+    try {
+      setLoading(true);
+      const response = await axios.put(`/api/posts/${postId}`, {
+        content,
+        updatedBy: user.userId
+      });
+
+      setTopic(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          posts: prev.posts?.map(post => 
+            post.id === postId ? { ...post, ...response.data } : post
+          ) || []
+        };
+      });
+    } catch (error) {
+      console.error('Failed to edit post:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUploadImage = async (postId: number, file: File) => {
+    if (!user || !topic) return;
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await axios.post(
+        `/api/topics/posts/${postId}/image?userId=${user.userId}`, 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      // Update the post in the topic state
+      setTopic(prev => {
+        if (!prev) return null;
+        const updatedPosts = prev.posts?.map(post => 
+          post.id === postId ? { ...post, imageUrl: response.data.imageUrl } : post
+        ) || [];
+        return {
+          ...prev,
+          posts: updatedPosts
+        };
+      });
+    } catch (error: any) {
+      console.error('Failed to upload image:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to upload image';
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading && !topic) {
     return <div className="container mx-auto p-4">Loading...</div>;
   }
 
@@ -69,7 +131,7 @@ export default function TopicView() {
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <Button 
-        variant="outline" 
+        variant="destructive" 
         className="mb-4"
         onClick={() => navigate(-1)}
       >
@@ -96,44 +158,13 @@ export default function TopicView() {
 
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Posts</h2>
-        {(topic.posts || []).map((post) => (
-          <Card key={post.id} className="bg-white">
-            <CardContent className="pt-4">
-              <div className="flex items-center mb-2">
-                <Avatar className="h-6 w-6 mr-2">
-                  {post.authorAvatarUrl && (
-                    <AvatarImage src={post.authorAvatarUrl} alt={post.authorUsername || ''} />
-                  )}
-                  <AvatarFallback>
-                    {post.authorUsername?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm text-gray-600">
-                  {post.authorUsername}
-                </span>
-              </div>
-              <p className="text-gray-800">{post.content}</p>
-            </CardContent>
-          </Card>
-        ))}
-
-        {user && (
-          <div className="mt-6">
-            <Textarea
-              placeholder="Write a new post..."
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-              className="mb-2"
-            />
-            <Button 
-              onClick={handleCreatePost}
-              disabled={!newPostContent.trim() || loading}
-              className="bg-blue-400 hover:bg-blue-500 text-white"
-            >
-              Post Reply
-            </Button>
-          </div>
-        )}
+        <Posts 
+          posts={topic.posts || []}
+          onEdit={handleEditPost}
+          onUploadImage={handleUploadImage}
+          onCreatePost={handleCreatePost}
+          allowNewPosts={true}
+        />
       </div>
     </div>
   );

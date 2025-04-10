@@ -158,6 +158,7 @@ export interface Post {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  imageUrl?: string;
   
   // Client-specific additions
   author?: User | BasicProfile;
@@ -167,8 +168,8 @@ export interface Post {
   // New fields for enhanced functionality
   authorUsername?: string;
   //authorFirstName?: string;
- //authorLastName?: string;
-  authorAvatarUrl?: string | null;
+  //authorLastName?: string;  
+  //authorAvatarUrl?: string | null;
 }
 
 // Comment definition

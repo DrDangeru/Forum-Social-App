@@ -3,6 +3,45 @@ import type { Request, Response } from 'express';
 import db from '../db';
 import { handleServerError } from '../utils.ts';
 import { Post } from '../types/index';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure Multer storage
+const storage = multer.diskStorage({
+  destination: (req, _file, cb) => {
+    // Get userId from request body or params
+    const userId = req.body?.userId || req.query?.userId;
+    if (!userId) {
+      cb(new Error('User ID is required'), '');
+      return;
+    }
+    const uploadPath = path.join(__dirname, '..', 'uploads', userId);
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed'));
+    }
+    cb(null, true);
+  }
+});
 
 const router = express.Router();
 
@@ -379,5 +418,60 @@ router.post('/:topicId/posts', (req: Request, res: Response) => {
   }
 });
 
-export default router;
+// Upload image for a post
+router.post('/posts/:postId/image', (req: Request, _res: Response, next) => {
+  // Add userId to query params before multer processes the request
+  req.query.userId = req.body?.userId;
+  next();
+}, upload.single('image'), (req: Request, res: Response) => {
+  try {
+    const { postId } = req.params;
+    const file = req.file;
+    const userId = req.body.userId || req.query.userId;
 
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    if (!userId) {
+      fs.unlinkSync(file.path);
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Update post with image URL
+    const imageUrl = `/uploads/${userId}/${file.filename}`;
+    
+    // First check if post exists and user has permission
+    const post = db.prepare(`
+      SELECT * FROM posts WHERE id = ? AND createdBy = ?
+    `).get(postId, userId);
+
+    if (!post) {
+      // If post not found, delete the uploaded file
+      fs.unlinkSync(file.path);
+      return res.status(404).json({ error: 'Post not found or unauthorized' });
+    }
+
+    // Update the post with image URL
+    db.prepare(`
+      UPDATE posts 
+      SET imageUrl = ?, updatedAt = CURRENT_TIMESTAMP
+      WHERE id = ? AND createdBy = ?
+    `).run(imageUrl, postId, userId);
+
+    // Get the updated post with author info
+    const updatedPost = db.prepare(`
+      SELECT p.*, u.username as authorUsername
+      FROM posts p
+      JOIN users u ON p.createdBy = u.userId
+      WHERE p.id = ?
+    `).get(postId);
+
+    res.json(updatedPost);
+  } catch (error) {
+    console.error('Image upload error:', error);
+    handleServerError(res, error, 'Failed to upload image');
+  }
+});
+
+export default router;

@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import TopicsDropdown from './TopicsDropdown';
+import { buttonVariants } from './ui/buttonVariants';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -62,7 +63,7 @@ const Navbar = () => {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                    className={buttonVariants({ variant: "default", size: "default" })}
                   >
                     Logout
                   </button>
@@ -71,7 +72,8 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/register"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                className={buttonVariants({ variant: "destructive", size: "default" })} 
+                // was inline and not this
               >
                 Register
               </Link>
@@ -79,7 +81,7 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-    </nav>
+    </nav>  
   );
 };
 
