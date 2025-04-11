@@ -72,7 +72,7 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/register"
-                className={buttonVariants({ variant: "destructive", size: "default" })} 
+                className={buttonVariants({ variant: "default", size: "lg" })} 
                 // was inline and not this
               >
                 Register

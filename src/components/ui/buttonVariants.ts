@@ -3,10 +3,12 @@ import { cva, VariantProps } from "class-variance-authority";
 export const buttonVariants = cva(
   `inline-flex items-center justify-center whitespace-nowrap rounded-md text-md font-medium
    ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2
-   border-b-4 border-solid border-red-300
-   border-t-2 border-solid border-red-300
+   border-t-2 border-solid border-yellow-300
+   border-b-2 border-solid border-yellow-300
+   border-l-6 border-solid border-yellow-300
+   border-r-6 border-solid border-yellow-300
    focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none
-    disabled:opacity-60  `,
+   disabled:opacity-60  `,
   {
     variants: {
       variant: {
@@ -20,7 +22,8 @@ export const buttonVariants = cva(
       size: {
         default: "h-10 py-2 px-4",
         sm: "h-9 px-3",
-        lg: "h-11 px-8",
+        lg: "h-12 px-8",
+        xs: "h-5 px-2"
       },
     },
     defaultVariants: {

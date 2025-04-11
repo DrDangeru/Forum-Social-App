@@ -169,7 +169,7 @@ export interface Post {
   authorUsername?: string;
   //authorFirstName?: string;
   //authorLastName?: string;  
-  //authorAvatarUrl?: string | null;
+  authorAvatarUrl?: string | null;
 }
 
 // Comment definition

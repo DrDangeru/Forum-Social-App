@@ -141,6 +141,7 @@ export interface Post {
   updatedAt: string;
   authorUsername?: string;
   authorAvatarUrl?: string | null;
+  imageUrl: string | null;  // Added to support image uploads
 }
 
 // Follow relationship

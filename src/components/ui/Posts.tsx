@@ -79,21 +79,34 @@ export const Posts: React.FC<PostsProps> = ({
           <CardContent className="pt-4">
             <div className="flex items-center mb-2">
               <Avatar className="h-6 w-6 mr-2">
-                {post.author?.avatarUrl && (
-                  <AvatarImage src={post.author.avatarUrl} alt={post.authorUsername || ''} />
+                {post.authorAvatarUrl ? (
+                  <AvatarImage src={post.authorAvatarUrl} alt={post.authorUsername || ''} />
+                ) : (
+                  <AvatarFallback>
+                    {post.authorUsername?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
                 )}
-                <AvatarFallback>
-                  {post.authorUsername?.[0]?.toUpperCase()}
-                </AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{post.authorUsername}</span>
                 <span className="text-xs text-gray-500">
-                  {new Date(post.createdAt).toLocaleDateString()}
+                  {new Date(post.createdAt).toLocaleString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                   {post.updatedAt !== post.createdAt && (
                     <span 
                       className="ml-1 text-gray-400" 
-                      title={new Date(post.updatedAt).toLocaleString()}
+                      title={new Date(post.updatedAt).toLocaleString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
                     >
                       (edited)
                     </span>

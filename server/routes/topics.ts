@@ -14,13 +14,21 @@ const __dirname = path.dirname(__filename);
 // Configure Multer storage
 const storage = multer.diskStorage({
   destination: (req, _file, cb) => {
-    // Get userId from request body or params
-    const userId = req.body?.userId || req.query?.userId;
+    // Get userId from query parameters
+    const userId = req.query.userId as string;
     if (!userId) {
       cb(new Error('User ID is required'), '');
       return;
     }
-    const uploadPath = path.join(__dirname, '..', 'uploads', userId);
+    
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    // Create user-specific directory
+    const uploadPath = path.join(uploadsDir, userId);
     fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
   },
@@ -51,14 +59,15 @@ const getPostsForTopic = (topicId: number): Post[] => {
   try {
     const rawPosts = db.prepare(`
       SELECT p.id, p.topicId, p.content, p.createdBy, p.createdAt, p.updatedAt,
-             u.username as authorUsername, u.avatarUrl as authorAvatarUrl
+             u.username as authorUsername, u.avatarUrl as authorAvatarUrl, p.imageUrl
       FROM posts p
       JOIN users u ON p.createdBy = u.userId
       WHERE p.topicId = ?
       ORDER BY p.createdAt ASC
     `).all(topicId) as 
     { id: number; topicId: number; content: string; createdBy: string; createdAt: string; 
-      updatedAt: string; authorUsername: string; authorAvatarUrl: string | null }[];
+      updatedAt: string; authorUsername: string; authorAvatarUrl: string | null;
+      imageUrl: string | null }[];
 
     posts = rawPosts.map((post) => ({
       id: post.id,
@@ -69,9 +78,9 @@ const getPostsForTopic = (topicId: number): Post[] => {
       updatedAt: post.updatedAt,
       authorUsername: post.authorUsername,
       authorAvatarUrl: post.authorAvatarUrl,
+      imageUrl: post.imageUrl || null
     }));
   } catch (err) {
-    // If posts table doesn't exist, use an empty array
     console.log('Posts table may not exist yet:', err);
   }
   return posts;
@@ -301,7 +310,8 @@ router.post('/', (req: Request, res: Response) => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           authorUsername: user.username,
-          authorAvatarUrl: user.avatarUrl
+          authorAvatarUrl: user.avatarUrl,
+          imageUrl: null
         });
       }
 
@@ -333,7 +343,7 @@ router.post('/', (req: Request, res: Response) => {
 });
 
 // Add a post to a topic
-router.post('/:topicId/posts', (req: Request, res: Response) => {
+router.post('/:topicId/posts', upload.single('image'), async (req: Request, res: Response) => {
   try {
     const { topicId } = req.params;
     const { content, createdBy } = req.body;
@@ -400,16 +410,24 @@ router.post('/:topicId/posts', (req: Request, res: Response) => {
       SELECT username, avatarUrl FROM users WHERE userId = ?
     `).get(createdBy) as { username: string; avatarUrl: string | null } | undefined;
     
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `/uploads/${req.body.userId}/${req.file.filename}`;  
+      // Update the post in the database with the imageUrl
+      db.prepare('UPDATE posts SET imageUrl = ? WHERE id = last_insert_rowid()').run(imageUrl);
+    }
+    
     // Create a formatted response
     const newPost: Post = {
       id: postId,
-      topicId: Number(topicId),
-      content: content,
+      topicId: parseInt(topicId),
+      content: content || '',
       createdBy: createdBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       authorUsername: user?.username ?? '',
-      authorAvatarUrl: user?.avatarUrl ?? ''
+      authorAvatarUrl: user?.avatarUrl ?? '',
+      imageUrl: req.file ? `/uploads/${req.body.userId}/${req.file.filename}` : null
     };
     
     res.status(201).json(newPost);
@@ -419,27 +437,27 @@ router.post('/:topicId/posts', (req: Request, res: Response) => {
 });
 
 // Upload image for a post
-router.post('/posts/:postId/image', (req: Request, _res: Response, next) => {
-  // Add userId to query params before multer processes the request
-  req.query.userId = req.body?.userId;
-  next();
-}, upload.single('image'), (req: Request, res: Response) => {
+router.post('/posts/:postId/image', upload.single('image'), (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
     const file = req.file;
-    const userId = req.body.userId || req.query.userId;
+    const userId = req.query.userId as string;
+    console.log('File:', file);
+    console.log('User ID:', userId);
 
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
     if (!userId) {
-      fs.unlinkSync(file.path);
+      if (file && file.path) {
+        fs.unlinkSync(file.path);
+      }
       return res.status(400).json({ error: 'User ID is required' });
     }
 
     // Update post with image URL
-    const imageUrl = `/uploads/${userId}/${file.filename}`;
+    const imageUrl = `/api/topics/uploads/${userId}/${file.filename}`;
     
     // First check if post exists and user has permission
     const post = db.prepare(`
@@ -461,7 +479,7 @@ router.post('/posts/:postId/image', (req: Request, _res: Response, next) => {
 
     // Get the updated post with author info
     const updatedPost = db.prepare(`
-      SELECT p.*, u.username as authorUsername
+      SELECT p.*, u.username as authorUsername, u.avatarUrl as authorAvatarUrl
       FROM posts p
       JOIN users u ON p.createdBy = u.userId
       WHERE p.id = ?
@@ -473,5 +491,8 @@ router.post('/posts/:postId/image', (req: Request, _res: Response, next) => {
     handleServerError(res, error, 'Failed to upload image');
   }
 });
+
+// Serve static files from the uploads directory
+router.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 export default router;

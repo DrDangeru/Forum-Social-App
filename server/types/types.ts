@@ -119,6 +119,7 @@ export interface Post {
   updatedAt: string;
   author?: User | BasicProfile;
   topic?: Topic | string;
+  imageUrl?: string | null;
 }
 
 // Follow relationship

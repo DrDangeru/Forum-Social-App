@@ -88,9 +88,10 @@ function initializeDatabase() {
 
 // Function to initialize topics-related tables
 // should create only if not exists and ready topic table contents
+// with added indexes for better performance 
 function initTopicsTables() {
   db.exec(`
-      CREATE TABLE IF NOT EXISTS topics (
+    CREATE TABLE IF NOT EXISTS topics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       description TEXT NOT NULL,
@@ -117,9 +118,15 @@ function initTopicsTables() {
       createdBy TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      imageUrl TEXT,
       FOREIGN KEY (topicId) REFERENCES topics (id),
       FOREIGN KEY (createdBy) REFERENCES users (userId)
     );
+    
+    CREATE INDEX IF NOT EXISTS idx_userTopics_userId ON userTopics(userId);
+    CREATE INDEX IF NOT EXISTS idx_userTopics_topicId ON userTopics(topicId);
+    CREATE INDEX IF NOT EXISTS idx_posts_topicId ON posts(topicId);
+    CREATE INDEX IF NOT EXISTS idx_posts_createdBy ON posts(createdBy);
   `);
 }
 
@@ -364,6 +371,9 @@ const dbHelpers: DbHelpers = {
 
 // Set journal mode for better performance
 db.pragma('journal_mode = WAL');
+// Enable foreign key constraints for referential integrity
+// (so that they work properly)
+db.pragma('foreign_keys = ON');
 
 // Export both the database instance and helpers
 export { db as default, dbHelpers };

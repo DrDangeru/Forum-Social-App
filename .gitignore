@@ -60,7 +60,7 @@ src/pics
 uploads/
 /server/uploads
 
-# Database files
+# Database files and utilities
 *.db
 *.db-shm
 *.db-wal
@@ -69,6 +69,8 @@ uploads/
 *.sqlite-shm
 *.sqlite-wal
 /server/forum.db
+/server/db-cli.js
+/server/db-cli.bat
 
 # ENV Variables
 .env

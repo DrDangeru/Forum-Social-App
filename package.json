@@ -8,7 +8,8 @@
     "server": "tsx watch server/server.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db": "node server/db-cli.js"
   },
   "dependencies": {
     "@eslint/js": "^9.21.0",

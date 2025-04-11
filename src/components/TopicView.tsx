@@ -90,13 +90,15 @@ export default function TopicView() {
       const formData = new FormData();
       formData.append('image', file);
 
+      // Add a timeout to the axios request
       const response = await axios.post(
         `/api/topics/posts/${postId}/image?userId=${user.userId}`, 
         formData,
         {
           headers: {
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          timeout: 30000 // 30 seconds timeout
         }
       );
 
@@ -113,7 +115,20 @@ export default function TopicView() {
       });
     } catch (error: any) {
       console.error('Failed to upload image:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to upload image';
+      let errorMessage = 'Failed to upload image';
+      
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        errorMessage = error.response.data?.error || `Server error: ${error.response.status}`;
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage = 'No response from server. Please check your network connection.';
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        errorMessage = error.message || 'Unknown error occurred';
+      }
+      
       alert(errorMessage);
     } finally {
       setLoading(false);
