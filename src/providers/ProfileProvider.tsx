@@ -4,7 +4,7 @@ import { ProfileContext, ProfileContextType } from '../contexts/ProfileContext';
 import type { Profile } from '../types';
 import { useAuth } from '../hooks/useAuth';
 
-// Default profile for new users
+// Default profile for new users, empty 
 const defaultProfile: Profile = {
   userId: '',
   username: '',
@@ -62,8 +62,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     if (profiles[userId]) {
       return profiles[userId];
     }
-    
-    return await fetchProfile(userId);
+  
+      return await fetchProfile(userId);
   }, [profiles, fetchProfile]);
   
   // Update profile information

@@ -1,16 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { useTopics } from '../hooks/useTopics';
-import { FileText } from 'lucide-react';
+import { FileText, Image } from 'lucide-react';
 import { Button } from './ui/button';
 
 const Home: React.FC = () => {
   const { user } = useAuth();
-  const { setCurrentProfile } = useProfile();
+  const { profile, setCurrentProfile } = useProfile();
   const { userTopics, userTopicsLoading, userTopicsError } = useTopics();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Set current profile to the logged-in user's profile
   useEffect(() => {
@@ -19,35 +20,140 @@ const Home: React.FC = () => {
     }
   }, [user, setCurrentProfile]);
   
+  // Rotate through gallery images every 5 seconds
+  useEffect(() => {
+    if (!profile?.galleryImages?.length) return;
+    
+    const interval = setInterval(() => {
+      setCurrentImageIndex(prevIndex => 
+        (prevIndex + 1) % profile.galleryImages!.length
+      );
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [profile?.galleryImages]);
+  
+  // Get current gallery image or placeholder
+  const currentImage = profile?.galleryImages?.length 
+    ? profile.galleryImages[currentImageIndex] 
+    : null;
+  
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="text-2xl">
-            Welcome, {user?.username}!
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">
-            We're glad to see you on Forum Social App. 
-            Start exploring topics or connect with friends!
-          </p>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        {/* Profile Card */}
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle className="text-2xl">
+              Your Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {profile ? (
+              <div className="space-y-4">
+                <div className="text-center mb-6">
+                  {currentImage ? (
+                    <div className="relative w-full h-64 rounded-lg overflow-hidden mb-4">
+                      <img 
+                        src={currentImage} 
+                        alt="Gallery" 
+                        className="w-full h-full object-cover"
+                      />
+                      {profile.galleryImages && profile.galleryImages.length > 1 && (
+                        <div className="absolute bottom-2 right-2 bg-black bg-opacity-50
+                         text-white px-2 py-1 rounded text-xs">
+                          {currentImageIndex + 1}/{profile.galleryImages.length}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center
+                     justify-center mb-4">
+                      <Image className="h-16 w-16 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold">
+                    {profile.firstName} {profile.lastName}
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="text-gray-500">Username:</div>
+                    <div>{profile.username}</div>
+                    
+                    {profile.age !== null && profile.age !== undefined && (
+                      <>
+                        <div className="text-gray-500">Age:</div>
+                        <div>{profile.age}</div>
+                      </>
+                    )}
+                    
+                    {profile.relationshipStatus && (
+                      <>
+                        <div className="text-gray-500">Relationship:</div>
+                        <div>{profile.relationshipStatus}</div>
+                      </>
+                    )}
+                    
+                    {profile.location && (
+                      <>
+                        <div className="text-gray-500">Location:</div>
+                        <div>{profile.location}</div>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="mt-4">
+                    <Link to={`/profile/${profile.userId}`}>
+                      <Button variant="outline" className="w-full">
+                        View Full Profile
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                Loading profile...
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Welcome Card */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-2xl">
+              Welcome, {user?.username}!
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">
+              We're glad to see you on Forum Social App. 
+              Start exploring topics or connect with friends!
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+              <Link to="/topics">
+                <Button variant="default" className="w-full">
+                  Browse Topics
+                </Button>
+              </Link>
+              <Link to="/friends">
+                <Button variant="outline" className="w-full">
+                  Connect with Friends
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Your Topics</h2>
-          {/* <Link
-            to="/topics"
-            className={
-              "inline-flex items-center px-3 py-2 text-sm font-medium " +
-              "text-white bg-blue-600 rounded-md hover:bg-blue-700"
-            }
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Create Topic
-          </Link> */}
           <Button variant="default" >
             <Link to="/topics" >
             Create Topic
