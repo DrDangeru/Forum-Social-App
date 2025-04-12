@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { useTopics } from '../hooks/useTopics';
-import { FileText, Plus } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { Button } from './ui/button';
 
 const Home: React.FC = () => {
   const { user } = useAuth();
-  const { profile, setCurrentProfile } = useProfile();
+  const { setCurrentProfile } = useProfile();
   const { userTopics, userTopicsLoading, userTopicsError } = useTopics();
   
   // Set current profile to the logged-in user's profile
@@ -23,7 +24,7 @@ const Home: React.FC = () => {
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="text-2xl">
-            Welcome, {profile?.firstName || user?.firstName || 'User'}!
+            Welcome, {user?.username}!
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -37,7 +38,7 @@ const Home: React.FC = () => {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Your Topics</h2>
-          <Link
+          {/* <Link
             to="/topics"
             className={
               "inline-flex items-center px-3 py-2 text-sm font-medium " +
@@ -46,14 +47,19 @@ const Home: React.FC = () => {
           >
             <Plus className="h-4 w-4 mr-1" />
             Create Topic
-          </Link>
+          </Link> */}
+          <Button variant="default" >
+            <Link to="/topics" >
+            Create Topic
+            </Link> 
+          </Button>
         </div>
         
         <div className="space-y-4">
           {userTopicsLoading ? (
             <Card>
               <CardContent className="py-8">
-                <div className="text-center text-gray-500">
+                <div className="text-center text-gray-500 text-2xl">
                   <p>Loading topics...</p>
                 </div>
               </CardContent>
@@ -61,7 +67,7 @@ const Home: React.FC = () => {
           ) : userTopicsError ? (
             <Card className="bg-red-50">
               <CardContent className="py-8">
-                <div className="text-center text-red-500">
+                <div className="text-center text-red-500 text-2xl">
                   <p>{userTopicsError}</p>
                 </div>
               </CardContent>

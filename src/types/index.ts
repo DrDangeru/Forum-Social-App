@@ -163,26 +163,14 @@ export interface Post {
   // Client-specific additions
   author?: User | BasicProfile;
   topic?: Topic | string;
-  comments?: Comment[];
+  replies?: Post[];
+  postId?: number; // For posts that act as comments/replies to other posts
   
   // New fields for enhanced functionality
   authorUsername?: string;
   //authorFirstName?: string;
   //authorLastName?: string;  
   authorAvatarUrl?: string | null;
-}
-
-// Comment definition
-export interface Comment {
-  id: number;
-  postId: number;
-  content: string;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  
-  // Client-specific additions
-  author?: User | BasicProfile;
 }
 
 // Follow relationship

@@ -19,6 +19,10 @@ export interface User {
 
 export interface Profile {
   userId: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
   location: string | null;
   socialLinks: string | null;
   relationshipStatus: string | null;
@@ -30,6 +34,15 @@ export interface Profile {
   pets: string | null;
   createdAt: string;
   updatedAt: string;
+  isFriend?: boolean;
+  friendRequestStatus?: FriendRequestStatus;
+  following?: Topic[];
+  friends?: BasicProfile[];
+  friendRequests?: FriendRequest[];
+  followingMembers?: any[];
+  unreadAlerts?: number;
+  galleryImages?: string[];
+  bio?: string;
 }
 
 export interface GalleryImage {
@@ -83,29 +96,6 @@ export interface Topic {
   updatedAt: string;
   headline?: string;
   topicOwnerOrMod?: string;
-}
-
-// Member profile with additional information
-export interface MemberProfile {
-  userId: string;
-  profile: Profile;
-  isFriend?: boolean;
-  friendRequestStatus?: FriendRequestStatus;
-  following?: Topic[];
-  friends?: BasicProfile[];
-  friendRequests?: FriendRequest[];
-  followingMembers?: any[];
-  unreadAlerts?: number;
-  age?: string | null;
-  galleryImages?: string[];
-  bio?: string;
-  location?: string | null;
-  interests?: string[];
-  occupation?: string;
-  company?: string;
-  hobbies?: string[];
-  pets?: any[];
-  joinedDate?: string;
 }
 
 // Define the structure of dbHelpers

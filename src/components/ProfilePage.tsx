@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useFriends } from '../hooks/useFriends';
-import type { MemberProfile, BasicProfile } from '../../server/types';
+import type { Profile, BasicProfile } from '../../server/types';
 import { Button } from './ui/button';
 import UserTopics from './UserTopics';
 
@@ -10,7 +10,7 @@ const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
   const { isFriend } = useFriends();
-  const [profile, setProfile] = useState<MemberProfile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -123,7 +123,7 @@ const ProfilePage: React.FC = () => {
             <div>
               <span className="font-medium">Relationship Status:</span>{' '}
               <span className="text-gray-700">
-                {profile.profile?.relationshipStatus || 'Not specified'}
+                {profile.relationshipStatus || 'Not specified'}
               </span>
             </div>
             <div>
