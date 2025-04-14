@@ -74,15 +74,6 @@ function initializeDatabase() {
       FOREIGN KEY (userId) REFERENCES users (userId),
       FOREIGN KEY (friendId) REFERENCES users (userId)
     );
-
-    CREATE TABLE IF NOT EXISTS follows (
-      followerId TEXT NOT NULL,
-      followingId TEXT NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (followerId, followingId),
-      FOREIGN KEY (followerId) REFERENCES users (userId),
-      FOREIGN KEY (followingId) REFERENCES users (userId)
-    );
   `);
 }
 
@@ -90,6 +81,7 @@ function initializeDatabase() {
 // should create only if not exists and ready topic table contents
 // with added indexes for better performance 
 function initTopicsTables() {
+  // First create all tables
   db.exec(`
     CREATE TABLE IF NOT EXISTS topics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -123,10 +115,26 @@ function initTopicsTables() {
       FOREIGN KEY (createdBy) REFERENCES users (userId)
     );
     
+    CREATE TABLE IF NOT EXISTS follows (
+      followerId TEXT NOT NULL,
+      followingId TEXT NOT NULL,
+      topicId INTEGER NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (followerId, followingId, topicId),
+      FOREIGN KEY (followerId) REFERENCES users (userId),
+      FOREIGN KEY (followingId) REFERENCES users (userId),
+      FOREIGN KEY (topicId) REFERENCES topics (id)
+    );
+  `);
+  
+  // Then create all indexes in a separate statement
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_userTopics_userId ON userTopics(userId);
     CREATE INDEX IF NOT EXISTS idx_userTopics_topicId ON userTopics(topicId);
     CREATE INDEX IF NOT EXISTS idx_posts_topicId ON posts(topicId);
     CREATE INDEX IF NOT EXISTS idx_posts_createdBy ON posts(createdBy);
+    CREATE INDEX IF NOT EXISTS idx_follows_followerId ON follows(followerId);
+    CREATE INDEX IF NOT EXISTS idx_follows_topicId ON follows(topicId);
   `);
 }
 

@@ -3,22 +3,29 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { User,  } from '../types';
+import { User, Topic } from '../types';
 
 const Followed = ({ currentUserId }: { currentUserId: number }) => {
   const [followedUsers, setFollowedUsers] = useState<User[]>([]);
+  const [followedTopics, setFollowedTopics] = useState<Topic[]>([]);
+  const [userTopics, setUserTopics] = useState<Topic[]>([]);
   const [followers, setFollowers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchFollowData = async () => {
     try {
-      const [followingRes, followersRes] = await Promise.all([
+      const [followingRes, followersRes, followedTopicsRes, userTopicsRes] = await Promise.all([
         fetch(`http://localhost:3001/api/following/${currentUserId}`),
-        fetch(`http://localhost:3001/api/followers/${currentUserId}`)
+        fetch(`http://localhost:3001/api/followers/${currentUserId}`),
+        fetch(`http://localhost:3001/api/topics/followed/${currentUserId}`),
+        fetch(`http://localhost:3001/api/topics/user/${currentUserId}`)
       ]);
+      
 
       setFollowedUsers(await followingRes.json());
       setFollowers(await followersRes.json());
+      setFollowedTopics(await followedTopicsRes.json());
+      setUserTopics(await userTopicsRes.json());
     } catch (error) {
       console.error('Error fetching follow data:', error);
     } finally {
@@ -66,71 +73,136 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Following Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>People You Follow ({followedUsers.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {followedUsers.map(user => (
-                <div key={user.userId} className="flex items-center justify-between p-4 
-                hover:bg-gray-50 rounded-lg transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage src={user.avatarUrl || undefined} />
-                      <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{user.username}</h3>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+        {/* Left Column - Topics */}
+        <div className="space-y-6">
+          {/* Followed Topics Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Followed Topics ({followedTopics.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {followedTopics.map(topic => (
+                  <div key={topic.id} className="p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                    <h3 className="font-medium text-gray-900">{topic.title}</h3>
+                    <p className="text-sm text-gray-500">
+                      {topic.description || 'No description available'}
+                    </p>
+                    <div className="text-xs text-gray-400 mt-2">
+                      Created: {new Date(topic.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleUnfollow(user.userId as any)}
-                  >
-                    Unfollow
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+                {followedTopics.length === 0 && (
+                  <p className="text-gray-500 text-center py-4">No followed topics yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Followers Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Followers ({followers.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {followers.map(user => (
-                <div key={user.userId} className="flex items-center justify-between p-4
-                 hover:bg-gray-50 rounded-lg transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage src={user.avatarUrl || undefined} />
-                      <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{user.username}</h3>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+          {/* User's Own Topics Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>My Topics ({userTopics.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {userTopics.map(topic => (
+                  <div key={topic.id} className="p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                    <h3 className="font-medium text-gray-900">{topic.title}</h3>
+                    <p className="text-sm text-gray-500">
+                      {topic.description || 'No description available'}
+                    </p>
+                    <div className="text-xs text-gray-400 mt-2">
+                      Created: {new Date(topic.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                  {!followedUsers.some(f => f.userId === user.userId) && (
+                ))}
+                {userTopics.length === 0 && (
+                  <p className="text-gray-500 text-center py-4">
+                    You haven't created any topics yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Friends Updates */}
+        <div className="space-y-6">
+          {/* Following Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>People You Follow ({followedUsers.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {followedUsers.map(user => (
+                  <div key={user.userId} className="flex items-center justify-between p-4 
+                  hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <Avatar>
+                        <AvatarImage src={user.avatarUrl || undefined} />
+                        <AvatarFallback>{user.username.substring(0, 2)
+                        .toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-medium text-gray-900">{user.username}</h3>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                      </div>
+                    </div>
                     <Button
-                      variant="outline"
-                      onClick={() => handleFollow(user.userId as any)}
+                      variant="destructive"
+                      onClick={() => handleUnfollow(user.userId as any)}
                     >
-                      Follow Back
+                      Unfollow
                     </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                  </div>
+                ))}
+                {followedUsers.length === 0 && (
+                  <p className="text-gray-500 text-center py-4">You're not following anyone yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Followers Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Followers ({followers.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {followers.map(user => (
+                  <div key={user.userId} className="flex items-center justify-between p-4
+                   hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <Avatar>
+                        <AvatarImage src={user.avatarUrl || undefined} />
+                        <AvatarFallback>{user.username.substring(0, 2)
+                        .toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-medium text-gray-900">{user.username}</h3>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                      </div>
+                    </div>
+                    {!followedUsers.some(f => f.userId === user.userId) && (
+                      <Button
+                        variant="outline"
+                        onClick={() => handleFollow(user.userId as any)}
+                      >
+                        Follow Back
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                {followers.length === 0 && (
+                  <p className="text-gray-500 text-center py-4">No followers yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

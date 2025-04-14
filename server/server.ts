@@ -158,7 +158,7 @@ app.get('/api/followers/:userId', (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const followers = db.prepare(`
-      SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
+      SELECT u.id as userId, u.username, u.email, u.createdAt, u.avatarUrl
       FROM follows f
       JOIN users u ON f.followerId = u.id
       WHERE f.followingId = ?
@@ -175,7 +175,7 @@ app.get('/api/following/:userId', (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const following = db.prepare(`
-      SELECT u.id, u.username, u.email, u.created_at, u.avatar_url
+      SELECT u.id as userId, u.username, u.email, u.createdAt, u.avatarUrl
       FROM follows f
       JOIN users u ON f.followingId = u.id
       WHERE f.followerId = ?

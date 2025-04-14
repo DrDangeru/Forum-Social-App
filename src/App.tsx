@@ -16,7 +16,7 @@ import PhotoGalleryPage from './components/ui/PhotoGallery';
 import Home from './components/Home';
 import { UserSearch } from './components/UserSearch';
 import ProfilePage from './components/ProfilePage';
-
+import Followed from './components/Followed';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -27,6 +27,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return <>{children}</>;
+};
+
+// Followed page with auth
+const FollowedWithAuth = () => {
+  const { user, loading } = useAuth();
+  
+  if (loading || !user || !user.userId) {
+    return <div className="p-4">Loading...</div>;
+  }
+  
+  return <Followed currentUserId={Number(user.userId)} />;
 };
 
 function App() {
@@ -63,6 +74,11 @@ function App() {
                 <Route path="/friends" element={
                   <ProtectedRoute>
                     <Friends />
+                  </ProtectedRoute>
+                } />
+                <Route path="/followed" element={
+                  <ProtectedRoute>
+                    <FollowedWithAuth />
                   </ProtectedRoute>
                 } />
                 <Route path="/profile/:userId" element={

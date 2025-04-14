@@ -120,6 +120,44 @@ router.get('/', (_req: Request, res: Response) => {
   }
 });
 
+// Get topics followed by a user
+router.get('/followed/:userId', (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    
+    // Get topics followed by the user
+    const topics = db.prepare(`
+      SELECT DISTINCT t.id, t.title, t.description, t.createdAt,
+             u.username as creatorUsername, ut.userId as createdBy,
+             t.isPublic, t.updatedAt, u.avatarUrl as creatorAvatarUrl
+      FROM topics t
+      JOIN userTopics ut ON t.id = ut.topicId
+      JOIN users u ON ut.userId = u.userId
+      JOIN follows f ON t.id = f.topicId
+      WHERE f.followerId = ?
+      ORDER BY t.createdAt DESC
+    `).all(userId) as { id: number; title: string; createdAt: string; 
+      creatorUsername: string; createdBy: string; description: string | null; 
+      isPublic: number | null; updatedAt: string | null; creatorAvatarUrl: string | null }[];
+
+    // Get posts for each topic
+    const topicsWithPosts = topics.map((topic) => {
+      const posts = getPostsForTopic(topic.id);
+      return {
+        ...topic,
+        description: topic.description ?? topic.title,
+        isPublic: topic.isPublic === 1,
+        updatedAt: topic.updatedAt ?? topic.createdAt,
+        posts: posts
+      };
+    });
+
+    res.json(topicsWithPosts);
+  } catch (error) {
+    handleServerError(res, error, 'Failed to get followed topics');
+  }
+});
+
 // Get topics by user ID
 router.get('/user/:userId', (req: Request, res: Response) => {
   try {
@@ -494,5 +532,89 @@ router.post('/posts/:postId/image', upload.single('image'), (req: Request, res: 
 
 // Serve static files from the uploads directory
 router.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+// Follow a topic
+router.post('/follows', (req: Request, res: Response) => {
+  try {
+    const { topicId } = req.body;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Check if topic exists
+    const topic = db.prepare('SELECT id FROM topics WHERE id = ?').get(topicId);
+    if (!topic) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    // Check if already following
+    const existingFollow = db.prepare(
+      'SELECT * FROM follows WHERE followerId = ? AND topicId = ?'
+    ).get(userId, topicId);
+
+    if (existingFollow) {
+      return res.status(200).json({ message: 'Already following this topic' });
+    }
+
+    // Add follow relationship
+    db.prepare(
+      `INSERT INTO follows (followerId, followingId, topicId, createdAt)
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP)`
+    ).run(userId, userId, topicId);
+
+    res.status(201).json({ message: 'Successfully followed topic' });
+  } catch (error) {
+    handleServerError(res, error, 'Failed to follow topic');
+  }
+});
+
+// Unfollow a topic
+router.delete('/follows', (req: Request, res: Response) => {
+  try {
+    const { topicId } = req.body;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Check if topic exists
+    const topic = db.prepare('SELECT id FROM topics WHERE id = ?').get(topicId);
+    if (!topic) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    // Remove follow relationship
+    const result = db.prepare(
+      'DELETE FROM follows WHERE followerId = ? AND topicId = ?'
+    ).run(userId, topicId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Not following this topic' });
+    }
+
+    res.status(200).json({ message: 'Successfully unfollowed topic' });
+  } catch (error) {
+    handleServerError(res, error, 'Failed to unfollow topic');
+  }
+});
+
+// Check if user is following a topic
+router.get('/follows/:userId', (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    // Get all follows for this user
+    const follows = db.prepare(
+      'SELECT * FROM follows WHERE followerId = ?'
+    ).all(userId);
+
+    res.json(follows);
+  } catch (error) {
+    handleServerError(res, error, 'Failed to get user follows');
+  }
+});
 
 export default router;
