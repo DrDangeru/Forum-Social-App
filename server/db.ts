@@ -77,11 +77,66 @@ function initializeDatabase() {
   `);
 }
 
+// Function to run database migrations
+// function runMigrations() {
+//   console.log('Running database migrations...');
+
+//   // Recreate follows table with new schema
+//   try {
+//     // Backup existing follows data
+//     const follows = db.prepare('SELECT * FROM follows').all();
+//     console.log('Backing up follows data:', follows);
+
+    // Drop and recreate follows table
+//     db.exec(`
+//       DROP TABLE IF EXISTS follows;
+      
+//       CREATE TABLE follows (
+//         followerId TEXT NOT NULL,
+//         followingId TEXT,  -- Made nullable to support topic follows
+//         topicId INTEGER,  -- Made nullable to support user follows
+//         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//         PRIMARY KEY (followerId, COALESCE(followingId, ''), COALESCE(topicId, 0)),
+//         FOREIGN KEY (followerId) REFERENCES users (userId),
+//         FOREIGN KEY (followingId) REFERENCES users (userId),
+//         FOREIGN KEY (topicId) REFERENCES topics (id)
+//       );
+      
+//       CREATE INDEX IF NOT EXISTS idx_follows_followerId ON follows(followerId);
+//       CREATE INDEX IF NOT EXISTS idx_follows_topicId ON follows(topicId);
+//     `);
+
+//     // Restore user follows (where topicId is NULL)
+//     const insertUserFollow = db.prepare(
+//       'INSERT INTO follows (followerId, followingId, createdAt) VALUES (?, ?, ?)'
+//     );
+
+//     // Restore topic follows (where followingId is NULL)
+//     const insertTopicFollow = db.prepare(
+//       'INSERT INTO follows (followerId, topicId, createdAt) VALUES (?, ?, ?)'
+//     );
+
+//     // Restore the data
+//     follows.forEach((follow: any) => {
+//       if (follow.topicId) {
+//         // This is a topic follow
+//         insertTopicFollow.run(follow.followerId, follow.topicId, follow.createdAt);
+//       } else {
+//         // This is a user follow
+//         insertUserFollow.run(follow.followerId, follow.followingId, follow.createdAt);
+//       }
+//     });
+
+//     console.log('Successfully migrated follows table');
+//   } catch (error) {
+//     console.error('Error during migration:', error);
+//   }
+// }
 // Function to initialize topics-related tables
 // should create only if not exists and ready topic table contents
 // with added indexes for better performance 
 function initTopicsTables() {
-  // First create all tables
+  // Create tables and their indexes in a single transaction
   db.exec(`
     CREATE TABLE IF NOT EXISTS topics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,6 +157,10 @@ function initTopicsTables() {
       FOREIGN KEY (userId) REFERENCES users (userId),
       FOREIGN KEY (topicId) REFERENCES topics (id)
     );
+    -- Index for userTopics
+    CREATE INDEX IF NOT EXISTS idx_userTopics_userId ON userTopics(userId);
+    CREATE INDEX IF NOT EXISTS idx_userTopics_topicId ON userTopics(topicId);
+
 
     CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -114,34 +173,35 @@ function initTopicsTables() {
       FOREIGN KEY (topicId) REFERENCES topics (id),
       FOREIGN KEY (createdBy) REFERENCES users (userId)
     );
-    
+    -- Index for posts
+    CREATE INDEX IF NOT EXISTS idx_posts_topicId ON posts(topicId);
+    CREATE INDEX IF NOT EXISTS idx_posts_createdBy ON posts(createdBy);
+
+
     CREATE TABLE IF NOT EXISTS follows (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       followerId TEXT NOT NULL,
-      followingId TEXT NOT NULL,
-      topicId INTEGER NOT NULL,
+      followingId TEXT,  
+      topicId INTEGER,  
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (followerId, followingId, topicId),
+      UNIQUE (followerId, followingId, topicId),
       FOREIGN KEY (followerId) REFERENCES users (userId),
       FOREIGN KEY (followingId) REFERENCES users (userId),
       FOREIGN KEY (topicId) REFERENCES topics (id)
     );
-  `);
-  
-  // Then create all indexes in a separate statement
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_userTopics_userId ON userTopics(userId);
-    CREATE INDEX IF NOT EXISTS idx_userTopics_topicId ON userTopics(topicId);
-    CREATE INDEX IF NOT EXISTS idx_posts_topicId ON posts(topicId);
-    CREATE INDEX IF NOT EXISTS idx_posts_createdBy ON posts(createdBy);
+    -- Index for follows - this should now succeed after migration
     CREATE INDEX IF NOT EXISTS idx_follows_followerId ON follows(followerId);
-    CREATE INDEX IF NOT EXISTS idx_follows_topicId ON follows(topicId);
+    CREATE INDEX IF NOT EXISTS idx_follows_topicId ON follows(topicId); 
   `);
 }
 
 // Initialize the database
 initializeDatabase();
 
-// Initialize topics tables on startup
+// Run migrations to update schema if/when necessary
+// runMigrations(); 
+
+// Initialize topics tables (will create if not exist, indexes should work now)
 initTopicsTables(); 
 
 // Database helper functions

@@ -65,7 +65,7 @@ const upload = multer({
 
 // Core middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'], // Allow both client and server URLs
+  origin: ['http://localhost:5173', 'http://localhost:3000'], // Allow Vite dev server (5173) and potentially old CRA (3000)
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -153,14 +153,14 @@ app.delete('/api/follow', (req: Request, res: Response) => {
   }
 });
 
-// User who follow current user, just a shell for now
+// User who follow current user
 app.get('/api/followers/:userId', (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const followers = db.prepare(`
-      SELECT u.id as userId, u.username, u.email, u.createdAt, u.avatarUrl
+      SELECT u.userId, u.username, u.avatarUrl, u.createdAt
       FROM follows f
-      JOIN users u ON f.followerId = u.id
+      JOIN users u ON f.followerId = u.userId 
       WHERE f.followingId = ?
     `).all(userId);
     
@@ -170,14 +170,14 @@ app.get('/api/followers/:userId', (req: Request, res: Response) => {
   }
 });
 
-// Who(users) current user follows, just a shell for now
+// Who(users) current user follows
 app.get('/api/following/:userId', (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const following = db.prepare(`
-      SELECT u.id as userId, u.username, u.email, u.createdAt, u.avatarUrl
+      SELECT u.userId, u.username, u.avatarUrl, u.createdAt
       FROM follows f
-      JOIN users u ON f.followingId = u.id
+      JOIN users u ON f.followingId = u.userId 
       WHERE f.followerId = ?
     `).all(userId);
     

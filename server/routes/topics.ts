@@ -133,8 +133,8 @@ router.get('/followed/:userId', (req: Request, res: Response) => {
       FROM topics t
       JOIN userTopics ut ON t.id = ut.topicId
       JOIN users u ON ut.userId = u.userId
-      JOIN follows f ON t.id = f.topicId
-      WHERE f.followerId = ?
+      LEFT JOIN follows f ON t.id = f.topicId AND f.followerId = ?
+      WHERE f.topicId IS NOT NULL
       ORDER BY t.createdAt DESC
     `).all(userId) as { id: number; title: string; createdAt: string; 
       creatorUsername: string; createdBy: string; description: string | null; 
@@ -558,11 +558,11 @@ router.post('/follows', (req: Request, res: Response) => {
       return res.status(200).json({ message: 'Already following this topic' });
     }
 
-    // Add follow relationship
+    // Add follow relationship - set followingId to NULL for topic follows
     db.prepare(
       `INSERT INTO follows (followerId, followingId, topicId, createdAt)
-      VALUES (?, ?, ?, CURRENT_TIMESTAMP)`
-    ).run(userId, userId, topicId);
+      VALUES (?, NULL, ?, CURRENT_TIMESTAMP)`
+    ).run(userId, topicId);
 
     res.status(201).json({ message: 'Successfully followed topic' });
   } catch (error) {

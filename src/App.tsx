@@ -33,11 +33,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const FollowedWithAuth = () => {
   const { user, loading } = useAuth();
   
-  if (loading || !user || !user.userId) {
+  if (loading || !user) {
     return <div className="p-4">Loading...</div>;
   }
   
-  return <Followed currentUserId={Number(user.userId)} />;
+  return <Followed />;
 };
 
 function App() {

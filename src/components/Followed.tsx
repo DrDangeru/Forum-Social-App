@@ -4,8 +4,11 @@ import { Button } from './ui/button';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { User, Topic } from '../types';
+import { useAuth } from '@/hooks/useAuth';
 
-const Followed = ({ currentUserId }: { currentUserId: number }) => {
+const Followed = () => {
+  const { user } = useAuth();
+  const currentUserId = user?.userId;
   const [followedUsers, setFollowedUsers] = useState<User[]>([]);
   const [followedTopics, setFollowedTopics] = useState<Topic[]>([]);
   const [userTopics, setUserTopics] = useState<Topic[]>([]);
@@ -13,6 +16,10 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchFollowData = async () => {
+    if (!currentUserId) {
+      return;
+    }
+
     try {
       const [followingRes, followersRes, followedTopicsRes, userTopicsRes] = await Promise.all([
         fetch(`http://localhost:3001/api/following/${currentUserId}`),
@@ -21,7 +28,6 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
         fetch(`http://localhost:3001/api/topics/user/${currentUserId}`)
       ]);
       
-
       setFollowedUsers(await followingRes.json());
       setFollowers(await followersRes.json());
       setFollowedTopics(await followedTopicsRes.json());
@@ -82,7 +88,7 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {followedTopics.map(topic => (
+                {Array.isArray(followedTopics) ? followedTopics.map(topic => (
                   <div key={topic.id} className="p-4 hover:bg-gray-50 rounded-lg transition-colors">
                     <h3 className="font-medium text-gray-900">{topic.title}</h3>
                     <p className="text-sm text-gray-500">
@@ -92,8 +98,10 @@ const Followed = ({ currentUserId }: { currentUserId: number }) => {
                       Created: {new Date(topic.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                ))}
-                {followedTopics.length === 0 && (
+                )) : (
+                  <p className="text-gray-500 text-center py-4">No topics loaded or followed.</p>
+                )}
+                {Array.isArray(followedTopics) && followedTopics.length === 0 && (
                   <p className="text-gray-500 text-center py-4">No followed topics yet</p>
                 )}
               </div>
