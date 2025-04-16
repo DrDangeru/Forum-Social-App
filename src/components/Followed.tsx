@@ -90,104 +90,132 @@ const Followed = () => {
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Friends' Topics Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Friends' Public Topics ({followedTopics.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Array.isArray(followedTopics) ? followedTopics.map(topic => (
-                  <div
-                    key={topic.id}
-                    className="p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
-                    onClick={() => navigate(`/topics/${topic.id}`)}
-                  >
-                    <h3 className="font-medium text-gray-900">{topic.title}</h3>
-                    <p className="text-sm text-gray-500">
-                      {topic.description || 'No description available'}
-                    </p>
-                    <div className="text-xs text-gray-400 mt-2">
-                      Created: {new Date(topic.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                )) : (
-                  <p className="text-gray-500 text-center py-4">No topics loaded or followed.</p>
-                )}
-                {Array.isArray(followedTopics) && followedTopics.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">No friends' public topics yet</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* User's Own Topics Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>My Topics ({userTopics.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Array.isArray(userTopics) ? userTopics.map(topic => (
-                  <div
-                    key={topic.id}
-                    className="p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
-                    onClick={() => navigate(`/topics/${topic.id}`)}
-                  >
-                    <h3 className="font-medium text-gray-900">{topic.title}</h3>
-                    <p className="text-sm text-gray-500">
-                      {topic.description || 'No description available'}
-                    </p>
-                    <div className="text-xs text-gray-400 mt-2">
-                      Created: {new Date(topic.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                )) : (
-                  <p className="text-gray-500 text-center py-4">No user topics loaded.</p>
-                )}
-                {Array.isArray(userTopics) && userTopics.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">
-                    You haven't created any topics yet</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Friends Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Friends ({followedUsers.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {followedUsers.map(user => (
-                  <div
-                    key={user.userId}
-                    className="flex items-center justify-between p-4
-                     hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
-                    onClick={() => navigate(`/profile/${user.userId}`)}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <Avatar>
-                        <AvatarImage src={user.avatarUrl || undefined} />
-                        <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}
-                          
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-medium text-gray-900">{user.username}</h3>
-                        <p className="text-sm text-gray-500">{user.email}</p>
+        <div className="space-y-6"> 
+          {/* First Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Friends' Topics Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">Friends' Public Topics 
+                  ({followedTopics.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 text-center">
+                  {Array.isArray(followedTopics) ? followedTopics.map(topic => (
+                    <div
+                      key={topic.id}
+                      className="p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                      onClick={() => navigate(`/topics/${topic.id}`)}
+                    >
+                      <h3 className="font-medium text-gray-900">{topic.title}</h3>
+                      <p className="text-sm text-gray-500">
+                        {topic.description || 'No description available'}
+                      </p>
+                      <div className="text-xs text-gray-400 mt-2">
+                        Created: {new Date(topic.createdAt).toLocaleDateString()}
                       </div>
                     </div>
-                  </div>
-                ))}
-                {followedUsers.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">You don't have any friends yet</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  )) : (
+                    <p className="text-gray-500 text-center py-4">No topics loaded or followed.</p>
+                  )}
+                  {Array.isArray(followedTopics) && followedTopics.length === 0 && (
+                    <p className="text-gray-500 text-center py-4">No friends' public topics yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* User's Own Topics Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">My Topics ({userTopics.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 text-center">
+                  {Array.isArray(userTopics) ? userTopics.map(topic => (
+                    <div
+                      key={topic.id}
+                      className="p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                      onClick={() => navigate(`/topics/${topic.id}`)}
+                    >
+                      <h3 className="font-medium text-gray-900">{topic.title}</h3>
+                      <p className="text-sm text-gray-500">
+                        {topic.description || 'No description available'}
+                      </p>
+                      <div className="text-xs text-gray-400 mt-2">
+                        Created: {new Date(topic.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  )) : (
+                    <p className="text-gray-500 text-center py-4">No user topics loaded.</p>
+                  )}
+                  {Array.isArray(userTopics) && userTopics.length === 0 && (
+                    <p className="text-gray-500 text-center py-4">
+                      You haven't created any topics yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Friends Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">Friends ({followedUsers.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Changed to flex column and centered items */}
+                <div className="flex flex-col items-center space-y-4"> 
+                  {followedUsers.map(user => (
+                    <div
+                      key={user.userId}
+                      // Changed to flex column, centered items, removed justify-between
+                      className="flex flex-col items-center p-4 w-full 
+                       hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                      onClick={() => navigate(`/profile/${user.userId}`)}
+                    >
+                      {/* This inner div keeps Avatar and text side-by-side */}
+                      <div className="flex items-center space-x-4"> 
+                        <Avatar>
+                          <AvatarImage className='align-center' src={user.avatarUrl || undefined} />
+                          <AvatarFallback className='align-center'>
+                            {user.username.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-medium text-gray-900">{user.username}</h3>
+                          <p className="text-sm text-gray-500">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {followedUsers.length === 0 && (
+                    <p className="text-gray-500 text-center py-4">You don't have any friends yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Second Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Empty Column 1 */}
+            <div></div> 
+
+            {/* Feed - Coming Soon Section (Middle Column) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">Feed</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center h-full text-center">
+                  <p className="text-gray-500 text-lg font-semibold">Coming Soon</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Empty Column 3 */}
+            <div></div> 
+          </div>
         </div>
       )}
     </div>
