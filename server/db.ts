@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { DbHelpers, User, GalleryImage, Profile } from './types';
+import type { DbHelpers, User, GalleryImage, Profile, UserFile } from './types/types';
 import fs from 'fs';
 import crypto from 'crypto';
 
@@ -81,9 +81,9 @@ function initializeDatabase() {
 // function runMigrations() {
 //   console.log('Running database migrations...');
 
-//   // Recreate follows table with new schema
+//   // Recreate follows/any table with new schema
 //   try {
-//     // Backup existing follows data
+//     // Backup existing follows data (change to new column)
 //     const follows = db.prepare('SELECT * FROM follows').all();
 //     console.log('Backing up follows data:', follows);
 
@@ -217,11 +217,12 @@ const dbHelpers: DbHelpers = {
     },
     
     create: (user) => {
-      // Generate a unique string userId if not provided
-      const userId = user.userId || crypto.randomUUID();
+      // Generate a unique string userId using random UUID
+      const userId = crypto.randomUUID();
       
       return db.prepare(`
-        INSERT INTO users (userId, username, email, passwordHash, firstName, lastName)
+        INSERT INTO users (userId, username, email, passwordHash,
+         firstName, lastName)
         VALUES (?, ?, ?, ?, ?, ?)
       `).run(
         userId,
@@ -409,7 +410,7 @@ const dbHelpers: DbHelpers = {
     getById: (fileId: string) => {
       return db.prepare(`
         SELECT * FROM userFiles WHERE id = ?
-      `).get(fileId);
+      `).get(fileId) as UserFile | undefined;
     },
     
     deleteById: (fileId: string) => {

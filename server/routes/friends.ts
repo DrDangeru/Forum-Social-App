@@ -4,7 +4,7 @@ import db from '../db';
 import { 
   FriendRequest, 
   BasicProfile as Friend 
-} from '../types';
+} from '../types/types';
 
 const router = express.Router();
 

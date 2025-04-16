@@ -50,6 +50,7 @@ export interface Profile {
   pets: string | null;
   createdAt: string;
   updatedAt: string;
+  bio?: string | null;
   isFriend?: boolean;
   friendRequestStatus?: FriendRequestStatus;
   following?: Topic[];
@@ -57,7 +58,7 @@ export interface Profile {
   friendRequests?: FriendRequest[];
   followingMembers?: any[];
   unreadAlerts?: number;
-  galleryImages?: string[];
+  galleryImages?: GalleryImage[];
 }
 
 // Social links structure
@@ -83,6 +84,18 @@ export interface FriendRequest {
   updatedAt: string;
 }
 
+// Friend request with user details
+export interface FriendRequestWithDetails extends FriendRequest {
+  senderFirstName: string;
+  senderLastName: string;
+  senderUsername: string;
+  senderAvatarUrl: string | null;
+  receiverFirstName: string;
+  receiverLastName: string;
+  receiverUsername: string;
+  receiverAvatarUrl: string | null;
+}
+
 // Basic profile for display in lists
 export interface BasicProfile {
   userId: string;
@@ -90,6 +103,26 @@ export interface BasicProfile {
   firstName: string;
   lastName: string;
   avatarUrl: string | null;
+}
+
+// Member profile
+export interface MemberProfile {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  createdAt: string;
+  location?: string;
+  socialLinks?: SocialLinks;
+  relationshipStatus?: string;
+  age?: number | null;
+  interests?: string[];
+  occupation?: string;
+  company?: string;
+  hobbies?: string[];
+  pets?: any[];
 }
 
 // ==================== CONTENT TYPES ====================
@@ -102,10 +135,12 @@ export interface Topic {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  posts?: Post[];
+  author?: BasicProfile;
+  isFollowed?: boolean;
   headline?: string;
   topicOwnerOrMod?: string;
   followers?: User[];
-  posts?: Post[];
   public?: boolean;
 }
 
@@ -133,14 +168,14 @@ export interface Follow {
 
 // File related types
 export interface UserFile {
-  id: number;
+  id: string;
   userId: string;
   filename: string;
   originalName: string;
   filePath: string;
   size: number;
   mimetype: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 // Gallery Image type
@@ -186,7 +221,7 @@ export interface DbHelpers {
       location?: string;
       socialLinks?: string;
       relationshipStatus?: string;
-      age?: number | string | null;
+      age: number | null;
       interests?: string;
       occupation?: string;
       company?: string;
@@ -197,7 +232,7 @@ export interface DbHelpers {
       location?: string;
       socialLinks?: string;
       relationshipStatus?: string;
-      age?: number | string | null;
+      age?: number | null;
       interests?: string;
       occupation?: string;
       company?: string;
@@ -213,7 +248,7 @@ export interface DbHelpers {
   };
   
   userFiles: {
-    getByUserId: (userId: string) => UserFile[];
+    getByUserId: (userId: string) => unknown[];
     getFileCount: (userId: string) => { count: number };
     create: (file: {
       userId: string;
@@ -223,7 +258,7 @@ export interface DbHelpers {
       size: number;
       mimetype: string;
     }) => DbOperationResult;
-    getById: (fileId: string) => UserFile;
+    getById: (fileId: string) => UserFile | undefined;
     deleteById: (fileId: string) => DbOperationResult;
   };
   

@@ -4,7 +4,7 @@ import db from '../db';
 import crypto from 'node:crypto';
 import { generateToken } from '../middleware/auth';
 import dotenv from 'dotenv';
-import { User } from '../types';
+import { User } from '../types/types';
 import cookieParser from 'cookie-parser';
 
 dotenv.config();
