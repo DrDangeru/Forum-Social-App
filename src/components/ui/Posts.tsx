@@ -31,7 +31,7 @@ export const Posts: React.FC<PostsProps> = ({
   const [loading, setLoading] = useState(false);
 
   const handleEditClick = (post: Post) => {
-    setEditingPostId(post.id);
+    setEditingPostId(post.postId);
     setEditContent(post.content);
   };
 
@@ -75,7 +75,7 @@ export const Posts: React.FC<PostsProps> = ({
   return (
     <div className="space-y-4">
       {posts.map((post) => (
-        <Card key={post.id} className="bg-white">
+        <Card key={post.postId} className="bg-white">
           <CardContent className="pt-4">
             <div className="flex items-center mb-2">
               <Avatar className="h-6 w-6 mr-2">
@@ -115,7 +115,7 @@ export const Posts: React.FC<PostsProps> = ({
               </div>
             </div>
 
-            {editingPostId === post.id ? (
+            {editingPostId === post.postId ? (
               <div className="mt-2 space-y-2">
                 <Textarea
                   value={editContent}
@@ -125,7 +125,7 @@ export const Posts: React.FC<PostsProps> = ({
                 />
                 <div className="flex space-x-2">
                   <Button
-                    onClick={() => handleSaveEdit(post.id)}
+                    onClick={() => handleSaveEdit(post.postId)}
                     disabled={loading || !editContent.trim()}
                     variant="default"
                     size="sm"
@@ -154,7 +154,7 @@ export const Posts: React.FC<PostsProps> = ({
               </div>
             )}
 
-            {user && post.createdBy === user.userId && !editingPostId && (
+            {user && post.posterId === user.userId && !editingPostId && (
               <div className="mt-2 flex space-x-2">
                 <button
                   onClick={() => handleEditClick(post)}
@@ -170,7 +170,7 @@ export const Posts: React.FC<PostsProps> = ({
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => handleImageUpload(post.id, e)}
+                    onChange={(e) => handleImageUpload(post.postId, e)}
                   />
                   <Upload className="h-4 w-4 mr-1" />
                   Upload Image

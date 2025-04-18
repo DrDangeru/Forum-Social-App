@@ -146,14 +146,16 @@ export interface Topic {
 
 // Post interface
 export interface Post {
-  id: number;
-  userId: string;
+  postId: number;
+  topicId: number;
+  posterId: string;
   content: string;
-  createdBy: string;
   createdAt: string;
   updatedAt: string;
-  author?: User | BasicProfile;
-  topic?: Topic | string;
+  // author?: User | BasicProfile; author is obv the poster(posterId)
+  //topic?: Topic | string; topicId is the topic identifier
+  authorUsername?: string;
+  authorAvatarUrl?: string | null;
   imageUrl?: string | null;
 }
 

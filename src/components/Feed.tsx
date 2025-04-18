@@ -43,10 +43,10 @@ const Feed = ({ userId }: { userId: string }) => {
         </Card>
       ) : (
         posts.map((post) => (
-          <Card key={post.id} className="mb-4">
+          <Card key={post.postId} className="mb-4">
             <CardHeader>
               <CardTitle className="text-xl">
-                {post.author?.firstName} {post.author?.lastName}
+                {post.authorUsername}
               </CardTitle>
             </CardHeader>
             <CardContent>

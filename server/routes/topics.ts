@@ -2,7 +2,7 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import db from '../db';
 import { handleServerError } from '../utils.ts';
-import { Post } from '../types/index';
+import { Post } from '../types/types.ts';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -70,10 +70,10 @@ const getPostsForTopic = (topicId: number): Post[] => {
       imageUrl: string | null }[];
 
     posts = rawPosts.map((post) => ({
-      id: post.id,
+      postId: post.id,
       topicId: post.topicId,
+      posterId: post.createdBy,
       content: post.content,
-      createdBy: post.createdBy,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
       authorUsername: post.authorUsername,
@@ -341,10 +341,10 @@ router.post('/', (req: Request, res: Response) => {
         const postId = Number(postResult.lastInsertRowid);
         
         posts.push({
-          id: postId,
+          postId,
           topicId,
+          posterId: createdBy,
           content: firstPostContent,
-          createdBy,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           authorUsername: user.username,
@@ -457,10 +457,10 @@ router.post('/:topicId/posts', upload.single('image'), async (req: Request, res:
     
     // Create a formatted response
     const newPost: Post = {
-      id: postId,
+      postId,
       topicId: parseInt(topicId),
+      posterId: createdBy,
       content: content || '',
-      createdBy: createdBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       authorUsername: user?.username ?? '',

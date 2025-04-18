@@ -124,7 +124,7 @@ export default function TopicView() {
         return {
           ...prev,
           posts: prev.posts?.map(post => 
-            post.id === postId ? { ...post, ...response.data } : post
+            post.postId === postId ? { ...post, ...response.data } : post
           ) || []
         };
       });
@@ -159,7 +159,7 @@ export default function TopicView() {
       setTopic(prev => {
         if (!prev) return null;
         const updatedPosts = prev.posts?.map(post => 
-          post.id === postId ? { ...post, imageUrl: response.data.imageUrl } : post
+          post.postId === postId ? { ...post, imageUrl: response.data.imageUrl } : post
         ) || [];
         return {
           ...prev,

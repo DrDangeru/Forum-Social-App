@@ -175,7 +175,7 @@ export default function UserTopics({
                           new Date(b.createdAt).getTime()
                         )
                         .map((post: Post) => (
-                          <div key={post.id} className="bg-gray-50 p-3 rounded-md">
+                          <div key={post.postId} className="bg-gray-50 p-3 rounded-md">
                             <p className="text-gray-800">{post.content}</p>
                             <div className="flex justify-between mt-2">
                               <span className="text-xs text-gray-500">

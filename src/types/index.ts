@@ -152,24 +152,14 @@ export interface Topic {
 
 // Post definition
 export interface Post {
-  id: number;
+  postId: number;
   topicId: number;
+  posterId: string;
   content: string;
-  createdBy: string;
   createdAt: string;
   updatedAt: string;
   imageUrl?: string;
-  
-  // Client-specific additions
-  author?: User | BasicProfile;
-  topic?: Topic | string;
-  replies?: Post[];
-  postId?: number; // For posts that act as comments/replies to other posts
-  
-  // New fields for enhanced functionality
   authorUsername?: string;
-  //authorFirstName?: string;
-  //authorLastName?: string;  
   authorAvatarUrl?: string | null;
 }
 

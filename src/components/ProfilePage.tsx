@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useFriends } from '../hooks/useFriends';
-import type { Profile, BasicProfile } from '../../server/types';
+import type { Profile, BasicProfile } from '../types/index';
 import { Button } from './ui/button';
 import UserTopics from './UserTopics';
 
