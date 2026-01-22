@@ -1,10 +1,10 @@
 import express from 'express';
 import type { Request, Response } from 'express';
-import db from '../db';
+import db from '../db.js';
 import { 
   FriendRequest, 
   BasicProfile as Friend 
-} from '../types/types';
+} from '../types/types.js';
 
 const router = express.Router();
 

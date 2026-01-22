@@ -1,7 +1,7 @@
 import express from 'express';
 import type { Request, Response } from 'express';
-import db, { dbHelpers } from '../db';
-import type { User, Profile, GalleryImage } from '../types/types';
+import db, { dbHelpers } from '../db.js';
+import type { User, Profile, GalleryImage } from '../types/types.js';
 
 const router = express.Router();
 

@@ -1,18 +1,18 @@
 import express from 'express';
 import type { Express, Request, Response } from 'express';
 import cors from 'cors';
-import db, { dbHelpers } from './db';
+import db, { dbHelpers } from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import authRoutes from './routes/auth';
-import profileRoutes from './routes/profile';
-import friendsRoutes from './routes/friends';
-import usersRoutes from './routes/users';
-import topicsRoutes from './routes/topics';
-import { verifyToken, AuthRequest } from './middleware/auth';
+import authRoutes from './routes/auth.js';
+import profileRoutes from './routes/profile.js';
+import friendsRoutes from './routes/friends.js';
+import usersRoutes from './routes/users.js';
+import topicsRoutes from './routes/topics.js';
+import { verifyToken, AuthRequest } from './middleware/auth.js';
 import process from 'node:process';
 import cookieParser from 'cookie-parser'; // Import express cookie-parser
 

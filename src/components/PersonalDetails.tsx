@@ -115,8 +115,10 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
       const fileInfo = response.data.files[0];
       
       // Get the server-relative path for the avatar
-      // Use path if available, otherwise construct it from userId and filename
-      const filePath = fileInfo.path || `/uploads/${user.userId}/${fileInfo.filename}`;
+      // Standardize to use /uploads prefix
+      const filePath = fileInfo.path ? 
+        (fileInfo.path.startsWith('/uploads') ? fileInfo.path : `/uploads/${user.userId}/${fileInfo.filename}`) : 
+        `/uploads/${user.userId}/${fileInfo.filename}`;
       
       // Save the profile immediately to persist the change
       const updatedDetails = {

@@ -1,10 +1,10 @@
 import { Router, Request } from 'express';
 import bcrypt from 'bcrypt';
-import db from '../db';
+import db from '../db.js';
 import crypto from 'node:crypto';
-import { generateToken } from '../middleware/auth';
+import { generateToken } from '../middleware/auth.js';
 import dotenv from 'dotenv';
-import { User } from '../types/types';
+import { User } from '../types/types.js';
 import cookieParser from 'cookie-parser';
 
 dotenv.config();

@@ -1,8 +1,8 @@
 import express from 'express';
 import type { Request, Response } from 'express';
-import db from '../db';
-import { handleServerError } from '../utils.ts';
-import { Post } from '../types/types.ts';
+import db from '../db.js';
+import { handleServerError } from '../utils.js';
+import { Post } from '../types/types.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -494,8 +494,8 @@ router.post('/posts/:postId/image', upload.single('image'), (req: Request, res: 
       return res.status(400).json({ error: 'User ID is required' });
     }
 
-    // Update post with image URL
-    const imageUrl = `/api/topics/uploads/${userId}/${file.filename}`;
+    // Update the post with image URL
+    const imageUrl = `/uploads/${userId}/${file.filename}`;
     
     // First check if post exists and user has permission
     const post = db.prepare(`

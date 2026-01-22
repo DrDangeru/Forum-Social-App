@@ -1,7 +1,7 @@
 import express from 'express';
 import type { Request, Response } from 'express';
-import db from '../db';
-import type { BasicProfile } from '../types/types';
+import db from '../db.js';
+import type { BasicProfile } from '../types/types.js';
 
 const router = express.Router();
 
