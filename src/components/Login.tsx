@@ -24,11 +24,8 @@ const Login = () => {
     setError('');
     
     try {
-      // Email is optional for login, use username if not provided
-      const loginData = { 
-        ...formData, 
-        email: formData.email || formData.username // Use username as email if not provided
-      };
+      // Email is NOT used for login in the current backend, only username.
+      const { email, ...loginData } = formData;
       await login(loginData);
       navigate('/'); // Navigate to home page after successful login
     } catch (error: any) {

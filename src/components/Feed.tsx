@@ -1,62 +1,163 @@
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { Post } from '../types';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Card, CardContent, CardHeader } from './ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { Badge } from './ui/badge';
+import { Loader2, MessageSquare, TrendingUp, Users } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 
-const Feed = ({ userId }: { userId: string }) => {
+interface FeedItem {
+  postId: number;
+  topicId: number;
+  content: string;
+  posterId: string;
+  createdAt: string;
+  updatedAt: string;
+  imageUrl: string | null;
+  authorUsername: string;
+  authorAvatarUrl: string | null;
+  topicTitle: string;
+  relevanceScore: number;
+}
+
+const Feed: React.FC = () => {
+  const [items, setItems] = useState<FeedItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { data: posts, isLoading } = useQuery<Post[]>({
-    queryKey: ['feed', userId],
-    queryFn: async () => {
-      const response = await fetch(`http://localhost:3001/api/feed?userId=${userId}`);
-      return response.json();
-    },
-  });
+
+  useEffect(() => {
+    const fetchFeed = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/api/feed');
+        setItems(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching feed:', err);
+        setError('Failed to load your feed. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeed();
+  }, []);
 
   const handleStartTopic = () => {
     navigate('/topics');
   };
 
-  if (isLoading) return <div className="text-lg">Loading...</div>;
-  if (!posts) return <div className="text-lg">No posts found. Follow stuff for posts.</div>;
+  const getRelevanceLabel = (score: number) => {
+    if (score >= 100) return { label: 'Friend', icon: <Users className="h-3 w-3 mr-1" />, color: 'bg-blue-100 text-blue-800' };
+    if (score >= 80) return { label: 'Following', icon: <TrendingUp className="h-3 w-3 mr-1" />, color: 'bg-green-100 text-green-800' };
+    if (score > 0) return { label: 'Match', icon: <TrendingUp className="h-3 w-3 mr-1" />, color: 'bg-purple-100 text-purple-800' };
+    return { label: 'Discovery', icon: <MessageSquare className="h-3 w-3 mr-1" />, color: 'bg-gray-100 text-gray-800' };
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Tailoring your feed...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="border-destructive">
+        <CardContent className="pt-6">
+          <p className="text-destructive text-center">{error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="max-w-[600px] mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Your Feed</h2>
+    <div className="max-w-[800px] mx-auto space-y-6 px-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold tracking-tight">Your Feed</h2>
         <Button 
           onClick={handleStartTopic}
-          className="bg-green-500 hover:bg-green-600"
+          className="bg-green-600 hover:bg-green-700 text-white"
         >
           Start a Topic
         </Button>
       </div>
-
-      {!posts || posts.length === 0 ? (
-        <Card className="mb-4">
-          <CardContent className="py-6">
-            <p className="text-center text-gray-500">
-              No posts found. Follow topics or users to see their posts here.
-            </p>
+      
+      {items.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6 text-center space-y-4">
+            <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground opacity-20" />
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Your feed is quiet</h3>
+              <p className="text-muted-foreground max-w-xs mx-auto">
+                Follow some topics or add friends to see what's happening in your community.
+              </p>
+            </div>
+            <Link to="/topics" className="inline-block text-primary hover:underline">
+              Explore Topics
+            </Link>
           </CardContent>
         </Card>
       ) : (
-        posts.map((post) => (
-          <Card key={post.postId} className="mb-4">
-            <CardHeader>
-              <CardTitle className="text-xl">
-                {post.authorUsername}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-base">{post.content}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {new Date(post.createdAt).toLocaleString()}
-              </p>
-            </CardContent>
-          </Card>
-        ))
+        <div className="grid gap-6">
+          {items.map((item) => {
+            const relevance = getRelevanceLabel(item.relevanceScore);
+            return (
+              <Card key={item.postId} className="overflow-hidden transition-all hover:shadow-md">
+                <CardHeader className="flex flex-row items-start space-y-0 gap-4 pb-3">
+                  <Link to={`/profile/${item.posterId}`}>
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={item.authorAvatarUrl || undefined} />
+                      <AvatarFallback>{item.authorUsername[0].toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </Link>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Link to={`/profile/${item.posterId}`} className="font-semibold hover:underline">
+                          {item.authorUsername}
+                        </Link>
+                        <span className="text-muted-foreground text-sm">•</span>
+                        <span className="text-muted-foreground text-sm">
+                          {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <Badge variant="secondary" className={`${relevance.color} border-none font-medium flex items-center px-2 py-0.5`}>
+                        {relevance.icon}
+                        {relevance.label}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <span>posted in</span>
+                      <Link to={`/topic/${item.topicId}`} className="text-primary hover:underline font-medium">
+                        {item.topicTitle}
+                      </Link>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {item.content}
+                  </p>
+                  {item.imageUrl && (
+                    <div className="rounded-lg overflow-hidden border">
+                      <img 
+                        src={item.imageUrl} 
+                        alt="Post content" 
+                        className="w-full h-auto max-h-[400px] object-cover"
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       )}
     </div>
   );
