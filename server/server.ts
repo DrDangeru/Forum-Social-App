@@ -13,6 +13,7 @@ import friendsRoutes from './routes/friends.js';
 import usersRoutes from './routes/users.js';
 import topicsRoutes from './routes/topics.js';
 import feedRoutes from './routes/feed.js';
+import groupsRoutes from './routes/groups.js';
 import { verifyToken, AuthRequest } from './middleware/auth.js';
 import process from 'node:process';
 import cookieParser from 'cookie-parser'; // Import express cookie-parser
@@ -87,6 +88,7 @@ app.use('/api/friends', verifyToken, friendsRoutes);
 app.use('/api/users', verifyToken, usersRoutes);
 app.use('/api/topics', verifyToken, topicsRoutes);
 app.use('/api/feed', verifyToken, feedRoutes);
+app.use('/api/groups', verifyToken, groupsRoutes);
 
 // Social Features 
 // Think for now feed would be friends topics/posts

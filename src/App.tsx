@@ -17,6 +17,8 @@ import Home from './components/Home';
 import { UserSearch } from './components/UserSearch';
 import ProfilePage from './components/ProfilePage';
 import Followed from './components/Followed';
+import Groups from './components/Groups';
+import GroupView from './components/GroupView';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -104,6 +106,16 @@ function App() {
                 <Route path="/search" element={
                   <ProtectedRoute>
                     <UserSearch />
+                  </ProtectedRoute>
+                } />
+                <Route path="/groups" element={
+                  <ProtectedRoute>
+                    <Groups />
+                  </ProtectedRoute>
+                } />
+                <Route path="/groups/:groupId" element={
+                  <ProtectedRoute>
+                    <GroupView />
                   </ProtectedRoute>
                 } />
               </Routes>

@@ -170,6 +170,57 @@ export interface Follow {
   createdAt: string;
 }
 
+// ==================== GROUP TYPES ====================
+
+// Group access type
+export type GroupAccessType = 'open' | 'invitation';
+
+// Group member role
+export type GroupMemberRole = 'owner' | 'admin' | 'member';
+
+// Group interface
+export interface Group {
+  id: number;
+  name: string;
+  description: string;
+  accessType: GroupAccessType;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  memberCount?: number;
+  creatorUsername?: string;
+  creatorAvatarUrl?: string | null;
+  isMember?: boolean;
+  userRole?: GroupMemberRole;
+}
+
+// Group member interface
+export interface GroupMember {
+  id: number;
+  groupId: number;
+  userId: string;
+  role: GroupMemberRole;
+  joinedAt: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string | null;
+}
+
+// Group invitation interface
+export interface GroupInvitation {
+  id: number;
+  groupId: number;
+  inviterId: string;
+  inviteeId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+  groupName?: string;
+  inviterUsername?: string;
+  inviterAvatarUrl?: string | null;
+}
+
 // ==================== UTILITY TYPES ====================
 
 // File related types

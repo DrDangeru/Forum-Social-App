@@ -202,7 +202,54 @@ initializeDatabase();
 // runMigrations(); 
 
 // Initialize topics tables (will create if not exist, indexes should work now)
-initTopicsTables(); 
+initTopicsTables();
+
+// Function to initialize groups-related tables
+function initGroupsTables() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      accessType TEXT NOT NULL DEFAULT 'open',
+      createdBy TEXT NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (createdBy) REFERENCES users (userId)
+    );
+
+    CREATE TABLE IF NOT EXISTS groupMembers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      groupId INTEGER NOT NULL,
+      userId TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'member',
+      joinedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (groupId, userId),
+      FOREIGN KEY (groupId) REFERENCES groups (id) ON DELETE CASCADE,
+      FOREIGN KEY (userId) REFERENCES users (userId) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_groupMembers_groupId ON groupMembers(groupId);
+    CREATE INDEX IF NOT EXISTS idx_groupMembers_userId ON groupMembers(userId);
+
+    CREATE TABLE IF NOT EXISTS groupInvitations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      groupId INTEGER NOT NULL,
+      inviterId TEXT NOT NULL,
+      inviteeId TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (groupId, inviteeId),
+      FOREIGN KEY (groupId) REFERENCES groups (id) ON DELETE CASCADE,
+      FOREIGN KEY (inviterId) REFERENCES users (userId),
+      FOREIGN KEY (inviteeId) REFERENCES users (userId)
+    );
+    CREATE INDEX IF NOT EXISTS idx_groupInvitations_inviteeId ON groupInvitations(inviteeId);
+  `);
+}
+
+// Initialize groups tables
+initGroupsTables(); 
 
 // Database helper functions
 const dbHelpers: DbHelpers = {

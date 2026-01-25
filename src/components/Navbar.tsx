@@ -43,6 +43,12 @@ const Navbar = () => {
                   Followed
                 </Link>
                 <Link
+                  to="/groups"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                >
+                  Groups
+                </Link>
+                <Link
                   to="/alerts"
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md relative"
                 >
