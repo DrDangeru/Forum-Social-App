@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Badge } from './ui/badge';
-import { Loader2, MessageSquare, TrendingUp, Users } from 'lucide-react';
+import { Loader2, MessageSquare, TrendingUp, Upload, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
+import { useAuth } from '../hooks/useAuth';
 
 interface FeedItem {
   postId: number;
@@ -26,28 +28,80 @@ const Feed: React.FC = () => {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [replyingToPostId, setReplyingToPostId] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [replyImage, setReplyImage] = useState<File | null>(null);
+  const [isReplySubmitting, setIsReplySubmitting] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const fetchFeed = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/feed');
+      setItems(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching feed:', err);
+      setError('Failed to load your feed. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchFeed = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get('/api/feed');
-        setItems(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching feed:', err);
-        setError('Failed to load your feed. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchFeed();
-  }, []);
+  }, [fetchFeed]);
 
   const handleStartTopic = () => {
     navigate('/topics');
+  };
+
+  const handleStartReply = (postId: number) => {
+    setReplyingToPostId(postId);
+    setReplyContent('');
+    setReplyImage(null);
+  };
+
+  const handleSubmitReply = async (topicId: number) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (!replyContent.trim()) return;
+
+    try {
+      setIsReplySubmitting(true);
+
+      if (replyImage) {
+        const formData = new FormData();
+        formData.append('content', replyContent.trim());
+        formData.append('createdBy', user.userId);
+        formData.append('image', replyImage);
+
+        await axios.post(`/api/topics/${topicId}/posts`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      } else {
+        await axios.post(`/api/topics/${topicId}/posts`, {
+          content: replyContent.trim(),
+          createdBy: user.userId
+        });
+      }
+
+      setReplyingToPostId(null);
+      setReplyContent('');
+      setReplyImage(null);
+      fetchFeed();
+    } catch (err) {
+      console.error('Failed to post reply:', err);
+      setError('Failed to post reply. Please try again.');
+    } finally {
+      setIsReplySubmitting(false);
+    }
   };
 
   const getRelevanceLabel = (score: number) => {
@@ -134,7 +188,7 @@ const Feed: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <span>posted in</span>
-                      <Link to={`/topic/${item.topicId}`} className="text-primary hover:underline font-medium">
+                      <Link to={`/topics/${item.topicId}`} className="text-primary hover:underline font-medium">
                         {item.topicTitle}
                       </Link>
                     </div>
@@ -151,6 +205,72 @@ const Feed: React.FC = () => {
                         alt="Post content" 
                         className="w-full h-auto max-h-[400px] object-cover"
                       />
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleStartReply(item.postId)}
+                    >
+                      Reply
+                    </Button>
+                    <Link to={`/topics/${item.topicId}`} className="text-sm text-primary hover:underline">
+                      View topic
+                    </Link>
+                  </div>
+
+                  {replyingToPostId === item.postId && (
+                    <div className="space-y-2 pt-2">
+                      <Textarea
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        placeholder={`Reply to ${item.authorUsername}...`}
+                        className="min-h-[90px]"
+                      />
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="inline-flex items-center text-sm text-gray-700 cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              setReplyImage(file);
+                            }}
+                          />
+                          <span className="inline-flex items-center">
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload image
+                          </span>
+                        </label>
+                        {replyImage && (
+                          <span className="text-xs text-muted-foreground truncate max-w-[55%]">
+                            {replyImage.name}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setReplyingToPostId(null);
+                            setReplyContent('');
+                            setReplyImage(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleSubmitReply(item.topicId)}
+                          disabled={isReplySubmitting || !replyContent.trim()}
+                        >
+                          {isReplySubmitting ? 'Posting...' : 'Post Reply'}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </CardContent>

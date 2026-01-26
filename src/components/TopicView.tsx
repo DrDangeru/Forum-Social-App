@@ -85,15 +85,27 @@ export default function TopicView() {
     }
   };
 
-  const handleCreatePost = async (content: string) => {
+  const handleCreatePost = async (content: string, image?: File | null) => {
     if (!user || !topic) return;
 
     try {
       setLoading(true);
-      const response = await axios.post(`/api/topics/${topicId}/posts`, {
-        content,
-        createdBy: user.userId
-      });
+
+      const response = image
+        ? await axios.post(
+          `/api/topics/${topicId}/posts`,
+          (() => {
+            const formData = new FormData();
+            formData.append('content', content);
+            formData.append('createdBy', user.userId);
+            formData.append('image', image);
+            return formData;
+          })()
+        )
+        : await axios.post(`/api/topics/${topicId}/posts`, {
+          content,
+          createdBy: user.userId
+        });
 
       setTopic(prev => {
         if (!prev) return null;

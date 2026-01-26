@@ -193,6 +193,15 @@ function initTopicsTables() {
     CREATE INDEX IF NOT EXISTS idx_follows_followerId ON follows(followerId);
     CREATE INDEX IF NOT EXISTS idx_follows_topicId ON follows(topicId); 
   `);
+
+  try {
+    const hasImageUrl = db.prepare('PRAGMA table_info(posts)').all().some((col: any) => col.name === 'imageUrl');
+    if (!hasImageUrl) {
+      db.prepare('ALTER TABLE posts ADD COLUMN imageUrl TEXT').run();
+    }
+  } catch {
+    // intentionally ignored
+  }
 }
 
 // Initialize the database
@@ -224,7 +233,7 @@ function initGroupsTables() {
       userId TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'member',
       joinedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (groupId, userId),
+      UNIQUE (groupId, userId),
       FOREIGN KEY (groupId) REFERENCES groups (id) ON DELETE CASCADE,
       FOREIGN KEY (userId) REFERENCES users (userId) ON DELETE CASCADE
     );

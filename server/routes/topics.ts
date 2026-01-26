@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import db from '../db.js';
 import { handleServerError } from '../utils.js';
 import { Post } from '../types/types.js';
+import type { AuthRequest } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -14,8 +15,8 @@ const __dirname = path.dirname(__filename);
 // Configure Multer storage
 const storage = multer.diskStorage({
   destination: (req, _file, cb) => {
-    // Get userId from query parameters
-    const userId = req.query.userId as string;
+    const authUserId = (req as AuthRequest).user?.userId;
+    const userId = authUserId || (req.query.userId as string | undefined); 
     if (!userId) {
       cb(new Error('User ID is required'), '');
       return;
@@ -52,6 +53,13 @@ const upload = multer({
 });
 
 const router = express.Router();
+
+const uploadSingleImage: express.RequestHandler = (req, res, next) => {
+  if (req.is('multipart/form-data')) {
+    return upload.single('image')(req, res, next);
+  }
+  return next();
+};
 
 // Helper function to get posts for a topic
 const getPostsForTopic = (topicId: number): Post[] => {
@@ -381,10 +389,19 @@ router.post('/', (req: Request, res: Response) => {
 });
 
 // Add a post to a topic
-router.post('/:topicId/posts', upload.single('image'), async (req: Request, res: Response) => {
+router.post('/:topicId/posts', uploadSingleImage, async (req: Request, res: Response) => {
   try {
     const { topicId } = req.params;
     const { content, createdBy } = req.body;
+
+    const authUserId = (req as AuthRequest).user?.userId;
+    if (!authUserId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (createdBy && createdBy !== authUserId) {
+      return res.status(403).json({ error: 'Unauthorized user for post creation' });
+    }
     
     // Check if topic exists
     const topic = db.prepare('SELECT id FROM topics WHERE id = ?').
@@ -393,49 +410,14 @@ router.post('/:topicId/posts', upload.single('image'), async (req: Request, res:
       return res.status(404).json({ error: 'Topic not found' });
     }
     
-    // Check if the posts table exists and has the correct schema
-    try {
-      // First check if the posts table exists
-      const tableExists = db.prepare(`
-        SELECT name FROM sqlite_master WHERE type='table' AND name='posts'
-      `).get();
-      
-      if (tableExists) {
-        // Check if the table has the topicId column
-        const hasTopicId = db.prepare(`
-          PRAGMA table_info(posts)
-        `).all().some((col: any) => col.name === 'topicId');
-        
-        if (!hasTopicId) {
-          // Drop the table if it doesn't have the topicId column
-          db.prepare(`DROP TABLE IF EXISTS posts`).run();
-        }
-      }
-      
-      // Create the posts table with the correct schema
-      db.prepare(`
-        CREATE TABLE IF NOT EXISTS posts (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          topicId INTEGER NOT NULL,
-          content TEXT NOT NULL,
-          createdBy TEXT NOT NULL,
-          createdAt TEXT NOT NULL,
-          updatedAt TEXT NOT NULL,
-          FOREIGN KEY (topicId) REFERENCES topics(id) ON DELETE CASCADE,
-          FOREIGN KEY (createdBy) REFERENCES users(userId) ON DELETE CASCADE
-        )
-      `).run();
-    } catch (err) {
-      console.log('Error creating posts table:', err);
-    }
-    
     // Insert the post
     let postId = 0;
+    const imageUrl = req.file ? `/uploads/${authUserId}/${req.file.filename}` : null;
     try {
       const result = db.prepare(`
-        INSERT INTO posts (topicId, content, createdBy, createdAt, updatedAt)
-        VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      `).run(topicId, content, createdBy);
+        INSERT INTO posts (topicId, content, createdBy, createdAt, updatedAt, imageUrl)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
+      `).run(topicId, content, authUserId, imageUrl);
       
       postId = Number(result.lastInsertRowid);
     } catch (err) {
@@ -446,26 +428,19 @@ router.post('/:topicId/posts', upload.single('image'), async (req: Request, res:
     // Get user info
     const user = db.prepare(`
       SELECT username, avatarUrl FROM users WHERE userId = ?
-    `).get(createdBy) as { username: string; avatarUrl: string | null } | undefined;
-    
-    let imageUrl = null;
-    if (req.file) {
-      imageUrl = `/uploads/${req.body.userId}/${req.file.filename}`;  
-      // Update the post in the database with the imageUrl
-      db.prepare('UPDATE posts SET imageUrl = ? WHERE id = last_insert_rowid()').run(imageUrl);
-    }
+    `).get(authUserId) as { username: string; avatarUrl: string | null } | undefined;
     
     // Create a formatted response
     const newPost: Post = {
       postId,
       topicId: parseInt(topicId),
-      posterId: createdBy,
+      posterId: authUserId,
       content: content || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       authorUsername: user?.username ?? '',
       authorAvatarUrl: user?.avatarUrl ?? '',
-      imageUrl: req.file ? `/uploads/${req.body.userId}/${req.file.filename}` : null
+      imageUrl
     };
     
     res.status(201).json(newPost);

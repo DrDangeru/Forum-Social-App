@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import TopicsDropdown from './TopicsDropdown';
+import GroupsDropdown from './GroupsDropdown';
 import { buttonVariants } from './ui/buttonVariants';
 
 const Navbar = () => {
@@ -36,17 +37,12 @@ const Navbar = () => {
                   Friends ({profile?.friends?.length || 0})
                 </Link>
                 <TopicsDropdown />
+                <GroupsDropdown />
                 <Link
                   to="/followed"
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
                 >
                   Followed
-                </Link>
-                <Link
-                  to="/groups"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
-                >
-                  Groups
                 </Link>
                 <Link
                   to="/alerts"

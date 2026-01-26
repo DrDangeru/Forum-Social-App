@@ -19,6 +19,8 @@ import ProfilePage from './components/ProfilePage';
 import Followed from './components/Followed';
 import Groups from './components/Groups';
 import GroupView from './components/GroupView';
+import NewTopic from './components/NewTopic';
+import NewGroup from './components/NewGroup';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -61,6 +63,11 @@ function App() {
                 <Route path="/topics" element={
                   <ProtectedRoute>
                     <Topics />
+                  </ProtectedRoute>
+                } />
+                <Route path="/topics/new" element={
+                  <ProtectedRoute>
+                    <NewTopic />
                   </ProtectedRoute>
                 } />
                 <Route path="/topics/:topicId" element={
@@ -111,6 +118,11 @@ function App() {
                 <Route path="/groups" element={
                   <ProtectedRoute>
                     <Groups />
+                  </ProtectedRoute>
+                } />
+                <Route path="/groups/new" element={
+                  <ProtectedRoute>
+                    <NewGroup />
                   </ProtectedRoute>
                 } />
                 <Route path="/groups/:groupId" element={

@@ -1,63 +1,27 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, FileText, Plus } from 'lucide-react';
 import { useTopics } from '../hooks/useTopics';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Button } from '../components/ui/button';
-import { Label } from '../components/ui/label';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { Switch } from '../components/ui/switch';
-import { useAuth } from '../hooks/useAuth';
-import axios from 'axios';
+import { useDropdownAutoClose } from '../hooks/useDropdownAutoClose';
 
 export const TopicsDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [isPublic, setIsPublic] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
+  const containerRef = useRef<HTMLDivElement>(null);
   const { 
     userTopics, 
     friendTopics, 
     userTopicsLoading, 
     friendTopicsLoading,
     userTopicsError,
-    friendTopicsError,
-    refreshTopics
+    friendTopicsError
   } = useTopics();
   
   const toggleDropdown = () => setIsOpen(!isOpen);
 
-  const handleCreateTopic = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !title.trim() || !description.trim()) return;
-
-    try {
-      setIsSubmitting(true);
-      await axios.post('/api/topics', {
-        title: title.trim(),
-        description: description.trim(),
-        createdBy: user.userId,
-        isPublic
-      });
-      
-      setTitle('');
-      setDescription('');
-      setIsPublic(true);
-      setIsCreateModalOpen(false);
-      refreshTopics();
-    } catch (error) {
-      console.error('Failed to create topic:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  useDropdownAutoClose(containerRef, isOpen, () => setIsOpen(false));
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <button
         onClick={toggleDropdown}
         className={
@@ -75,19 +39,26 @@ export const TopicsDropdown: React.FC = () => {
             "absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 py-2 " +
             "border border-gray-200"
           }
+          style={{ marginRight: '0.5rem' }}
+          onMouseLeave={() => setIsOpen(false)}
         >
+          <div className="px-2 py-2 border-b border-gray-200">
+            <Link
+              to="/topics/new"
+              className={
+                "block px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded " +
+                "flex items-center"
+              }
+              onClick={() => setIsOpen(false)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              <span>New Topic</span>
+            </Link>
+          </div>
+
           <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center">
             <h3 className="font-medium text-sm">Your Topics</h3>
-            <button
-              onClick={() => {
-                setIsCreateModalOpen(true);
-                setIsOpen(false);
-              }}
-              className="text-blue-600 hover:text-blue-800 inline-flex items-center text-sm"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Create
-            </button>
+            <div />
           </div>
           
           {userTopicsLoading ? (
@@ -168,59 +139,6 @@ export const TopicsDropdown: React.FC = () => {
         </div>
       )}
 
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Topic</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleCreateTopic} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter topic title"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter topic description"
-                required
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isPublic"
-                checked={isPublic}
-                onCheckedChange={setIsPublic}
-              />
-              <Label htmlFor="isPublic">Make topic public</Label>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreateModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || !title.trim() || !description.trim()}
-                className="bg-blue-400 hover:bg-blue-500 text-white"
-              >
-                {isSubmitting ? 'Creating...' : 'Create Topic'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

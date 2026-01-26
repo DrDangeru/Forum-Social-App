@@ -13,7 +13,7 @@ interface PostsProps {
   posts: Post[];
   onEdit?: (postId: number, content: string) => Promise<void>;
   onUploadImage?: (postId: number, file: File) => Promise<void>;
-  onCreatePost?: (content: string) => Promise<void>;
+  onCreatePost?: (content: string, image?: File | null) => Promise<void>;
   allowNewPosts?: boolean;
 }
 
@@ -28,6 +28,7 @@ export const Posts: React.FC<PostsProps> = ({
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
+  const [newPostImage, setNewPostImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleEditClick = (post: Post) => {
@@ -64,8 +65,9 @@ export const Posts: React.FC<PostsProps> = ({
     if (onCreatePost && newPostContent.trim()) {
       setLoading(true);
       try {
-        await onCreatePost(newPostContent);
+        await onCreatePost(newPostContent, newPostImage);
         setNewPostContent('');
+        setNewPostImage(null);
       } finally {
         setLoading(false);
       }
@@ -189,6 +191,26 @@ export const Posts: React.FC<PostsProps> = ({
             onChange={(e) => setNewPostContent(e.target.value)}
             className="mb-2"
           />
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <label className={`${buttonVariants({ variant: "ghost", size: "sm" })} cursor-pointer`}>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setNewPostImage(file);
+                }}
+              />
+              <Upload className="h-4 w-4 mr-1" />
+              Upload Image
+            </label>
+            {newPostImage && (
+              <span className="text-xs text-muted-foreground truncate max-w-[55%]">
+                {newPostImage.name}
+              </span>
+            )}
+          </div>
           <Button 
             onClick={handleCreatePost}
             disabled={!newPostContent.trim() || loading}
