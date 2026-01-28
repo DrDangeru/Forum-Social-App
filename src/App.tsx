@@ -21,6 +21,7 @@ import Groups from './components/Groups';
 import GroupView from './components/GroupView';
 import NewTopic from './components/NewTopic';
 import NewGroup from './components/NewGroup';
+import SettingsPage from './components/SettingsPage';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -128,6 +129,11 @@ function App() {
                 <Route path="/groups/:groupId" element={
                   <ProtectedRoute>
                     <GroupView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <SettingsPage />
                   </ProtectedRoute>
                 } />
               </Routes>

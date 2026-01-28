@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { Bell, Settings } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
@@ -53,6 +53,13 @@ const Navbar = () => {
                   rounded-full h-4 w-4 flex items-center justify-center">
                     {profile?.unreadAlerts || 0}
                   </span>
+                </Link>
+                <Link
+                  to="/settings"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                  title="Settings"
+                >
+                  <Settings className="h-5 w-5" />
                 </Link>
                 
                 <div className="flex items-center space-x-4">

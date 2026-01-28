@@ -25,6 +25,8 @@ function initializeDatabase() {
       lastName TEXT NOT NULL,
       avatarUrl TEXT,
       bio TEXT,
+      ipRestricted INTEGER DEFAULT 0,
+      allowedIp TEXT,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -74,6 +76,16 @@ function initializeDatabase() {
       FOREIGN KEY (userId) REFERENCES users (userId),
       FOREIGN KEY (friendId) REFERENCES users (userId)
     );
+
+    CREATE TABLE IF NOT EXISTS loginHistory (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId TEXT NOT NULL,
+      ipAddress TEXT NOT NULL,
+      userAgent TEXT,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users (userId) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_loginHistory_userId ON loginHistory(userId);
   `);
 }
 
@@ -206,6 +218,17 @@ function initTopicsTables() {
 
 // Initialize the database
 initializeDatabase();
+
+// Migration: Add IP restriction columns to users table if they don't exist
+try {
+  const hasIpRestricted = db.prepare('PRAGMA table_info(users)').all().some((col: any) => col.name === 'ipRestricted');
+  if (!hasIpRestricted) {
+    db.prepare('ALTER TABLE users ADD COLUMN ipRestricted INTEGER DEFAULT 0').run();
+    db.prepare('ALTER TABLE users ADD COLUMN allowedIp TEXT').run();
+  }
+} catch {
+  // intentionally ignored - columns may already exist
+}
 
 // Run migrations to update schema if/when necessary
 // runMigrations(); 

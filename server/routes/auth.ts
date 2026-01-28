@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import { User } from '../types/types.js';
 import cookieParser from 'cookie-parser';
 
+const MAX_LOGIN_HISTORY = 20;
+
 dotenv.config();
 
 /* global process */
@@ -34,6 +36,42 @@ const COOKIE_OPTIONS = {
   sameSite: 'strict' as const,
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 };
+
+// Helper: Get client IP from request
+function getClientIp(req: Request): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    const ips = (typeof forwarded === 'string' ? forwarded : forwarded[0]).split(',');
+    return ips[0].trim();
+  }
+  return req.socket.remoteAddress || req.ip || 'unknown';
+}
+
+// Helper: Log login attempt and maintain max history
+function logLoginAttempt(userId: string, ipAddress: string, userAgent: string | null) {
+  // Insert new login record
+  db.prepare(`
+    INSERT INTO loginHistory (userId, ipAddress, userAgent)
+    VALUES (?, ?, ?)
+  `).run(userId, ipAddress, userAgent);
+
+  // Keep only the last MAX_LOGIN_HISTORY entries
+  db.prepare(`
+    DELETE FROM loginHistory 
+    WHERE userId = ? AND id NOT IN (
+      SELECT id FROM loginHistory 
+      WHERE userId = ? 
+      ORDER BY createdAt DESC 
+      LIMIT ?
+    )
+  `).run(userId, userId, MAX_LOGIN_HISTORY);
+}
+
+// Helper: Check if IP is allowed for user
+function isIpAllowed(user: User, clientIp: string): boolean {
+  if (!user.ipRestricted) return true;
+  return user.allowedIp === clientIp;
+}
 
 router.post('/register', async (req: AuthRequest, res) => {
   try {
@@ -124,6 +162,18 @@ router.post('/login', async (req: AuthRequest, res) => {
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
+
+    // Check IP restriction
+    const clientIp = getClientIp(req);
+    if (!isIpAllowed(user, clientIp)) {
+      return res.status(403).json({ 
+        error: 'Login from this IP address is not allowed. IP restriction is enabled on this account.' 
+      });
+    }
+
+    // Log successful login
+    const userAgent = req.headers['user-agent'] || null;
+    logLoginAttempt(user.userId, clientIp, userAgent);
 
     // Generate JWT token and set as cookie
     const token = generateToken({ userId: user.userId, username: user.username });

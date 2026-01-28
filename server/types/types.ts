@@ -16,6 +16,17 @@ export interface User {
   lastName: string;
   avatarUrl: string | null;
   bio: string | null;
+  ipRestricted: number;
+  allowedIp: string | null;
+  createdAt: string;
+}
+
+// Login history entry
+export interface LoginHistory {
+  id: number;
+  userId: string;
+  ipAddress: string;
+  userAgent: string | null;
   createdAt: string;
 }
 

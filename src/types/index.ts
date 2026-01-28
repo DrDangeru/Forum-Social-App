@@ -221,6 +221,24 @@ export interface GroupInvitation {
   inviterAvatarUrl?: string | null;
 }
 
+// ==================== SETTINGS TYPES ====================
+
+// Login history entry
+export interface LoginHistory {
+  id: number;
+  userId: string;
+  ipAddress: string;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+// IP restriction settings
+export interface IpRestrictionSettings {
+  ipRestricted: boolean;
+  allowedIp: string | null;
+  currentIp: string;
+}
+
 // ==================== UTILITY TYPES ====================
 
 // File related types
