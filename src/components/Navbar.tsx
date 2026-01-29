@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, Settings } from 'lucide-react';
+import { Bell, Settings, Shield } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
@@ -61,6 +61,15 @@ const Navbar = () => {
                 >
                   <Settings className="h-5 w-5" />
                 </Link>
+                {user?.isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                    title="Admin Dashboard"
+                  >
+                    <Shield className="h-5 w-5" />
+                  </Link>
+                )}
                 
                 <div className="flex items-center space-x-4">
                   <Link to="/personal-details" className="flex items-center space-x-2">

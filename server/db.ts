@@ -27,6 +27,7 @@ function initializeDatabase() {
       bio TEXT,
       ipRestricted INTEGER DEFAULT 0,
       allowedIp TEXT,
+      isAdmin INTEGER DEFAULT 0,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -86,6 +87,23 @@ function initializeDatabase() {
       FOREIGN KEY (userId) REFERENCES users (userId) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS idx_loginHistory_userId ON loginHistory(userId);
+
+    CREATE TABLE IF NOT EXISTS ads (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      imageUrl TEXT NOT NULL,
+      linkUrl TEXT NOT NULL,
+      placement TEXT NOT NULL DEFAULT 'banner',
+      isActive INTEGER DEFAULT 1,
+      clicks INTEGER DEFAULT 0,
+      impressions INTEGER DEFAULT 0,
+      createdBy TEXT NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (createdBy) REFERENCES users (userId)
+    );
+    CREATE INDEX IF NOT EXISTS idx_ads_placement ON ads(placement);
+    CREATE INDEX IF NOT EXISTS idx_ads_isActive ON ads(isActive);
   `);
 }
 
@@ -228,6 +246,16 @@ try {
   }
 } catch {
   // intentionally ignored - columns may already exist
+}
+
+// Migration: Add isAdmin column to users table if it doesn't exist
+try {
+  const hasIsAdmin = db.prepare('PRAGMA table_info(users)').all().some((col: any) => col.name === 'isAdmin');
+  if (!hasIsAdmin) {
+    db.prepare('ALTER TABLE users ADD COLUMN isAdmin INTEGER DEFAULT 0').run();
+  }
+} catch {
+  // intentionally ignored - column may already exist
 }
 
 // Run migrations to update schema if/when necessary

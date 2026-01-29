@@ -18,7 +18,26 @@ export interface User {
   bio: string | null;
   ipRestricted: number;
   allowedIp: string | null;
+  isAdmin: number;
   createdAt: string;
+}
+
+// Ad placement types
+export type AdPlacement = 'banner' | 'sidebar' | 'feed';
+
+// Ad interface
+export interface Ad {
+  id: number;
+  title: string;
+  imageUrl: string;
+  linkUrl: string;
+  placement: AdPlacement;
+  isActive: number;
+  clicks: number;
+  impressions: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Login history entry

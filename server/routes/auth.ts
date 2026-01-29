@@ -16,6 +16,7 @@ dotenv.config();
 interface LoginCredentials {
   username: string;
   password: string;
+  isAdmin: number
 }
 
 // Extend Request type to include user
@@ -23,7 +24,8 @@ interface AuthRequest extends Request {
   user?: {
     userId: string;
     username: string;
-  };
+    isAdmin: number;
+    };
 }
 
 const router = Router();
@@ -76,7 +78,7 @@ function isIpAllowed(user: User, clientIp: string): boolean {
 router.post('/register', async (req: AuthRequest, res) => {
   try {
     console.log('Registration request received:', req.body);
-    const { email, password, firstName, lastName, username } = req.body;
+    const { email, password, firstName, lastName, username, isAdmin } = req.body;
 
     // Validate required fields
     if (!email || !password || !firstName || !lastName || !username) {
@@ -104,10 +106,10 @@ router.post('/register', async (req: AuthRequest, res) => {
     // Insert new user
     try {
       const insertStmt = db.prepare(`
-        INSERT INTO users (userId, username, email, passwordHash, firstName, lastName)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO users (userId, username, email, passwordHash, firstName, lastName , isAdmin)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `);
-      const result = insertStmt.run(userId, username, email, passwordHash, firstName, lastName);
+      const result = insertStmt.run(userId, username, email, passwordHash, firstName, lastName, isAdmin);
       
       console.log('Insert result:', result);
       
@@ -127,7 +129,8 @@ router.post('/register', async (req: AuthRequest, res) => {
           username: newUser.username,
           email: newUser.email,
           firstName: newUser.firstName,
-          lastName: newUser.lastName
+          lastName: newUser.lastName,
+          isAdmin: !!newUser.isAdmin
         }
       });
     } catch (dbError) {
@@ -185,7 +188,8 @@ router.post('/login', async (req: AuthRequest, res) => {
         username: user.username,
         email: user.email,
         firstName: user.firstName,
-        lastName: user.lastName
+        lastName: user.lastName,
+        isAdmin: !!user.isAdmin
       }
     });
   } catch (error) {
@@ -199,7 +203,7 @@ router.get('/me', async (req: AuthRequest, res) => {
     // Token verification will be handled by auth middleware
     const user = db
       .prepare(
-        'SELECT userId, username, email, firstName, lastName FROM users WHERE userId = ?'
+        'SELECT userId, username, email, firstName, lastName, isAdmin FROM users WHERE userId = ?'
       )
       .get(req.user?.userId) as Omit<User, 'passwordHash'> | undefined;
 

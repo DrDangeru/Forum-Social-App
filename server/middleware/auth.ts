@@ -70,6 +70,33 @@ export const verifyToken = (
   }
 };
 
+// Admin verification middleware - must be used after verifyToken
+export const verifyAdmin = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Response | void => {
+  // Import db here to avoid circular dependency
+  const db = require('../db.js').default;
+  
+  if (!req.user?.userId) {
+    return res.status(401).json({ error: 'Access denied. Not authenticated.' });
+  }
+
+  try {
+    const user = db.prepare('SELECT isAdmin FROM users WHERE userId = ?').get(req.user.userId) as { isAdmin: number } | undefined;
+    
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Admin verification failed:', error);
+    return res.status(500).json({ error: 'Failed to verify admin status.' });
+  }
+};
+
 export const generateToken = (payload: { userId: string; username: string }): string => {
   // Ensure JWT_EXPIRES_IN is handled correctly (number string vs time string)
   const expiresIn = /^\d+$/.test(JWT_EXPIRES_IN)

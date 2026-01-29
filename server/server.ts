@@ -15,7 +15,8 @@ import topicsRoutes from './routes/topics.js';
 import feedRoutes from './routes/feed.js';
 import groupsRoutes from './routes/groups.js';
 import settingsRoutes from './routes/settings.js';
-import { verifyToken, AuthRequest } from './middleware/auth.js';
+import adsRoutes from './routes/ads.js';
+import { verifyToken, verifyAdmin, AuthRequest } from './middleware/auth.js';
 import process from 'node:process';
 import cookieParser from 'cookie-parser'; // Import express cookie-parser
 
@@ -91,6 +92,11 @@ app.use('/api/topics', verifyToken, topicsRoutes);
 app.use('/api/feed', verifyToken, feedRoutes);
 app.use('/api/groups', verifyToken, groupsRoutes);
 app.use('/api/settings', verifyToken, settingsRoutes);
+
+// Ads routes - public routes for viewing ads
+app.use('/api/ads', adsRoutes);
+// Admin-only ads management routes
+app.use('/api/admin/ads', verifyToken, verifyAdmin, adsRoutes);
 
 // Social Features 
 // Think for now feed would be friends topics/posts
