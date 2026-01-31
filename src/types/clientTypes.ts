@@ -65,6 +65,7 @@ export interface Profile {
   avatarUrl: string | null;
   socialLinks: string | null;
   relationshipStatus: string | null;
+  region?: string | null;
   createdAt: string;
   updatedAt: string;
   isFriend?: boolean;
@@ -147,6 +148,7 @@ export interface Topic {
   title: string;
   description: string;
   createdBy: string;
+  region?: string | null;
   createdAt: string;
   updatedAt: string;
   
@@ -160,12 +162,8 @@ export interface Topic {
   isPublic?: boolean;
   creatorUsername?: string;
   creatorAvatarUrl?: string | null;
-  //creatorFirstName?: string;
-  //creatorLastName?: string;
   firstPost?: Post & {
     authorUsername?: string;
-    //authorFirstName?: string;
-    //authorLastName?: string;
     authorAvatarUrl?: string | null;
   };
 }

@@ -100,7 +100,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose, userName }
 
   const goToRegionalFeed = () => {
     onClose();
-    navigate('/feed'); // Or create a specific regional feed route
+    navigate('/regional');
   };
 
   const goToFriends = () => {

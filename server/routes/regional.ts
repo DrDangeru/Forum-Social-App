@@ -126,6 +126,102 @@ router.get('/followed-topics', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Get regional topics (topics tagged with user's region)
+router.get('/topics', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get user's region
+    const user = db.prepare('SELECT region FROM users WHERE userId = ?').get(userId) as { region: string | null } | undefined;
+    
+    if (!user || !user.region) {
+      return res.json({ 
+        topics: [], 
+        region: null,
+        message: 'No region set. Set your region to see regional topics.'
+      });
+    }
+
+    // Get topics in user's region with post counts
+    const topics = db.prepare(`
+      SELECT 
+        t.id,
+        t.title,
+        t.description,
+        t.region,
+        t.createdBy,
+        t.createdAt,
+        t.updatedAt,
+        u.username as creatorUsername,
+        u.avatarUrl as creatorAvatarUrl,
+        COUNT(p.id) as postCount,
+        MAX(p.createdAt) as lastPostAt
+      FROM topics t
+      JOIN users u ON t.createdBy = u.userId
+      LEFT JOIN posts p ON p.topicId = t.id
+      WHERE t.region = ?
+      GROUP BY t.id
+      ORDER BY lastPostAt DESC, t.createdAt DESC
+      LIMIT 50
+    `).all(user.region);
+
+    res.json({ topics, region: user.region });
+  } catch (error) {
+    console.error('Error fetching regional topics:', error);
+    res.status(500).json({ error: 'Failed to fetch regional topics' });
+  }
+});
+
+// Create a regional topic
+router.post('/topics', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { title, description } = req.body;
+
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Title and description are required' });
+    }
+
+    // Get user's region
+    const user = db.prepare('SELECT region FROM users WHERE userId = ?').get(userId) as { region: string | null } | undefined;
+    
+    if (!user || !user.region) {
+      return res.status(400).json({ error: 'You must set your region before creating regional topics' });
+    }
+
+    // Create the topic with the user's region
+    const result = db.prepare(`
+      INSERT INTO topics (title, description, createdBy, region, isPublic)
+      VALUES (?, ?, ?, ?, 1)
+    `).run(title.trim(), description.trim(), userId, user.region);
+
+    const topicId = result.lastInsertRowid;
+
+    // Get the created topic with user info
+    const topic = db.prepare(`
+      SELECT 
+        t.*,
+        u.username as creatorUsername,
+        u.avatarUrl as creatorAvatarUrl
+      FROM topics t
+      JOIN users u ON t.createdBy = u.userId
+      WHERE t.id = ?
+    `).get(topicId);
+
+    res.status(201).json({ topic, message: 'Regional topic created successfully' });
+  } catch (error) {
+    console.error('Error creating regional topic:', error);
+    res.status(500).json({ error: 'Failed to create regional topic' });
+  }
+});
+
 // Update user region
 router.put('/set-region', async (req: AuthRequest, res: Response) => {
   try {

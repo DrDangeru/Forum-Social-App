@@ -175,10 +175,12 @@ function initTopicsTables() {
       description TEXT NOT NULL,
       createdBy TEXT NOT NULL,
       isPublic INTEGER DEFAULT 1,
+      region TEXT,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (createdBy) REFERENCES users (userId)
     );
+    CREATE INDEX IF NOT EXISTS idx_topics_region ON topics(region);
 
     CREATE TABLE IF NOT EXISTS userTopics (
       userId TEXT NOT NULL,
@@ -264,6 +266,17 @@ try {
   const hasRegion = db.prepare('PRAGMA table_info(users)').all().some((col: any) => col.name === 'region');
   if (!hasRegion) {
     db.prepare('ALTER TABLE users ADD COLUMN region TEXT').run();
+  }
+} catch {
+  // intentionally ignored - column may already exist
+}
+
+// Migration: Add region column to topics table if it doesn't exist
+try {
+  const hasTopicRegion = db.prepare('PRAGMA table_info(topics)').all()
+  .some((col: any) => col.name === 'region');
+  if (!hasTopicRegion) {
+    db.prepare('ALTER TABLE topics ADD COLUMN region TEXT').run();
   }
 } catch {
   // intentionally ignored - column may already exist

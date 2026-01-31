@@ -164,6 +164,7 @@ export interface Topic {
   title: string;
   description: string;
   createdBy: string;
+  region?: string | null;
   createdAt: string;
   updatedAt: string;
   posts?: Post[];

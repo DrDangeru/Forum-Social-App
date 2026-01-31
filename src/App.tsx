@@ -23,6 +23,7 @@ import NewTopic from './components/NewTopic';
 import NewGroup from './components/NewGroup';
 import SettingsPage from './components/SettingsPage';
 import AdminDashboard from './components/AdminDashboard';
+import RegionalFeed from './components/RegionalFeed';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -140,6 +141,11 @@ function App() {
                 <Route path="/admin" element={
                   <ProtectedRoute>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/regional" element={
+                  <ProtectedRoute>
+                    <RegionalFeed />
                   </ProtectedRoute>
                 } />
               </Routes>

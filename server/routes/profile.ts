@@ -43,6 +43,7 @@ router.get('/:userId', (req: Request, res: Response) => {
       avatarUrl: user.avatarUrl,
       bio: user.bio || '',
       location: profileData?.location || '',
+      region: user.region || null,
       createdAt: user.createdAt,
       updatedAt: profileData?.updatedAt || user.createdAt,
       socialLinks: profileData?.socialLinks || null,
@@ -90,6 +91,12 @@ router.put('/:userId', (req: Request, res: Response) => {
         bio: profileData.bio,
         avatarUrl: profileData.avatarUrl
       });
+      
+      // Update region if provided
+      if (profileData.region !== undefined) {
+        db.prepare('UPDATE users SET region = ? WHERE userId = ?')
+          .run(profileData.region ? profileData.region.toUpperCase() : null, userId);
+      }
       
       // Check if profile exists
       const profileExists = dbHelpers.profiles.exists(userId);

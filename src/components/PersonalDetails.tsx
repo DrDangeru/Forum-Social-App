@@ -368,6 +368,17 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="region">Region (for regional topics)</Label>
+                    <Input
+                      id="region"
+                      type="text"
+                      value={details.region || ''}
+                      onChange={(e) => handleChange('region', e.target.value.toUpperCase())}
+                      placeholder="e.g., US, UK, NYC"
+                    />
+                    <p className="text-xs text-gray-500">Used for regional discussions</p>
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="age">Age</Label>
                     <Input
                       id="age"
@@ -415,6 +426,10 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
                   <div>
                     <Label>Location</Label>
                     <p className="text-gray-600">{details.location || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <Label>Region</Label>
+                    <p className="text-gray-600">{details.region || 'Not set'}</p>
                   </div>
                   <div>
                     <Label>Age</Label>
