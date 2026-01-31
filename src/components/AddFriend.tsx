@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useFriends } from '../hooks/useFriends';
-import { BasicProfile } from '../types';
+import { BasicProfile } from '../types/clientTypes';
 import { getInitials } from '../lib/utils';
 import { Search, UserPlus } from 'lucide-react';
 

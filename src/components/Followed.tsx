@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 // import { Button } from './ui/button';
 import { useEffect, useState } from 'react';
 // import axios from 'axios';
-import { User, Topic } from '../types';
+import { User, Topic } from '../types/clientTypes';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 

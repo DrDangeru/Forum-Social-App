@@ -8,7 +8,7 @@ import { getInitials } from "../lib/utils";
 import { UserCheck, UserX, Clock } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { UserSearch } from './UserSearch';
-import type { BasicProfile } from '../types';
+import type { BasicProfile } from '../types/clientTypes';
 
 export default function Friends() {
   const { 

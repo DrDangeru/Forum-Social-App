@@ -13,7 +13,7 @@ import {
 import { 
   Pencil, Save, X, Plus, Upload, Image, Trash2
 } from 'lucide-react';
-import { Profile } from '../types';
+import { Profile } from '../types/clientTypes';
 import { useProfile } from '../hooks/useProfile';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useParams } from 'react-router-dom';

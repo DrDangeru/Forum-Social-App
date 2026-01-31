@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Topic, Post } from '../types';
+import { Topic, Post } from '../types/clientTypes';
 import { useAuth } from '../hooks/useAuth';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -272,7 +272,7 @@ export default function Topics() {
                             new Date(b.createdAt).getTime()
                           )
                           .map((post: Post) => (
-                            <div key={post.id} className="bg-gray-50 p-3 rounded-md">
+                            <div key={post.postId} className="bg-gray-50 p-3 rounded-md">
                               <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0">
                                   <Avatar className="h-24 w-24">

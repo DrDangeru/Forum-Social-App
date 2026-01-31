@@ -7,7 +7,7 @@ import { Edit, Upload } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Textarea } from './textarea';
 import { Button } from './button';
-import type { Post } from '../../types';
+import type { Post } from '../../types/clientTypes';
 
 interface PostsProps {
   posts: Post[];

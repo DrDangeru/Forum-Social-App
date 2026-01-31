@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Plus, Users } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
-import type { Group } from '../types';
+import type { Group } from '../types/clientTypes';
 import { useDropdownAutoClose } from '../hooks/useDropdownAutoClose';
 
 export const GroupsDropdown: React.FC = () => {

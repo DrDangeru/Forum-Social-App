@@ -25,6 +25,7 @@ function initializeDatabase() {
       lastName TEXT NOT NULL,
       avatarUrl TEXT,
       bio TEXT,
+      region TEXT,
       ipRestricted INTEGER DEFAULT 0,
       allowedIp TEXT,
       isAdmin INTEGER DEFAULT 0,
@@ -253,6 +254,16 @@ try {
   const hasIsAdmin = db.prepare('PRAGMA table_info(users)').all().some((col: any) => col.name === 'isAdmin');
   if (!hasIsAdmin) {
     db.prepare('ALTER TABLE users ADD COLUMN isAdmin INTEGER DEFAULT 0').run();
+  }
+} catch {
+  // intentionally ignored - column may already exist
+}
+
+// Migration: Add region column to users table if it doesn't exist
+try {
+  const hasRegion = db.prepare('PRAGMA table_info(users)').all().some((col: any) => col.name === 'region');
+  if (!hasRegion) {
+    db.prepare('ALTER TABLE users ADD COLUMN region TEXT').run();
   }
 } catch {
   // intentionally ignored - column may already exist

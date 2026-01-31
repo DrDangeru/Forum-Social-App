@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { User, AuthState, AuthCredentials } from '../types';
+import type { User, AuthState, AuthCredentials } from '../types/clientTypes';
 import { AuthContext } from '../contexts/AuthContext';
 import axios from 'axios';
 

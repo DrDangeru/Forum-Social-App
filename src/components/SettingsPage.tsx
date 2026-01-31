@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from './ui/button';
-import type { LoginHistory, IpRestrictionSettings } from '../types/index';
+import type { LoginHistory, IpRestrictionSettings } from '../types/clientTypes';
 
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();

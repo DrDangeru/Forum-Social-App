@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { ProfileContext, ProfileContextType } from '../contexts/ProfileContext';
-import type { Profile } from '../types';
+import type { Profile } from '../types/clientTypes';
 import { useAuth } from '../hooks/useAuth';
 
 // Default profile for new users, empty 

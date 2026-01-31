@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { useTopics } from '../hooks/useTopics';
 import Feed from './Feed';
+import WelcomeModal from './WelcomeModal';
 import { FileText, Image, Layout, Users } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -13,6 +14,16 @@ const Home: React.FC = () => {
   const { profile, setCurrentProfile } = useProfile();
   const { userTopics, userTopicsLoading } = useTopics();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  
+  // Check if we should show welcome modal (on login)
+  useEffect(() => {
+    const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
+    if (user && !hasSeenWelcome) {
+      setShowWelcomeModal(true);
+      sessionStorage.setItem('hasSeenWelcome', 'true');
+    }
+  }, [user]);
   
   // Set current profile to the logged-in user's profile
   useEffect(() => {
@@ -41,6 +52,11 @@ const Home: React.FC = () => {
   
   return (
     <div className="container mx-auto px-4 py-8">
+      <WelcomeModal 
+        isOpen={showWelcomeModal} 
+        onClose={() => setShowWelcomeModal(false)}
+        userName={user?.firstName || user?.username || ''}
+      />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         {/* Profile and Quick Links */}
         <div className="md:col-span-1 space-y-6">

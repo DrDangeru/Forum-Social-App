@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from './ui/button';
-import type { Ad, AdPlacement } from '../types/index';
+import type { Ad, AdPlacement } from '../types/clientTypes';
 
 interface AdStats {
   totalAds: number;

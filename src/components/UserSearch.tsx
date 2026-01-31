@@ -5,7 +5,7 @@ import { Avatar } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { UserPlus, UserCheck, Clock } from 'lucide-react';
 import { Button } from './ui/button';
-import type { BasicProfile } from '../types';
+import type { BasicProfile } from '../types/clientTypes';
 
 interface UserSearchProps {
   // eslint-disable-next-line no-unused-vars 

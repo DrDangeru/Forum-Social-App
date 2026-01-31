@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Topic } from '../types';
+import { Topic } from '../types/clientTypes';
 import { useAuth } from './useAuth';
 
 export function useTopics() {

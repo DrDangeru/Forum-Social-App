@@ -7,7 +7,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea.tsx';
 import { useAuth } from '../hooks/useAuth';
-import type { GroupAccessType } from '../types';
+import type { GroupAccessType } from '../types/clientTypes';
 import { Globe, Lock } from 'lucide-react';
 
 export default function NewGroup() {

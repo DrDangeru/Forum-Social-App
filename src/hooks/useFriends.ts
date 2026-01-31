@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FriendRequest, BasicProfile } from '../types';
+import { FriendRequest, BasicProfile } from '../types/clientTypes';
 import { useAuth } from './useAuth';
 
 /**

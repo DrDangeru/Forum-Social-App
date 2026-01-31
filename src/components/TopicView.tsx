@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import type { Topic } from '../types';
+import type { Topic } from '../types/clientTypes';
 import { useAuth } from '../hooks/useAuth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Posts } from './ui/Posts';

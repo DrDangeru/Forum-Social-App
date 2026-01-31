@@ -7,7 +7,7 @@ import { UserCheck, UserX, UserPlus, Clock } from 'lucide-react';
 import { useFriends } from '../hooks/useFriends';
 import { getInitials } from '../lib/utils';
 import { useState, useEffect } from 'react';
-import { FriendRequest } from '../types';
+import { FriendRequest } from '../types/clientTypes';
 
 // SendFriendRequest component for profile pages
 export const SendFriendRequest: React.FC<{

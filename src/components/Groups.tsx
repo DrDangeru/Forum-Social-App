@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Group, GroupAccessType } from '../types';
+import { Group, GroupAccessType } from '../types/clientTypes';
 import { useAuth } from '../hooks/useAuth';
 import { Input } from './ui/input';
 import { Label } from './ui/label';

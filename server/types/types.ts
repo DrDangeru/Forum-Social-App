@@ -16,6 +16,7 @@ export interface User {
   lastName: string;
   avatarUrl: string | null;
   bio: string | null;
+  region: string | null;
   ipRestricted: number;
   allowedIp: string | null;
   isAdmin: number;
@@ -243,6 +244,38 @@ export interface GroupInvitation {
   groupName?: string;
   inviterUsername?: string;
   inviterAvatarUrl?: string | null;
+}
+
+// ==================== REGIONAL/ACTIVITY TYPES ====================
+
+// Regional post with author info
+export interface RegionalPost extends Post {
+  topicTitle: string;
+  userId: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+}
+
+// Friend activity summary
+export interface FriendActivity {
+  userId: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+  region: string | null;
+  recentPosts: number;
+}
+
+// Followed topic summary
+export interface FollowedTopic {
+  topicId: number;
+  topicTitle: string;
+  topicDescription: string;
+  recentPosts: number;
+  createdBy: string;
 }
 
 // ==================== UTILITY TYPES ====================

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { AuthState, AuthCredentials, User } from '../types';
+import { AuthState, AuthCredentials, User } from '../types/clientTypes';
 import axios from 'axios';
 import { AuthContext } from '../contexts/AuthContext';
 

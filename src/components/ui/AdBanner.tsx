@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Ad } from '../../types/index';
+import type { Ad } from '../../types/clientTypes';
 
 interface AdBannerProps {
   placement?: 'banner' | 'sidebar' | 'feed';
