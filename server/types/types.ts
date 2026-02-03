@@ -279,6 +279,48 @@ export interface FollowedTopic {
   createdBy: string;
 }
 
+// ==================== ALERT TYPES ====================
+
+// Alert type
+export type AlertType = 'friend_request' | 'group_invitation' | 'topic_update';
+
+// Alert item interface
+export interface AlertItem {
+  id: number | string;
+  type: AlertType;
+  title: string;
+  message: string;
+  fromUserId?: string;
+  fromUsername?: string;
+  fromAvatarUrl?: string | null;
+  relatedId?: number | string;
+  createdAt: string;
+  read: boolean;
+}
+
+// Login credentials for authentication
+export interface LoginCredentials {
+  username: string;
+  password: string;
+  isAdmin: number;
+}
+
+// Received friend request with sender details
+export interface ReceivedFriendRequest extends FriendRequest {
+  senderUsername: string;
+  senderFirstName: string;
+  senderLastName: string;
+  senderAvatarUrl: string | null;
+}
+
+// Sent friend request with receiver details
+export interface SentFriendRequest extends FriendRequest {
+  receiverUsername: string;
+  receiverFirstName: string;
+  receiverLastName: string;
+  receiverAvatarUrl: string | null;
+}
+
 // ==================== UTILITY TYPES ====================
 
 // File related types

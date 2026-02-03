@@ -1,0 +1,64 @@
+/* Home page styles */
+
+/* Main layout grid - 1/5 - 3/5 - 1/5 ratio */
+.home-layout {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 1.5rem !important;
+  margin-bottom: 2rem !important;
+  width: 100% !important;
+}
+
+@media (min-width: 1024px) {
+  .home-layout {
+    grid-template-columns: 1fr 3fr 1fr !important; /* 1/5 - 3/5 - 1/5 ratio = 20% - 60% - 20% */
+  }
+}
+
+/* Sidebar and feed ordering */
+.local-feed-sidebar {
+  order: 1;
+}
+
+.main-feed {
+  order: 2;
+}
+
+.quick-actions-sidebar {
+  order: 3;
+}
+
+/* Frosted glass card effect */
+.frosted-card {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Button hover styles */
+.action-btn {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.action-btn:hover {
+  transform: translateY(2px);
+  background-color: #d1fae5; /* pale green */
+  cursor: pointer;
+}
+
+/* Divider line */
+.section-divider {
+  border-top: 1px solid #d1d5db;
+  margin: 0.5rem 0;
+}
+
+/* Thin divider for within cards */
+.thin-divider {
+  border-top: 1px solid rgba(209, 213, 219, 0.5);
+  margin: 0.25rem 0;
+}

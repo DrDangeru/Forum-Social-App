@@ -3,25 +3,16 @@ import type { Request, Response } from 'express';
 import db from '../db.js';
 import { 
   FriendRequest, 
-  BasicProfile as Friend 
+  BasicProfile as Friend,
+  ReceivedFriendRequest,
+  SentFriendRequest
 } from '../types/types.js';
 
 const router = express.Router();
 
-// Define types for database results that extend the base types
-interface ReceivedRequest extends FriendRequest {
-  senderUsername: string;
-  senderFirstName: string;
-  senderLastName: string;
-  senderAvatarUrl: string;
-}
-// Could be added in types.ts, but used just here...
-interface SentRequest extends FriendRequest {
-  receiverUsername: string;
-  receiverFirstName: string;
-  receiverLastName: string;
-  receiverAvatarUrl: string;
-}
+// Type aliases for backward compatibility
+type ReceivedRequest = ReceivedFriendRequest;
+type SentRequest = SentFriendRequest;
 
 // Ensure friend-related tables exist
 function ensureFriendTablesExist() {

@@ -24,6 +24,7 @@ import NewGroup from './components/NewGroup';
 import SettingsPage from './components/SettingsPage';
 import AdminDashboard from './components/AdminDashboard';
 import RegionalFeed from './components/RegionalFeed';
+import Alerts from './components/Alerts';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -100,7 +101,7 @@ function App() {
                 } />
                 <Route path="/alerts" element={
                   <ProtectedRoute>
-                    <div className="p-4">Alerts page (Coming soon)</div>
+                    <Alerts />
                   </ProtectedRoute>
                 } />
                 <Route path="/personal-details" element={

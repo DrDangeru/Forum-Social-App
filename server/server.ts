@@ -17,6 +17,8 @@ import groupsRoutes from './routes/groups.js';
 import settingsRoutes from './routes/settings.js';
 import adsRoutes from './routes/ads.js';
 import regionalRoutes from './routes/regional.js';
+import sseRoutes from './routes/sse.js';
+import alertsRoutes from './routes/alerts.js';
 import { verifyToken, verifyAdmin, AuthRequest } from './middleware/auth.js';
 import process from 'node:process';
 import cookieParser from 'cookie-parser'; // Import express cookie-parser
@@ -101,6 +103,12 @@ app.use('/api/admin/ads', verifyToken, verifyAdmin, adsRoutes);
 
 // Regional activity routes
 app.use('/api/regional', verifyToken, regionalRoutes);
+
+// SSE routes for real-time updates
+app.use('/api/sse', verifyToken, sseRoutes);
+
+// Alerts routes
+app.use('/api/alerts', verifyToken, alertsRoutes);
 
 // Social Features 
 // Think for now feed would be friends topics/posts

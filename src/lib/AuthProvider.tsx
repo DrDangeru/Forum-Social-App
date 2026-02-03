@@ -63,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 lastName: data.lastName,
                 avatarUrl: null,
                 bio: null,
+                region: null,
                 createdAt: new Date().toISOString()
             };
 

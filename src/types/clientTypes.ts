@@ -271,6 +271,36 @@ export interface FollowedTopic {
   createdBy: string;
 }
 
+// ==================== ALERT TYPES ====================
+
+// Alert type
+export type AlertType = 'friend_request' | 'group_invitation' | 'topic_update';
+
+// Alert item interface
+export interface AlertItem {
+  id: string;
+  type: AlertType;
+  title: string;
+  message: string;
+  fromUserId?: string;
+  fromUsername?: string;
+  fromAvatarUrl?: string | null;
+  relatedId?: number | string;
+  createdAt: string;
+  read: boolean;
+}
+
+// Alerts response from API
+export interface AlertsResponse {
+  alerts: AlertItem[];
+  counts: {
+    friendRequests: number;
+    groupInvitations: number;
+    topicUpdates: number;
+    total: number;
+  };
+}
+
 // ==================== SETTINGS TYPES ====================
 
 // Login history entry

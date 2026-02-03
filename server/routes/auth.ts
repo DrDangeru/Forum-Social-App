@@ -2,9 +2,9 @@ import { Router, Request } from 'express';
 import bcrypt from 'bcrypt';
 import db from '../db.js';
 import crypto from 'node:crypto';
-import { generateToken } from '../middleware/auth.js';
+import { generateToken, AuthRequest } from '../middleware/auth.js';
 import dotenv from 'dotenv';
-import { User } from '../types/types.js';
+import { User, LoginCredentials } from '../types/types.js';
 import cookieParser from 'cookie-parser';
 
 const MAX_LOGIN_HISTORY = 20;
@@ -12,21 +12,6 @@ const MAX_LOGIN_HISTORY = 20;
 dotenv.config();
 
 /* global process */
-
-interface LoginCredentials {
-  username: string;
-  password: string;
-  isAdmin: number
-}
-
-// Extend Request type to include user
-interface AuthRequest extends Request {
-  user?: {
-    userId: string;
-    username: string;
-    isAdmin: number;
-    };
-}
 
 const router = Router();
 router.use(cookieParser());
