@@ -6,11 +6,36 @@ import { useProfile } from '../hooks/useProfile';
 import TopicsDropdown from './TopicsDropdown';
 import GroupsDropdown from './GroupsDropdown';
 import { buttonVariants } from './ui/buttonVariants';
+import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import { AlertCounts } from '../types/clientTypes';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
+  const [alertCounts, setAlertCounts] = useState<AlertCounts>({
+    friendRequests: 0,
+    groupInvitations: 0,
+    total: 0
+  });
+
+  const fetchAlertCounts = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const response = await axios.get<AlertCounts>('/api/alerts/counts');
+      setAlertCounts(response.data);
+    } catch (error) {
+      console.error('Failed to fetch alert counts:', error);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchAlertCounts();
+    // Refresh counts every 30 seconds
+    const interval = setInterval(fetchAlertCounts, 30000);
+    return () => clearInterval(interval);
+  }, [fetchAlertCounts]);
 
   const handleLogout = () => {
     logout();
@@ -32,9 +57,12 @@ const Navbar = () => {
               <>
                 <Link
                   to="/friends"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md relative"
                 >
                   Friends ({profile?.friends?.length || 0})
+                  {alertCounts.friendRequests > 0 && (
+                    <span className="notification-dot" />
+                  )}
                 </Link>
                 <TopicsDropdown />
                 <GroupsDropdown />
@@ -49,10 +77,9 @@ const Navbar = () => {
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md relative"
                 >
                   <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs 
-                  rounded-full h-4 w-4 flex items-center justify-center">
-                    {profile?.unreadAlerts || 0}
-                  </span>
+                  {alertCounts.total > 0 && (
+                    <span className="notification-dot" />
+                  )}
                 </Link>
                 <Link
                   to="/settings"

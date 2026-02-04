@@ -575,5 +575,66 @@ db.pragma('journal_mode = WAL');
 // (so that they work properly)
 db.pragma('foreign_keys = ON');
 
+// Seed mock regional topics for the local feed
+function seedMockTopics() {
+  // Check if system user exists, create if not
+  const systemUser = db.prepare('SELECT userId FROM users WHERE username = ?').get('SystemNews') as { userId: string } | undefined;
+  
+  let systemUserId: string;
+  if (!systemUser) {
+    systemUserId = crypto.randomUUID();
+    db.prepare(`
+      INSERT INTO users (userId, username, email, passwordHash, firstName, lastName, bio, region)
+      VALUES (?, 'SystemNews', 'system@forum.local', 'no-login', 'Forum', 'News', 'Official news and trending topics', 'Global')
+    `).run(systemUserId);
+  } else {
+    systemUserId = systemUser.userId;
+  }
+
+  // Mock topics to seed
+  const mockTopics = [
+    { id: 901, title: 'Increase in Inflation for 2025', description: 'Economic experts predict rising costs across multiple sectors. Analysts discuss the impact on consumers and businesses alike.', region: 'Global' },
+    { id: 902, title: 'New Goalie for Local Team', description: 'Major signing announced today as the team prepares for the upcoming season. Fans react to the surprise transfer.', region: 'Global' },
+    { id: 903, title: 'President Makes New Party', description: 'Political landscape shifts dramatically as new coalition forms. What this means for upcoming elections.', region: 'Global' },
+    { id: 904, title: 'Gold Price Hits New Highs', description: 'Investors flock to safe haven assets amid market uncertainty. Experts weigh in on the trend.', region: 'Global' },
+    { id: 905, title: 'Champions League Finals Preview', description: 'Everything you need to know about the big match. Team lineups, predictions, and key players to watch.', region: 'Global' }
+  ];
+
+  for (const topic of mockTopics) {
+    // Check if topic already exists
+    const existing = db.prepare('SELECT id FROM topics WHERE id = ?').get(topic.id);
+    if (!existing) {
+      db.prepare(`
+        INSERT INTO topics (id, title, description, createdBy, region, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `).run(topic.id, topic.title, topic.description, systemUserId, topic.region);
+
+      // Add an initial post to each topic
+      db.prepare(`
+        INSERT INTO posts (topicId, createdBy, content, createdAt, updatedAt)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `).run(
+        topic.id,
+        systemUserId,
+        `Welcome to "${topic.title}". ${topic.description}\n\nShare your thoughts below!`
+      );
+    }
+
+    // Ensure userTopics entry exists (required for topic queries)
+    const userTopicExists = db.prepare(
+      'SELECT 1 FROM userTopics WHERE userId = ? AND topicId = ?'
+    ).get(systemUserId, topic.id);
+    if (!userTopicExists) {
+      db.prepare(`
+        INSERT INTO userTopics (userId, topicId, createdAt)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+      `).run(systemUserId, topic.id);
+    }
+  }
+}
+
+// Run seeding
+seedMockTopics();
+
 // Export both the database instance and helpers
 export { db as default, dbHelpers };

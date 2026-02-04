@@ -28,17 +28,27 @@ router.get('/regional-topics', (req: AuthRequest, res: Response) => {
   res.flushHeaders();
 
   // Get user's region
-  const user = db.prepare('SELECT region FROM users WHERE userId = ?').get(userId) as { region: string | null } | undefined;
+  const user = db.prepare('SELECT region FROM users WHERE userId = ?')
+    .get(userId) as { region: string | null } | undefined;
   const region = user?.region;
 
-  // Mock regional topics data
-  const mockRegionalTopics = [
-    { id: 901, title: 'Increase in Inflation for 2025', description: 'Economic experts predict rising costs', postCount: 47, creatorUsername: 'EconWatch', region: region || 'US' },
-    { id: 902, title: 'New Goalie for Local Team', description: 'Major signing announced today', postCount: 89, creatorUsername: 'SportsDesk', region: region || 'US' },
-    { id: 903, title: 'President Makes New Party', description: 'Political landscape shifts dramatically', postCount: 156, creatorUsername: 'PoliticsNow', region: region || 'US' },
-    { id: 904, title: 'Gold Price Hits New Highs', description: 'Investors flock to safe haven assets', postCount: 34, creatorUsername: 'MarketWatch', region: region || 'US' },
-    { id: 905, title: 'Champions League Finals Preview', description: 'Everything you need to know about the big match', postCount: 203, creatorUsername: 'FootballFan', region: region || 'US' }
-  ];
+  // Fetch seeded mock topics from database (IDs 901-905)
+  const mockRegionalTopics = db.prepare(`
+    SELECT 
+      t.id,
+      t.title,
+      t.description,
+      t.region,
+      u.username as creatorUsername,
+      u.avatarUrl as creatorAvatarUrl,
+      COUNT(p.id) as postCount
+    FROM topics t
+    JOIN users u ON t.createdBy = u.userId
+    LEFT JOIN posts p ON p.topicId = t.id
+    WHERE t.id BETWEEN 901 AND 905
+    GROUP BY t.id
+    ORDER BY t.id
+  `).all() as any[];
 
   // Function to fetch and send regional topics
   const sendRegionalTopics = () => {

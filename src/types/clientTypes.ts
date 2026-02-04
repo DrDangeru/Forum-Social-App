@@ -293,12 +293,23 @@ export interface AlertItem {
 // Alerts response from API
 export interface AlertsResponse {
   alerts: AlertItem[];
-  counts: {
-    friendRequests: number;
-    groupInvitations: number;
-    topicUpdates: number;
-    total: number;
-  };
+  counts: AlertCounts;
+}
+
+// Alert counts for navbar
+export interface AlertCounts {
+  friendRequests: number;
+  groupInvitations: number;
+  topicUpdates?: number;
+  total: number;
+}
+
+// Preview topic for login page
+export interface PreviewTopic {
+  id: number;
+  title: string;
+  description?: string;
+  postCount?: number;
 }
 
 // ==================== SETTINGS TYPES ====================

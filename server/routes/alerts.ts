@@ -5,6 +5,37 @@ import { AlertItem } from '../types/types.js';
 
 const router = Router();
 
+// Get alert counts only (lightweight endpoint for navbar)
+router.get('/counts', (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Count pending friend requests
+    const friendRequestCount = db.prepare(`
+      SELECT COUNT(*) as count FROM friendRequests 
+      WHERE receiverId = ? AND status = 'pending'
+    `).get(userId) as { count: number };
+
+    // Count pending group invitations
+    const groupInvitationCount = db.prepare(`
+      SELECT COUNT(*) as count FROM groupInvitations 
+      WHERE inviteeId = ? AND status = 'pending'
+    `).get(userId) as { count: number };
+
+    res.json({
+      friendRequests: friendRequestCount.count,
+      groupInvitations: groupInvitationCount.count,
+      total: friendRequestCount.count + groupInvitationCount.count
+    });
+  } catch (error) {
+    console.error('Failed to get alert counts:', error);
+    res.status(500).json({ error: 'Failed to get alert counts' });
+  }
+});
+
 // Get all alerts for a user
 router.get('/', (req: AuthRequest, res: Response) => {
   try {
