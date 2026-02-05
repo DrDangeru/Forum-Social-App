@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button} from './ui/button'; //Variants should be attached as ext class props
 import { Input } from './ui/input';
@@ -11,19 +11,15 @@ import {
   SelectValue,
 } from './ui/select';
 import { 
-  Pencil, Save, X, Plus, Upload, Image, Trash2
+  Pencil, Save, X, Plus, Upload, Image, Trash2, Shield
 } from 'lucide-react';
-import { Profile } from '../types/clientTypes';
+import type { Profile, LoginHistory, IpRestrictionSettings, PersonalDetailsProps } from '../types/clientTypes';
 import { useProfile } from '../hooks/useProfile';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useParams } from 'react-router-dom';
 import { SendFriendRequest } from './FriendRequests';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
-
-interface PersonalDetailsProps {
-  isOwner: boolean;
-}
 
 const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
   const { profile, updateProfile } = useProfile();
@@ -84,6 +80,93 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [galleryImages, setGalleryImages] = useState<string[]>(details.galleryImages || []);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Account Settings state
+  const [loginHistory, setLoginHistory] = useState<LoginHistory[]>([]);
+  const [ipSettings, setIpSettings] = useState<IpRestrictionSettings | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Fetch account settings data
+  const fetchSettingsData = useCallback(async () => {
+    if (!isOwner || !user) return;
+    setSettingsLoading(true);
+    setSettingsError(null);
+    try {
+      const [historyRes, settingsRes] = await Promise.all([
+        fetch('/api/settings/login-history', { credentials: 'include' }),
+        fetch('/api/settings/ip-restriction', { credentials: 'include' })
+      ]);
+
+      if (!historyRes.ok || !settingsRes.ok) {
+        throw new Error('Failed to fetch settings');
+      }
+
+      const historyData = await historyRes.json();
+      const settingsData = await settingsRes.json();
+
+      setLoginHistory(historyData.history || []);
+      setIpSettings(settingsData);
+    } catch (err) {
+      setSettingsError('Failed to load account settings');
+      console.error('Error fetching settings:', err);
+    } finally {
+      setSettingsLoading(false);
+    }
+  }, [isOwner, user]);
+
+  useEffect(() => {
+    fetchSettingsData();
+  }, [fetchSettingsData]);
+
+  const handleToggleIpRestriction = async () => {
+    if (!ipSettings) return;
+    
+    setActionLoading(true);
+    setSettingsError(null);
+    
+    try {
+      const endpoint = ipSettings.ipRestricted 
+        ? '/api/settings/ip-restriction/disable'
+        : '/api/settings/ip-restriction/enable';
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update IP restriction');
+      }
+
+      const data = await response.json();
+      setIpSettings({
+        ...ipSettings,
+        ipRestricted: data.ipRestricted,
+        allowedIp: data.allowedIp
+      });
+    } catch (err) {
+      setSettingsError('Failed to update IP restriction');
+      console.error('Error updating IP restriction:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const parseUserAgent = (ua: string | null) => {
+    if (!ua) return 'Unknown device';
+    if (ua.includes('Windows')) return 'Windows';
+    if (ua.includes('Mac')) return 'macOS';
+    if (ua.includes('Linux')) return 'Linux';
+    if (ua.includes('Android')) return 'Android';
+    if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+    return 'Unknown device';
+  };
 
   const handleProfilePicUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -648,6 +731,109 @@ const PersonalDetailsPage: React.FC<PersonalDetailsProps> = ({ isOwner }) => {
               </div>
             )}
           </div>
+
+          {/* Account Settings Section - Only for owner */}
+          {isOwner && (
+            <div className="space-y-4 pt-6 border-t">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Shield className="h-5 w-5 text-blue-500" />
+                Account Settings
+              </h3>
+
+              {settingsError && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                  {settingsError}
+                </div>
+              )}
+
+              {settingsLoading ? (
+                <p className="text-gray-500">Loading account settings...</p>
+              ) : (
+                <>
+                  {/* IP Security */}
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                    <h4 className="font-medium">IP Security</h4>
+                    
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p><strong>Your current IP:</strong> {ipSettings?.currentIp || 'Unknown'}</p>
+                      {ipSettings?.ipRestricted && (
+                        <p><strong>Allowed IP:</strong> {ipSettings.allowedIp}</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                      <div>
+                        <p className="font-medium text-sm">Restrict login to current IP only</p>
+                        <p className="text-xs text-gray-500">
+                          {ipSettings?.ipRestricted 
+                            ? 'Only your current IP address can log into this account.'
+                            : 'Anyone with your credentials can log in from any IP address.'}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleToggleIpRestriction}
+                        disabled={actionLoading}
+                        size="sm"
+                        className={ipSettings?.ipRestricted 
+                          ? 'bg-red-500 hover:bg-red-600' 
+                          : 'bg-green-500 hover:bg-green-600'}
+                      >
+                        {actionLoading 
+                          ? 'Processing...' 
+                          : ipSettings?.ipRestricted 
+                            ? 'Disable' 
+                            : 'Enable'}
+                      </Button>
+                    </div>
+
+                    {ipSettings?.ipRestricted && (
+                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-xs text-yellow-800">
+                          <strong>Warning:</strong> If your IP address changes, you will not be able to log in.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Login History */}
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <h4 className="font-medium">Login History</h4>
+                    <p className="text-xs text-gray-500">Last 20 login attempts</p>
+
+                    {loginHistory.length === 0 ? (
+                      <p className="text-gray-500 text-sm">No login history available.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="text-left py-2 px-2 text-xs">Date & Time</th>
+                              <th className="text-left py-2 px-2 text-xs">IP Address</th>
+                              <th className="text-left py-2 px-2 text-xs">Device</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {loginHistory.slice(0, 10).map((entry) => (
+                              <tr key={entry.id} className="border-b hover:bg-white">
+                                <td className="py-2 px-2 text-xs">{formatDate(entry.createdAt)}</td>
+                                <td className="py-2 px-2 font-mono text-xs">
+                                  {entry.ipAddress}
+                                  {ipSettings?.currentIp === entry.ipAddress && (
+                                    <span className="ml-1 text-green-600">(current)</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2 text-xs">{parseUserAgent(entry.userAgent)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

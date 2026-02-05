@@ -10,10 +10,6 @@ import {
 
 const router = express.Router();
 
-// Type aliases for backward compatibility
-type ReceivedRequest = ReceivedFriendRequest;
-type SentRequest = SentFriendRequest;
-
 // Ensure friend-related tables exist
 function ensureFriendTablesExist() {
   // Create friendRequests table if it doesn't exist
@@ -80,7 +76,7 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
       FROM friendRequests fr
       JOIN users u ON fr.senderId = u.userId
       WHERE fr.receiverId = ? AND fr.status = 'pending'
-    `).all(userId) as ReceivedRequest[];
+    `).all(userId) as ReceivedFriendRequest[];
     
     // Get sent friend requests
     const sentRequests = db.prepare(`
@@ -89,7 +85,7 @@ router.get('/:userId/requests', (req: Request, res: Response) => {
       FROM friendRequests fr
       JOIN users u ON fr.receiverId = u.userId
       WHERE fr.senderId = ? AND fr.status = 'pending'
-    `).all(userId) as SentRequest[];
+    `).all(userId) as SentFriendRequest[];
     
     res.json({
       received: receivedRequests,
@@ -172,7 +168,7 @@ router.post('/request', (req: Request, res: Response) => {
       FROM friendRequests fr
       JOIN users u ON fr.receiverId = u.userId
       WHERE fr.id = ?
-    `).get(result.lastInsertRowid) as SentRequest;
+    `).get(result.lastInsertRowid) as SentFriendRequest;
     
     console.log('[Friend Request] Returning created request with user details:', request);
     res.status(201).json(request);

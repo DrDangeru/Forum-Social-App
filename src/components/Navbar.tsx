@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, Settings, Shield } from 'lucide-react';
+import { Bell, Shield } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
@@ -80,13 +80,6 @@ const Navbar = () => {
                   {alertCounts.total > 0 && (
                     <span className="notification-dot" />
                   )}
-                </Link>
-                <Link
-                  to="/settings"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
-                  title="Settings"
-                >
-                  <Settings className="h-5 w-5" />
                 </Link>
                 {user?.isAdmin && (
                   <Link

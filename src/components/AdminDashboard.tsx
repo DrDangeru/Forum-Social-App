@@ -1,22 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from './ui/button';
-import type { Ad, AdPlacement } from '../types/clientTypes';
-
-interface AdStats {
-  totalAds: number;
-  activeAds: number;
-  totalClicks: number;
-  totalImpressions: number;
-}
-
-interface AdFormData {
-  title: string;
-  imageUrl: string;
-  linkUrl: string;
-  placement: AdPlacement;
-  isActive: boolean;
-}
+import type { Ad, AdPlacement, AdFormData, AdStats } from '../types/clientTypes';
 
 const initialFormData: AdFormData = {
   title: '',

@@ -2,13 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { MapPin, Users, X } from 'lucide-react';
-import type { RegionalPost, FriendActivity, FollowedTopic } from '../types/clientTypes';
-
-interface WelcomeModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  userName: string;
-}
+import type { RegionalPost, FriendActivity, FollowedTopic, WelcomeModalProps } from '../types/clientTypes';
 
 const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose, userName }) => {
   const navigate = useNavigate();

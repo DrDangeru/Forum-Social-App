@@ -1,8 +1,9 @@
 /// <reference types="node" />
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import process from 'process';
+import type { AuthRequest, JwtUserPayload } from '../types/types.js';
 
 // Load environment variables early
 dotenv.config();
@@ -22,24 +23,6 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 // --- End Configuration Loading ---
 
 
-// --- Auth Module (e.g., auth.ts) ---
-
-export interface AuthRequest extends Request {
-  user?: { // more specific type(s) could be implemented
-    userId: string;
-    username: string;
-    // Add other relevant, non-sensitive user fields if needed (e.g., roles)
-  };
-}
-
-// Define the expected shape of the JWT payload
-interface JwtPayload {
-  userId: string;
-  username: string;
-  // iat?: number; // Issued at (added automatically by jwt)
-  // exp?: number; // Expiration time (added automatically by jwt)
-}
-
 export const verifyToken = (
   req: AuthRequest, 
   res: Response, 
@@ -52,7 +35,7 @@ export const verifyToken = (
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtUserPayload;
 
     if (typeof decoded !== 'object' || !decoded.userId || !decoded.username) {
       throw new Error('Invalid token payload structure');
@@ -97,7 +80,7 @@ export const verifyAdmin = (
   }
 };
 
-export const generateToken = (payload: { userId: string; username: string }): string => {
+export const generateToken = (payload: JwtUserPayload): string => {
   // Ensure JWT_EXPIRES_IN is handled correctly (number string vs time string)
   const expiresIn = /^\d+$/.test(JWT_EXPIRES_IN)
     ? parseInt(JWT_EXPIRES_IN, 10) // Specify radix 10

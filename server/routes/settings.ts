@@ -1,13 +1,6 @@
 import { Router, Request, Response } from 'express';
 import db from '../db.js';
-import { LoginHistory } from '../types/types.js';
-
-interface AuthRequest extends Request {
-  user?: {
-    userId: string;
-    username: string;
-  };
-}
+import type { LoginHistory, AuthRequest } from '../types/types.js';
 
 const router = Router();
 

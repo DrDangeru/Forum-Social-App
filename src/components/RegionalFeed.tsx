@@ -7,14 +7,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { MapPin, Plus, MessageSquare, Settings } from 'lucide-react';
-import type { Topic } from '../types/clientTypes';
-
-interface RegionalTopic extends Topic {
-  creatorUsername?: string;
-  creatorAvatarUrl?: string | null;
-  postCount?: number;
-  lastPostAt?: string | null;
-}
+import type { RegionalTopic } from '../types/clientTypes';
 
 const RegionalFeed: React.FC = () => {
   const [topics, setTopics] = useState<RegionalTopic[]>([]);

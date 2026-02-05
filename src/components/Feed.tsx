@@ -9,20 +9,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { useAuth } from '../hooks/useAuth';
-
-interface FeedItem {
-  postId: number;
-  topicId: number;
-  content: string;
-  posterId: string;
-  createdAt: string;
-  updatedAt: string;
-  imageUrl: string | null;
-  authorUsername: string;
-  authorAvatarUrl: string | null;
-  topicTitle: string;
-  relevanceScore: number;
-}
+import type { FeedItem } from '../types/clientTypes';
 
 const Feed: React.FC = () => {
   const [items, setItems] = useState<FeedItem[]>([]);

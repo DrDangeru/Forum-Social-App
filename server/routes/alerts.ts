@@ -1,14 +1,15 @@
 import { Router, Response } from 'express';
 import db from '../db.js';
-import { AuthRequest } from '../middleware/auth.js';
-import { AlertItem } from '../types/types.js';
+import type { AuthRequest, AlertItem } from '../types/types.js';
+import type { Request } from 'express';
 
 const router = Router();
 
 // Get alert counts only (lightweight endpoint for navbar)
-router.get('/counts', (req: AuthRequest, res: Response) => {
+router.get('/counts', (req: Request, res: Response): any => {
+  const authReq = req as unknown as AuthRequest;
   try {
-    const userId = req.user?.userId;
+    const userId = authReq.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -37,9 +38,10 @@ router.get('/counts', (req: AuthRequest, res: Response) => {
 });
 
 // Get all alerts for a user
-router.get('/', (req: AuthRequest, res: Response) => {
+router.get('/', (req: Request, res: Response): any => {
+  const authReq = req as unknown as AuthRequest;
   try {
-    const userId = req.user?.userId;
+    const userId = authReq.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -109,7 +111,7 @@ router.get('/', (req: AuthRequest, res: Response) => {
       JOIN posts p ON p.topicId = t.id
       WHERE f.followerId = ?
         AND p.createdAt > datetime('now', '-1 day')
-        AND p.authorId != ?
+        AND p.createdBy != ?
       GROUP BY t.id
       HAVING newPostCount > 0
       ORDER BY lastPostAt DESC
@@ -147,9 +149,10 @@ router.get('/', (req: AuthRequest, res: Response) => {
 });
 
 // Accept friend request
-router.post('/friend-request/:requestId/accept', (req: AuthRequest, res: Response) => {
+router.post('/friend-request/:requestId/accept', (req: Request, res: Response): any => {
+  const authReq = req as unknown as AuthRequest;
   try {
-    const userId = req.user?.userId;
+    const userId = authReq.user?.userId;
     const { requestId } = req.params;
 
     if (!userId) {
@@ -187,9 +190,10 @@ router.post('/friend-request/:requestId/accept', (req: AuthRequest, res: Respons
 });
 
 // Decline friend request
-router.post('/friend-request/:requestId/decline', (req: AuthRequest, res: Response) => {
+router.post('/friend-request/:requestId/decline', (req: Request, res: Response): any => {
+  const authReq = req as unknown as AuthRequest;
   try {
-    const userId = req.user?.userId;
+    const userId = authReq.user?.userId;
     const { requestId } = req.params;
 
     if (!userId) {
@@ -209,9 +213,10 @@ router.post('/friend-request/:requestId/decline', (req: AuthRequest, res: Respon
 });
 
 // Accept group invitation
-router.post('/group-invitation/:invitationId/accept', (req: AuthRequest, res: Response) => {
+router.post('/group-invitation/:invitationId/accept', (req: Request, res: Response): any => {
+  const authReq = req as unknown as AuthRequest;
   try {
-    const userId = req.user?.userId;
+    const userId = authReq.user?.userId;
     const { invitationId } = req.params;
 
     if (!userId) {
@@ -246,9 +251,10 @@ router.post('/group-invitation/:invitationId/accept', (req: AuthRequest, res: Re
 });
 
 // Decline group invitation
-router.post('/group-invitation/:invitationId/decline', (req: AuthRequest, res: Response) => {
+router.post('/group-invitation/:invitationId/decline', (req: Request, res: Response): any => {
+  const authReq = req as unknown as AuthRequest;
   try {
-    const userId = req.user?.userId;
+    const userId = authReq.user?.userId;
     const { invitationId } = req.params;
 
     if (!userId) {

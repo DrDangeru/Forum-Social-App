@@ -2,34 +2,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { MapPin, Star, MessageSquare, TrendingUp } from 'lucide-react';
-
-interface TopicItem {
-  id: number;
-  title: string;
-  description: string;
-  region?: string | null;
-  creatorUsername: string;
-  creatorAvatarUrl?: string | null;
-  postCount: number;
-  lastActivity?: string | null;
-  newPosts?: number;
-}
-
-interface RegionalData {
-  topics: TopicItem[];
-  region: string | null;
-  message?: string;
-  timestamp?: string;
-}
-
-interface FollowedData {
-  topics: TopicItem[];
-  timestamp?: string;
-}
+import type {
+  RegionalTopicItem,
+  FollowedTopicItem,
+  RegionalTopicsSseData,
+  FollowedTopicsSseData
+} from '../types/clientTypes';
 
 const LocalFeed: React.FC = () => {
-  const [regionalTopics, setRegionalTopics] = useState<TopicItem[]>([]);
-  const [followedTopics, setFollowedTopics] = useState<TopicItem[]>([]);
+  const [regionalTopics, setRegionalTopics] = useState<RegionalTopicItem[]>([]);
+  const [followedTopics, setFollowedTopics] = useState<FollowedTopicItem[]>([]);
   const [region, setRegion] = useState<string | null>(null);
   const [regionalMessage, setRegionalMessage] = useState<string | null>(null);
   
@@ -43,7 +25,7 @@ const LocalFeed: React.FC = () => {
     });
 
     regionalEventSource.current.addEventListener('regional-topics', (event) => {
-      const data: RegionalData = JSON.parse(event.data);
+      const data: RegionalTopicsSseData = JSON.parse(event.data);
       setRegionalTopics(data.topics);
       setRegion(data.region);
       setRegionalMessage(data.message || null);
@@ -59,7 +41,7 @@ const LocalFeed: React.FC = () => {
     });
 
     followedEventSource.current.addEventListener('followed-topics', (event) => {
-      const data: FollowedData = JSON.parse(event.data);
+      const data: FollowedTopicsSseData = JSON.parse(event.data);
       setFollowedTopics(data.topics);
     });
 
@@ -110,7 +92,7 @@ const LocalFeed: React.FC = () => {
                             <MessageSquare className="h-3 w-3" />
                             {topic.postCount}
                           </span>
-                          <span>by {topic.creatorUsername}</span>
+                          <span>by {topic.creatorUsername ?? 'Unknown'}</span>
                         </div>
                       </div>
                       {topic.postCount > 5 && (

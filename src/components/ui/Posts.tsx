@@ -7,15 +7,7 @@ import { Edit, Upload } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Textarea } from './textarea';
 import { Button } from './button';
-import type { Post } from '../../types/clientTypes';
-
-interface PostsProps {
-  posts: Post[];
-  onEdit?: (postId: number, content: string) => Promise<void>;
-  onUploadImage?: (postId: number, file: File) => Promise<void>;
-  onCreatePost?: (content: string, image?: File | null) => Promise<void>;
-  allowNewPosts?: boolean;
-}
+import type { Post, PostsProps } from '../../types/clientTypes';
 
 export const Posts: React.FC<PostsProps> = ({
   posts,

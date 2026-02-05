@@ -366,16 +366,17 @@ const dbHelpers: DbHelpers = {
     },
     
     update: (userId: string, data) => {
-      const { firstName, lastName, bio, avatarUrl } = data;
+      const { firstName, lastName, bio, avatarUrl, region } = data;
       return db.prepare(`
         UPDATE users 
         SET 
           firstName = COALESCE(?, firstName),
           lastName = COALESCE(?, lastName),
           bio = COALESCE(?, bio),
-          avatarUrl = COALESCE(?, avatarUrl)
+          avatarUrl = COALESCE(?, avatarUrl),
+          region = COALESCE(?, region)
         WHERE userId = ?
-      `).run(firstName, lastName, bio, avatarUrl, userId);
+      `).run(firstName, lastName, bio, avatarUrl, region, userId);
     },
     
     updateProfilePicture: (userId: string, filePath) => {

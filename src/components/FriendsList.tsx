@@ -3,14 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useFriends } from '../hooks/useFriends';
-import { BasicProfile } from '../types/clientTypes';
+import type { FriendItemProps, FriendsListProps } from '../types/clientTypes';
 import { getInitials } from '../lib/utils';
 import { UserX } from 'lucide-react';
-
-interface FriendsListProps {
-  profileId?: string; // Optional: to show friends of another user
-  isOwner?: boolean; // If true, show remove friend button
-}
 
 const FriendsList: React.FC<FriendsListProps> = ({ 
   profileId,
@@ -61,12 +56,6 @@ const FriendsList: React.FC<FriendsListProps> = ({
     </Card>
   );
 };
-
-interface FriendItemProps {
-  friend: BasicProfile;
-  isOwner: boolean;
-  onRemove: () => void;
-}
 
 const FriendItem: React.FC<FriendItemProps> = ({ friend, isOwner, onRemove }) => {
   return (

@@ -1,4 +1,4 @@
-import { cva, VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 
 export const buttonVariants = cva(
   `inline-flex items-center justify-center whitespace-nowrap rounded-md text-md font-medium
@@ -32,5 +32,3 @@ export const buttonVariants = cva(
     },
   }
 );
-
-export type ButtonVariantProps = VariantProps<typeof buttonVariants>;

@@ -5,15 +5,7 @@ import { Avatar } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { UserPlus, UserCheck, Clock } from 'lucide-react';
 import { Button } from './ui/button';
-import type { BasicProfile } from '../types/clientTypes';
-
-interface UserSearchProps {
-  // eslint-disable-next-line no-unused-vars 
-  onUserSelect?: (user: BasicProfile) => void;
-  // eslint-disable-next-line no-unused-vars
-  getFriendStatus?: (targetUserId: string) => 'none' | 'friends' | 'received' | 'sent';
-  className?: string;
-}
+import type { BasicProfile, UserSearchProps } from '../types/clientTypes';
 
 export function UserSearch({ onUserSelect, getFriendStatus, className }: UserSearchProps) {
   const [query, setQuery] = useState<string>('');

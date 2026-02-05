@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Topic, Post } from '../types/clientTypes';
+import type { Topic, Post, UserTopicsProps } from '../types/clientTypes';
 import { Textarea } from './ui/textarea.tsx';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
-
-interface UserTopicsProps {
-  userId: string;
-  showCreateButton?: boolean;
-  onCreateTopic?: () => void;
-}
 
 export default function UserTopics({
   userId,

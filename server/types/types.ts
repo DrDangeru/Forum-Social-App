@@ -65,6 +65,32 @@ export interface AuthState {
   error: string | null;
 }
 
+// JWT payload shape we store in the auth cookie
+export interface JwtUserPayload {
+  userId: string;
+  username: string;
+}
+
+import type { Request } from 'express';
+
+// Express request with authenticated user attached
+export interface AuthRequest extends Request {
+  user?: JwtUserPayload;
+}
+
+// Multer file shape used by our upload middleware
+export interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  destination: string;
+  filename: string;
+  path: string;
+  buffer: Buffer;
+}
+
 // ==================== PROFILE TYPES ====================
 
 // Basic profile information
@@ -367,6 +393,7 @@ export interface DbHelpers {
       lastName?: string;
       bio?: string;
       avatarUrl?: string | null;
+      region?: string | null;
     }) => DbOperationResult;
     updateProfilePicture: (userId: string, filePath: string) => DbOperationResult;
   };

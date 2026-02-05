@@ -3,16 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../../hooks/useAuth';
 import { useDropzone } from 'react-dropzone';
 import { Trash2, User, Upload } from 'lucide-react';
-
-interface UserPhoto {
-  id: number;
-  file_path: string;
-  original_name: string;
-  userId: string;
-  created_at: string;
-  size: number;
-  mimetype: string;
-}
+import type { UserPhoto } from '../../types/clientTypes';
 
 export default function PhotoGalleryPage() {
   const { user } = useAuth();

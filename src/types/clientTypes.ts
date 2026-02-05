@@ -38,6 +38,26 @@ export interface Ad {
   updatedAt: string;
 }
 
+export interface AdStats {
+  totalAds: number;
+  activeAds: number;
+  totalClicks: number;
+  totalImpressions: number;
+}
+
+export interface AdFormData {
+  title: string;
+  imageUrl: string;
+  linkUrl: string;
+  placement: AdPlacement;
+  isActive: boolean;
+}
+
+export interface AdBannerProps {
+  placement?: AdPlacement;
+  className?: string;
+}
+
 // Authentication credentials
 export interface AuthCredentials {
   username: string;
@@ -310,6 +330,149 @@ export interface PreviewTopic {
   title: string;
   description?: string;
   postCount?: number;
+}
+
+// Regional topics SSE types
+export interface RegionalTopicItem {
+  id: number;
+  title: string;
+  description: string;
+  region?: string | null;
+  creatorUsername?: string;
+  creatorAvatarUrl?: string | null;
+  postCount: number;
+  lastActivity?: string | null;
+}
+
+export interface FollowedTopicItem extends RegionalTopicItem {
+  newPosts?: number;
+}
+
+export interface RegionalTopicsSseData {
+  topics: RegionalTopicItem[];
+  region: string | null;
+  message?: string;
+  timestamp?: string;
+}
+
+export interface FollowedTopicsSseData {
+  topics: FollowedTopicItem[];
+  timestamp?: string;
+}
+
+export interface FriendsListProps {
+  profileId?: string;
+  isOwner?: boolean;
+}
+
+export interface FriendItemProps {
+  friend: BasicProfile;
+  isOwner: boolean;
+  onRemove: () => void;
+}
+
+export interface PostsProps {
+  posts: Post[];
+  onEdit?: (postId: number, content: string) => Promise<void>;
+  onUploadImage?: (postId: number, file: File) => Promise<void>;
+  onCreatePost?: (content: string, image?: File | null) => Promise<void>;
+  allowNewPosts?: boolean;
+}
+
+export interface UserPhoto {
+  id: number;
+  file_path: string;
+  original_name: string;
+  userId: string;
+  created_at: string;
+  size: number;
+  mimetype: string;
+}
+
+export interface FeedItem {
+  postId: number;
+  topicId: number;
+  content: string;
+  posterId: string;
+  createdAt: string;
+  updatedAt: string;
+  imageUrl: string | null;
+  authorUsername: string;
+  authorAvatarUrl: string | null;
+  topicTitle: string;
+  relevanceScore: number;
+}
+
+export interface LoginFormData {
+  username: string;
+  password: string;
+  email: string;
+}
+
+export interface PersonalDetailsProps {
+  isOwner: boolean;
+}
+
+export interface RegionalTopic extends Topic {
+  postCount?: number;
+  lastPostAt?: string | null;
+}
+
+export type UserSearchFriendStatus = 'none' | 'friends' | 'received' | 'sent';
+
+export interface UserSearchProps {
+  onUserSelect?: (user: BasicProfile) => void;
+  getFriendStatus?: (targetUserId: string) => UserSearchFriendStatus;
+  className?: string;
+}
+
+export interface UserTopicsProps {
+  userId: string;
+  showCreateButton?: boolean;
+  onCreateTopic?: () => void;
+}
+
+export interface WelcomeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userName: string;
+}
+
+export type RegisterPayload = Omit<AuthCredentials, 'userId'> & {
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
+export interface AuthContextType extends AuthState {
+  login: (arg: AuthCredentials) => Promise<User>;
+  logout: () => void;
+  register: (arg: RegisterPayload) => Promise<User>;
+}
+
+export interface ProfileContextType {
+  profile: Profile | null;
+  profiles: Record<string, Profile>;
+  getProfile: (userId: string) => Promise<Profile>;
+  updateProfile: (profile: Partial<Profile>, userId?: string) => Promise<Profile>;
+  setCurrentProfile: (userId: string) => void;
+}
+
+export interface UseFriendsReturn {
+  friends: BasicProfile[];
+  receivedRequests: FriendRequest[];
+  sentRequests: FriendRequest[];
+  isLoading: boolean;
+  error: string | null;
+  sendFriendRequest: (targetUserId: string) => Promise<void>;
+  acceptFriendRequest: (requestId: string) => Promise<void>;
+  rejectFriendRequest: (requestId: string) => Promise<void>;
+  removeFriend: (friendId: string) => Promise<void>;
+  refreshFriends: () => Promise<void>;
+  isFriend: (targetUserId: string) => boolean;
+  hasPendingRequestFrom: (targetUserId: string) => boolean;
+  hasPendingRequestTo: (targetUserId: string) => boolean;
+  getFriendRequestStatus: (targetUserId: string) => UserSearchFriendStatus;
 }
 
 // ==================== SETTINGS TYPES ====================

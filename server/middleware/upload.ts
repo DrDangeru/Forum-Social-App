@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Request } from 'express';
-import { Buffer } from 'buffer';
+import type { MulterFile } from '../types/types.js';
 
 // Get directory path using ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -34,18 +34,6 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
-
-interface MulterFile {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  size: number;
-  destination: string;
-  filename: string;
-  path: string;
-  buffer: Buffer;
-}
 
 // File filter multer.File lint error but confirmed working
 const fileFilter = (

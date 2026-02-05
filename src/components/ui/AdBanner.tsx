@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Ad } from '../../types/clientTypes';
-
-interface AdBannerProps {
-  placement?: 'banner' | 'sidebar' | 'feed';
-  className?: string;
-}
+import type { Ad, AdBannerProps } from '../../types/clientTypes';
 
 const AdBanner: React.FC<AdBannerProps> = ({ placement = 'banner',
   className = '' }) => {
