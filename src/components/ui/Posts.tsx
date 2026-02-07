@@ -1,9 +1,6 @@
-/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from './avatar';
-import { Card, CardContent } from './card';
-import { buttonVariants } from './buttonVariants';
-import { Edit, Upload } from 'lucide-react';
+import { Edit3, Upload, Calendar, Terminal, Zap, X, Save } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Textarea } from './textarea';
 import { Button } from './button';
@@ -67,149 +64,158 @@ export const Posts: React.FC<PostsProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {posts.map((post) => (
-        <Card key={post.postId} className="bg-white">
-          <CardContent className="pt-4">
-            <div className="flex items-center mb-2">
-              <Avatar className="h-6 w-6 mr-2">
-                {post.authorAvatarUrl ? (
-                  <AvatarImage src={post.authorAvatarUrl} alt={post.authorUsername || ''} />
-                ) : (
-                  <AvatarFallback>
-                    {post.authorUsername?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">{post.authorUsername}</span>
-                <span className="text-xs text-gray-500">
-                  {new Date(post.createdAt).toLocaleString(undefined, {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                  {post.updatedAt !== post.createdAt && (
-                    <span 
-                      className="ml-1 text-gray-400" 
-                      title={new Date(post.updatedAt).toLocaleString(undefined, {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    >
-                      (edited)
-                    </span>
+    <div className="space-y-10">
+      <div className="grid grid-cols-1 gap-10">
+        {posts.map((post) => (
+          <div key={post.postId} className="neo-brutal-card bg-white overflow-hidden flex flex-col group transition-all hover:-translate-y-1">
+            <div className="flex flex-row items-center gap-4 p-4 border-b-2 border-black bg-gray-50/50">
+              <div className="border-2 border-black shadow-neo-sm bg-white overflow-hidden transition-transform group-hover:-rotate-3">
+                <Avatar className="h-10 w-10 rounded-none border-none shadow-none">
+                  {post.authorAvatarUrl ? (
+                    <AvatarImage src={post.authorAvatarUrl} alt={post.authorUsername || ''} className="rounded-none" />
+                  ) : (
+                    <AvatarFallback className="rounded-none bg-orange-400 font-black text-xs">
+                      {post.authorUsername?.[0]?.toUpperCase() || 'U'}
+                    </AvatarFallback>
                   )}
-                </span>
+                </Avatar>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="font-black uppercase tracking-tight text-sm hover:underline decoration-2 cursor-pointer">@{post.authorUsername}</span>
+                  <div className="flex items-center gap-2">
+                    {post.updatedAt !== post.createdAt && (
+                      <div className="px-2 py-0.5 border border-black bg-purple-100 text-[8px] font-black uppercase shadow-neo-sm">EDITED</div>
+                    )}
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {editingPostId === post.postId ? (
-              <div className="mt-2 space-y-2">
-                <Textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                  rows={3}
-                />
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={() => handleSaveEdit(post.postId)}
-                    disabled={loading || !editContent.trim()}
-                    variant="default"
-                    size="sm"
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    onClick={() => setEditingPostId(null)}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    Cancel
-                  </Button>
+            <div className="p-6 space-y-6">
+              {editingPostId === post.postId ? (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <div className="absolute -top-3 left-4 bg-white px-2 border-2 border-black text-[10px] font-black uppercase tracking-widest">Edit Log</div>
+                    <Textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="min-h-[120px] rounded-none border-2 border-black shadow-neo-sm focus:shadow-none focus:translate-x-[1px] focus:translate-y-[1px] transition-all font-bold p-4"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <Button
+                      onClick={() => setEditingPostId(null)}
+                      variant="ghost"
+                      size="sm"
+                      className="font-black uppercase text-xs"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => handleSaveEdit(post.postId)}
+                      disabled={loading || !editContent.trim()}
+                      className="bg-black text-white hover:bg-gray-800 border-2 border-black shadow-neo-sm font-black uppercase text-xs px-6 flex items-center gap-2"
+                    >
+                      <Save className="h-3 w-3" /> Save Changes
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div>
-                <p className="mt-2">{post.content}</p>
-                {post.imageUrl && (
-                  <img
-                    src={post.imageUrl}
-                    alt="Post attachment"
-                    className="mt-4 rounded-lg max-h-96 object-cover w-full"
-                  />
-                )}
-              </div>
-            )}
+              ) : (
+                <div className="space-y-6">
+                  <p className="text-lg font-bold leading-tight whitespace-pre-wrap">{post.content}</p>
+                  {post.imageUrl && (
+                    <div className="border-4 border-black shadow-neo-sm overflow-hidden bg-black transition-transform hover:rotate-1">
+                      <img
+                        src={post.imageUrl}
+                        alt="Post attachment"
+                        className="w-full h-auto max-h-[500px] object-cover opacity-90 hover:opacity-100 transition-opacity"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
-            {user && post.posterId === user.userId && !editingPostId && (
-              <div className="mt-2 flex space-x-2">
-                <button
-                  onClick={() => handleEditClick(post)}
-                  className={buttonVariants({ variant: "ghost", size: "sm" })}
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </button>
-                <label
-                  className={`${buttonVariants({ variant: "ghost", size: "sm" })} cursor-pointer`}
-                >
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleImageUpload(post.postId, e)}
-                  />
-                  <Upload className="h-4 w-4 mr-1" />
-                  Upload Image
-                </label>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+              {user && post.posterId === user.userId && !editingPostId && (
+                <div className="flex items-center gap-3 pt-4 border-t-2 border-black/5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditClick(post)}
+                    className="border-2 border-black shadow-neo-sm font-black uppercase text-[10px] hover:bg-yellow-400 gap-2"
+                  >
+                    <Edit3 className="h-3 w-3 stroke-[3]" /> Edit Log
+                  </Button>
+                  <label className="flex items-center gap-2 px-3 py-1.5 border-2 border-black bg-white hover:bg-orange-50 cursor-pointer shadow-neo-sm active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all group">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleImageUpload(post.postId, e)}
+                    />
+                    <Upload className="h-3 w-3 stroke-[3] group-hover:rotate-12 transition-transform" />
+                    <span className="text-[10px] font-black uppercase">Add Intel Asset</span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {allowNewPosts && user && (
-        <div className="mt-6">
-          <Textarea style={{color: 'green'}}
-            placeholder="Write a new post..."
-            value={newPostContent}
-            onChange={(e) => setNewPostContent(e.target.value)}
-            className="mb-2"
-          />
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <label className={`${buttonVariants({ variant: "ghost", size: "sm" })} cursor-pointer`}>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setNewPostImage(file);
-                }}
-              />
-              <Upload className="h-4 w-4 mr-1" />
-              Upload Image
-            </label>
-            {newPostImage && (
-              <span className="text-xs text-muted-foreground truncate max-w-[55%]">
-                {newPostImage.name}
-              </span>
-            )}
+        <div className="mt-12 neo-brutal-card bg-white overflow-hidden flex flex-col border-l-8 border-l-green-500">
+          <div className="bg-black text-white p-4 border-b-2 border-black flex items-center gap-2">
+            <Terminal className="h-4 w-4" />
+            <h3 className="font-black uppercase tracking-widest text-xs">Establish New Transmission</h3>
           </div>
-          <Button 
-            onClick={handleCreatePost}
-            disabled={!newPostContent.trim() || loading}
-            variant="default"
-          >
-            Post Reply
-          </Button>
+          <div className="p-8 space-y-6">
+            <div className="relative">
+              <div className="absolute -top-3 left-4 bg-white px-2 border-2 border-black text-[10px] font-black uppercase tracking-widest">Message Feed</div>
+              <Textarea
+                placeholder="LOG YOUR FINDINGS..."
+                value={newPostContent}
+                onChange={(e) => setNewPostContent(e.target.value)}
+                className="min-h-[150px] rounded-none border-2 border-black shadow-neo-sm focus:shadow-none focus:translate-x-[1px] focus:translate-y-[1px] transition-all font-bold p-4 text-green-600"
+              />
+            </div>
+            
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <label className="flex items-center gap-2 px-4 py-2 border-2 border-black bg-white hover:bg-orange-50 cursor-pointer shadow-neo-sm active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all group">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setNewPostImage(file);
+                  }}
+                />
+                <Upload className="h-4 w-4 stroke-[3] group-hover:rotate-12 transition-transform" />
+                <span className="text-xs font-black uppercase">Attach Intel</span>
+              </label>
+              
+              {newPostImage && (
+                <div className="px-3 py-1 bg-black text-white text-[10px] font-black uppercase italic border-2 border-black flex items-center gap-2">
+                  <span className="truncate max-w-[150px]">{newPostImage.name}</span>
+                  <button onClick={() => setNewPostImage(null)} className="hover:text-red-400"><X className="h-3 w-3" /></button>
+                </div>
+              )}
+
+              <Button 
+                onClick={handleCreatePost}
+                disabled={!newPostContent.trim() || loading}
+                className="bg-black text-white hover:bg-gray-800 border-2 border-black shadow-neo font-black uppercase tracking-widest px-10 py-6 text-lg ml-auto flex items-center gap-2"
+              >
+                <Zap className="h-5 w-5 fill-yellow-400 text-yellow-400" /> Transmit Intel
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

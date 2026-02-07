@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { MapPin, Star, MessageSquare, TrendingUp } from 'lucide-react';
 import type {
   RegionalTopicItem,
@@ -57,47 +56,45 @@ const LocalFeed: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-4">
-      {/* Regional Top Topics - Frosted Glass */}
-      <Card className="backdrop-blur-md bg-white/70 border border-white/20 shadow-lg">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-blue-500" />
-            Top Stories in {region || 'Your Region'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
+    <div className="space-y-6">
+      {/* Regional Top Topics - Neo Glass */}
+      <div className="neo-glass-card overflow-hidden">
+        <div className="bg-blue-400 p-3 border-b-2 border-black flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-black fill-white" />
+          <h2 className="text-xs font-black uppercase tracking-widest">Local Pulse: {region || 'Global'}</h2>
+        </div>
+        <div className="p-4">
           {regionalMessage ? (
-            <p className="text-xs text-gray-500 py-2">{regionalMessage}</p>
+            <p className="text-xs font-bold text-gray-600 bg-orange-100 p-2 border border-black mb-2">{regionalMessage}</p>
           ) : regionalTopics.length === 0 ? (
-            <p className="text-xs text-gray-500 py-2">No regional topics yet</p>
+            <p className="text-xs font-bold text-gray-400 py-4 text-center">Scanning frequencies...</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {regionalTopics.map((topic, index) => (
-                <li key={topic.id} className="border-b last:border-0 pb-2 last:pb-0">
+                <li key={topic.id} className="group">
                   <Link 
                     to={`/topics/${topic.id}`}
-                    className="block hover:bg-gray-50 rounded p-1 -m-1"
+                    className="flex items-start gap-3 p-2 border-2 border-transparent hover:border-black hover:bg-white transition-all hover:translate-x-[1px] hover:translate-y-[1px]"
                   >
-                    <div className="flex items-start gap-2">
-                      <span className="text-xs font-bold text-blue-600 mt-0.5">
-                        {index + 1}.
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {topic.title}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
-                            {topic.postCount}
-                          </span>
-                          <span>by {topic.creatorUsername ?? 'Unknown'}</span>
+                    <span className="text-sm font-black italic text-blue-600">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black uppercase tracking-tight truncate group-hover:underline">
+                        {topic.title}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
+                          <MessageSquare className="h-3 w-3" />
+                          {topic.postCount}
                         </div>
+                        {topic.postCount > 5 && (
+                          <div className="flex items-center gap-1 bg-green-400 border border-black px-1">
+                            <TrendingUp className="h-2 w-2 text-black" />
+                            <span className="text-[8px] font-black uppercase">Hot</span>
+                          </div>
+                        )}
                       </div>
-                      {topic.postCount > 5 && (
-                        <TrendingUp className="h-3 w-3 text-green-500 flex-shrink-0" />
-                      )}
                     </div>
                   </Link>
                 </li>
@@ -107,56 +104,50 @@ const LocalFeed: React.FC = () => {
           {region && (
             <Link 
               to="/regional" 
-              className="text-xs text-blue-600 hover:underline mt-2 block"
+              className="text-[10px] font-black uppercase text-blue-600 hover:underline mt-4 block border-t-2 border-black/5 pt-2"
             >
-              View all regional topics →
+              Expand Search Radius →
             </Link>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <div className="border-t border-gray-300 my-2" />
-
-      {/* Followed Topics - Frosted Glass */}
-      <Card className="backdrop-blur-md bg-white/70 border border-white/20 shadow-lg">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Star className="h-4 w-4 text-yellow-500" />
-            Your Followed Topics
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
+      {/* Followed Topics - Neo Glass */}
+      <div className="neo-glass-card overflow-hidden">
+        <div className="bg-yellow-400 p-3 border-b-2 border-black flex items-center gap-2">
+          <Star className="h-4 w-4 text-black fill-black" />
+          <h2 className="text-xs font-black uppercase tracking-widest">Watching</h2>
+        </div>
+        <div className="p-4">
           {followedTopics.length === 0 ? (
-            <p className="text-xs text-gray-500 py-2">
-              No followed topics yet. Follow topics to see updates here.
-            </p>
+            <div className="text-center py-6 border-2 border-dashed border-black/10">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">No active surveillance.</p>
+            </div>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {followedTopics.map((topic, index) => (
-                <li key={topic.id} className="border-b last:border-0 pb-2 last:pb-0">
+                <li key={topic.id} className="group">
                   <Link 
                     to={`/topics/${topic.id}`}
-                    className="block hover:bg-gray-50 rounded p-1 -m-1"
+                    className="flex items-start gap-3 p-2 border-2 border-transparent hover:border-black hover:bg-white transition-all hover:translate-x-[1px] hover:translate-y-[1px]"
                   >
-                    <div className="flex items-start gap-2">
-                      <span className="text-xs font-bold text-yellow-600 mt-0.5">
-                        {index + 1}.
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {topic.title}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
-                            {topic.postCount}
-                          </span>
-                          {topic.newPosts && topic.newPosts > 0 && (
-                            <span className="text-green-600 font-medium">
-                              +{topic.newPosts} new
-                            </span>
-                          )}
+                    <span className="text-sm font-black italic text-yellow-600">
+                      #{index + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black uppercase tracking-tight truncate group-hover:underline">
+                        {topic.title}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
+                          <MessageSquare className="h-3 w-3" />
+                          {topic.postCount}
                         </div>
+                        {topic.newPosts && topic.newPosts > 0 && (
+                          <span className="bg-red-500 text-white text-[8px] font-black uppercase px-1 border border-black animate-pulse">
+                            {topic.newPosts} NEW
+                          </span>
+                        )}
                       </div>
                     </div>
                   </Link>
@@ -166,12 +157,12 @@ const LocalFeed: React.FC = () => {
           )}
           <Link 
             to="/topics" 
-            className="text-xs text-blue-600 hover:underline mt-2 block"
+            className="text-[10px] font-black uppercase text-yellow-600 hover:underline mt-4 block border-t-2 border-black/5 pt-2"
           >
-            Browse all topics →
+            Access All Topics →
           </Link>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

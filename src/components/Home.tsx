@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Link } from "react-router-dom";
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { useTopics } from '../hooks/useTopics';
@@ -70,117 +69,130 @@ const Home: React.FC = () => {
   //   : null;
   
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <WelcomeModal 
         isOpen={showWelcomeModal} 
         onClose={() => setShowWelcomeModal(false)}
         userName={user?.firstName || user?.username || ''}
       />
-      <div className="home-layout">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Sidebar - Local Feed */}
-        <div className="local-feed-sidebar">
-          <LocalFeed />
+        <div className="lg:col-span-3 space-y-6">
+          <div className="neo-brutal-card p-1 bg-yellow-400">
+            <div className="bg-white p-4 border-2 border-black">
+              <h3 className="font-black uppercase tracking-tight flex items-center gap-2 mb-4">
+                <MapPin className="h-5 w-5" />
+                Local Pulse
+              </h3>
+              <LocalFeed />
+            </div>
+          </div>
         </div>
         
         {/* Main Content - Followed Topics & Regional News */}
-        <div className="main-feed space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight">Your Feed</h2>
-            <Button className="bg-green-600 hover:bg-green-700 text-white">
-              <Link to="/topics">Start a Topic</Link>
+        <div className="lg:col-span-6 space-y-8">
+          <div className="flex items-center justify-between bg-white border-4 border-black p-6 shadow-neo">
+            <div>
+              <h2 className="text-3xl font-black uppercase tracking-tighter italic">Your Feed</h2>
+              <p className="text-sm font-bold text-gray-600">Fresh updates from your network</p>
+            </div>
+            <Button size="lg" className="bg-green-500 hover:bg-green-400 text-black border-2 border-black shadow-neo-sm font-black uppercase tracking-widest px-6">
+              <Link to="/topics">Start Topic</Link>
             </Button>
           </div>
           
           {/* Followed Topics Section */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500" />
-                Topics You Follow
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-500 mb-4">
-                Stay updated with the latest posts from topics you're following.
-              </p>
-              <div className="space-y-3">
-                {userTopicsLoading ? (
-                  <p className="text-gray-500">Loading followed topics...</p>
-                ) : userTopics.length > 0 ? (
-                  userTopics.slice(0, 5).map((topic) => (
+          <div className="neo-brutal-card overflow-hidden">
+            <div className="bg-purple-400 p-4 border-b-2 border-black flex items-center gap-2">
+              <Star className="h-6 w-6 text-black fill-yellow-400" />
+              <h2 className="text-xl font-black uppercase tracking-tight">Followed Topics</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              {userTopicsLoading ? (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-12 bg-gray-200 border-2 border-black" />
+                  <div className="h-12 bg-gray-200 border-2 border-black" />
+                </div>
+              ) : userTopics.length > 0 ? (
+                <div className="grid gap-4">
+                  {userTopics.slice(0, 5).map((topic) => (
                     <Link 
                       key={topic.id} 
                       to={`/topics/${topic.id}`}
-                      className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="group block p-4 border-2 border-black hover:bg-yellow-50 transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none shadow-neo-sm bg-white"
                     >
-                      <div className="flex items-start gap-3">
-                        <FileText className="h-5 w-5 text-gray-400 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-900 truncate">{topic.title}</h3>
-                          <p className="text-sm text-gray-500 truncate">{topic.description}</p>
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 border-2 border-black bg-orange-100 group-hover:bg-orange-200 transition-colors">
+                          <FileText className="h-5 w-5 text-black" />
                         </div>
-                        <MessageSquare className="h-4 w-4 text-gray-400" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-black text-lg uppercase tracking-tight truncate group-hover:underline decoration-2">{topic.title}</h3>
+                          <p className="text-sm font-bold text-gray-600 line-clamp-1">{topic.description}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="p-1 border border-black bg-white flex items-center gap-1">
+                            <MessageSquare className="h-3 w-3" />
+                            <span className="text-[10px] font-black">12</span>
+                          </div>
+                        </div>
                       </div>
                     </Link>
-                  ))
-                ) : (
-                  <div className="text-center py-6">
-                    <Star className="h-10 w-10 mx-auto text-gray-300 mb-2" />
-                    <p className="text-gray-500">No followed topics yet.</p>
-                    <Link to="/topics" className="text-blue-600 hover:underline text-sm">
-                      Browse topics to follow
-                    </Link>
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 border-2 border-dashed border-black bg-gray-50">
+                  <Star className="h-16 w-16 mx-auto text-gray-300 mb-4 stroke-[1.5]" />
+                  <p className="font-black uppercase tracking-tight text-gray-500 mb-4">Silence is golden, but following is better.</p>
+                  <Button variant="outline" className="font-black">
+                    <Link to="/topics">Find Something to Follow</Link>
+                  </Button>
+                </div>
+              )}
+              
               {userTopics.length > 5 && (
-                <Link to="/topics" className="text-blue-600 hover:underline text-sm mt-3 block">
+                <Link to="/topics" className="inline-block font-black uppercase text-xs hover:underline underline-offset-4 mt-2">
                   View all followed topics →
                 </Link>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Regional News Section */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-blue-500" />
-                Regional News
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-500 mb-4">
-                Top stories and discussions from your region.
-              </p>
-
+          <div className="neo-brutal-card overflow-hidden">
+            <div className="bg-blue-400 p-4 border-b-2 border-black flex items-center gap-2">
+              <MapPin className="h-6 w-6 text-black fill-white" />
+              <h2 className="text-xl font-black uppercase tracking-tight">Regional Pulse: {region || 'Global'}</h2>
+            </div>
+            <div className="p-6">
               {regionalMessage ? (
-                <p className="text-sm text-gray-500 py-2">{regionalMessage}</p>
+                <div className="p-4 bg-orange-100 border-2 border-black font-bold text-sm">
+                  {regionalMessage}
+                </div>
               ) : regionalTopics.length === 0 ? (
-                <p className="text-sm text-gray-500 py-2">No regional topics yet</p>
+                <div className="text-center py-8">
+                  <p className="font-bold text-gray-500">Scanning the airwaves...</p>
+                </div>
               ) : (
-                <div className="space-y-3">
-                  <p className="text-xs text-gray-500">
-                    Top Stories in {region || 'Your Region'}
-                  </p>
+                <div className="grid gap-4">
                   {regionalTopics.map((topic) => (
                     <Link
                       key={topic.id}
                       to={`/topics/${topic.id}`}
-                      className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="group block p-4 border-2 border-black bg-white hover:bg-blue-50 transition-all hover:translate-x-[2px] hover:translate-y-[2px] shadow-neo-sm"
                     >
-                      <div className="flex items-start gap-3">
-                        <FileText className="h-5 w-5 text-gray-400 mt-0.5" />
+                      <div className="flex items-start gap-4">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-900 truncate">{topic.title}</h3>
-                          <p className="text-sm text-gray-500 truncate">{topic.description}</p>
-                          <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <MessageSquare className="h-3 w-3" />
-                              {topic.postCount}
-                            </span>
-                            {topic.creatorUsername && <span>by {topic.creatorUsername}</span>}
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black uppercase px-1 border border-black bg-yellow-400">Trending</span>
+                            {topic.creatorUsername && (
+                              <span className="text-[10px] font-bold text-gray-500 italic">by @{topic.creatorUsername}</span>
+                            )}
                           </div>
+                          <h3 className="font-black text-lg uppercase tracking-tight truncate group-hover:underline decoration-2">{topic.title}</h3>
+                          <p className="text-sm font-medium text-gray-600 line-clamp-2">{topic.description}</p>
+                        </div>
+                        <div className="p-2 border-2 border-black bg-blue-100 group-hover:bg-blue-200 transition-colors">
+                          <MessageSquare className="h-5 w-5 text-black" />
                         </div>
                       </div>
                     </Link>
@@ -188,92 +200,97 @@ const Home: React.FC = () => {
                 </div>
               )}
 
-              <Link to="/regional" className="text-blue-600 hover:underline text-sm mt-3 block">
-                View all regional topics →
+              <Link to="/regional" className="inline-block font-black uppercase text-xs hover:underline underline-offset-4 mt-6">
+                Go beyond your region →
               </Link>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Right Sidebar - Quick Actions */}
-        <div className="quick-actions-sidebar">
-          <Card className="frosted-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Layout className="h-5 w-5 mr-2" />
-                Quick Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link to={`/profile/${profile?.userId}`} className="block w-full">
-                <Button variant="ghost" className="action-btn">
-                  <User className="h-4 w-4 mr-2" />
-                  My Profile
+        <div className="lg:col-span-3 space-y-6">
+          <div className="neo-brutal-card">
+            <div className="bg-black text-white p-4 flex items-center gap-2">
+              <Layout className="h-5 w-5" />
+              <h2 className="font-black uppercase tracking-widest text-sm">Quick Access</h2>
+            </div>
+            <div className="p-4 space-y-3 bg-white">
+              <Link to={`/profile/${profile?.userId}`} className="block">
+                <Button variant="outline" className="w-full justify-start font-black uppercase text-xs border-2 border-black shadow-none hover:bg-yellow-400 hover:shadow-neo-sm transition-all">
+                  <User className="h-4 w-4 mr-3 stroke-[3]" />
+                  My Command Center
                 </Button>
               </Link>
-              <div className="thin-divider" />
-              <Link to="/topics" className="block w-full">
-                <Button variant="ghost" className="action-btn">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Browse Topics
+              <Link to="/topics" className="block">
+                <Button variant="outline" className="w-full justify-start font-black uppercase text-xs border-2 border-black shadow-none hover:bg-purple-400 hover:shadow-neo-sm transition-all">
+                  <FileText className="h-4 w-4 mr-3 stroke-[3]" />
+                  Deep Dives
                 </Button>
               </Link>
-              <div className="thin-divider" />
-              <Link to="/friends" className="block w-full">
-                <Button variant="ghost" className="action-btn">
-                  <Users className="h-4 w-4 mr-2" />
-                  Find Friends
+              <Link to="/friends" className="block">
+                <Button variant="outline" className="w-full justify-start font-black uppercase text-xs border-2 border-black shadow-none hover:bg-green-400 hover:shadow-neo-sm transition-all">
+                  <Users className="h-4 w-4 mr-3 stroke-[3]" />
+                  The Squad
                 </Button>
               </Link>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          <div className="neo-glass-card p-6">
+            <h3 className="font-black uppercase italic tracking-tighter text-lg mb-2">Member Since</h3>
+            <p className="text-3xl font-black">2026</p>
+            <div className="mt-4 pt-4 border-t-2 border-black/10">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase text-gray-500">
+                <span>Reputation</span>
+                <span className="text-black">High</span>
+              </div>
+              <div className="w-full h-4 border-2 border-black mt-1 bg-white overflow-hidden">
+                <div className="h-full bg-green-500 w-[85%] border-r-2 border-black" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
       {/* Your Topics Section (kept for managing owned content) */}
-      <div className="mt-12">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Your Topics</h2>
-          <Button variant="default">
-            <Link to="/topics">Create Topic</Link> 
+      <div className="mt-16">
+        <div className="flex items-baseline gap-4 mb-8">
+          <h2 className="text-4xl font-black uppercase tracking-tighter italic">Your Archives</h2>
+          <div className="h-1 flex-1 bg-black" />
+          <Button variant="default" className="rounded-none font-black uppercase tracking-widest border-2 border-black shadow-neo">
+            <Link to="/topics">Archive Topic</Link> 
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {userTopicsLoading ? (
-            <Card className="col-span-full">
-              <CardContent className="py-8">
-                <div className="text-center text-gray-500">
-                  <p>Loading topics...</p>
-                </div>
-              </CardContent>
-            </Card>
+            Array(3).fill(0).map((_, i) => (
+              <div key={i} className="h-32 neo-brutal-card animate-pulse bg-gray-100" />
+            ))
           ) : userTopics.length > 0 ? (
             userTopics.map(topic => (
-              <Card key={topic.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="py-4">
-                  <Link to={`/topics/${topic.id}`} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0">
-                      <FileText className="h-6 w-6 text-gray-400" />
+              <div key={topic.id} className="neo-brutal-card group bg-white hover:-translate-rotate-1 transition-all">
+                <div className="p-6">
+                  <Link to={`/topics/${topic.id}`} className="block space-y-3">
+                    <div className="flex justify-between items-start">
+                      <FileText className="h-8 w-8 text-black stroke-[2.5]" />
+                      <span className="text-[10px] font-black uppercase px-2 py-1 bg-black text-white">Topic ID: {topic.id}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-medium text-gray-900 truncate">
-                        {topic.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 truncate">
-                        {topic.description}
-                      </p>
-                    </div>
+                    <h3 className="text-xl font-black uppercase tracking-tight group-hover:underline decoration-4">
+                      {topic.title}
+                    </h3>
+                    <p className="text-sm font-bold text-gray-600 line-clamp-2 italic">
+                      "{topic.description}"
+                    </p>
                   </Link>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))
           ) : (
-            <Card className="col-span-full bg-gray-50 border-dashed border-2">
-              <CardContent className="py-8 text-center text-gray-500">
-                <p>No topics created yet.</p>
-              </CardContent>
-            </Card>
+            <div className="col-span-full py-16 neo-brutal-card bg-gray-50 flex flex-col items-center justify-center border-dashed border-4 border-black/20">
+              <p className="text-2xl font-black uppercase text-gray-400">Empty Archives</p>
+              <p className="font-bold text-gray-500 mt-2">Start a legacy today.</p>
+            </div>
           )}
         </div>
       </div>

@@ -22,12 +22,9 @@ const DialogOverlay = React.forwardRef<
     ref={ref}
     className={cn(
       [
-        "fixed inset-0 z-50 bg-green-200/60 ",
+        "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
-        "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-1",
-        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]",
-        "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]"
+        "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
       ].join(" "),
       className
     )}
@@ -48,13 +45,10 @@ const DialogContent = React.forwardRef<
         [
           "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg",
           "translate-x-[-50%] translate-y-[-50%]",
-          "gap-4 border bg-background p-6 shadow-lg duration-200 text-blue-300",
+          "gap-0 border-4 border-black bg-white p-0 shadow-neo-lg duration-200 text-black",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-          // "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-          // "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]",
-          // "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
-          // "sm:rounded-lg"
+          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         ].join(" "),
         className
       )}
@@ -63,14 +57,12 @@ const DialogContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         className={[
-          "absolute right-4 top-4 rounded-sm opacity-70 text-blue-300",
-          "ring-offset-background transition-opacity hover:opacity-100",
-          "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-          "disabled:pointer-events-none",
-          "data-[state=open]:bg-accent data-[state=open]:text-muted-foreground text-blue-300"
+          "absolute right-4 top-4 border-2 border-black bg-white p-1 hover:bg-red-500 hover:text-white transition-all shadow-neo-sm active:shadow-none active:translate-x-[1px] active:translate-y-[1px]",
+          "ring-offset-background focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2",
+          "disabled:pointer-events-none"
         ].join(" ")}
       >
-        <X className="h-4 w-4" />
+        <X className="h-4 w-4 stroke-[3]" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
@@ -84,7 +76,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-blue-300 text-center sm:text-left",
+      "flex flex-col space-y-1.5 bg-yellow-400 p-6 border-b-4 border-black text-black text-center sm:text-left font-black uppercase italic tracking-tight",
       className
     )}
     {...props}
@@ -98,7 +90,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse text-blue-300 sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse p-6 border-t-4 border-black/5 sm:flex-row sm:justify-end sm:space-x-4",
       className
     )}
     {...props}
@@ -113,7 +105,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg text-blue-300 font-semibold leading-none tracking-tight",
+      "text-2xl text-black font-black leading-none tracking-tighter",
       className
     )}
     {...props}
@@ -127,7 +119,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground text-blue-300", className)}
+    className={cn("text-sm font-bold text-black/60 px-6 pt-4", className)}
     {...props}
   />
 ))

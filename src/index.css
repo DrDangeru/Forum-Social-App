@@ -20,10 +20,10 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
     --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --radius: 0;
   }
 
   .dark {
@@ -43,9 +43,28 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
     --ring: 212.7 26.8% 83.9%;
+    --radius: 0;
+  }
+}
+
+@layer components {
+  .neo-brutal-card {
+    @apply border-2 border-black bg-white shadow-neo transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-neo-sm;
+  }
+
+  .neo-brutal-btn {
+    @apply border-2 border-black bg-white px-4 py-2 font-bold shadow-neo transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-neo-sm;
+  }
+
+  .glass-effect {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
+
+  .neo-glass-card {
+    @apply glass-effect border-2 border-black shadow-neo;
   }
 }
 
@@ -54,7 +73,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-orange-50 text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background-image: 
+      radial-gradient(#000 0.5px, transparent 0.5px);
+    background-size: 20px 20px;
   }
 }

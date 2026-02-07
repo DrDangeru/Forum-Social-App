@@ -54,16 +54,19 @@ const AdBanner: React.FC<AdBannerProps> = ({ placement = 'banner',
 
   return (
     <div 
-      className={`relative cursor-pointer overflow-hidden rounded-lg ${placementStyles[placement]} ${className}`}
+      className={`relative cursor-pointer overflow-hidden border-4 border-black shadow-neo group hover:-translate-y-1 transition-all ${placementStyles[placement]} ${className}`}
       onClick={handleClick}
     >
       <img 
         src={ad.imageUrl} 
         alt={ad.title}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       />
-      <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
-        Ad
+      <div className="absolute top-2 left-2 bg-yellow-400 border-2 border-black text-black text-[10px] font-black uppercase px-2 py-0.5 shadow-neo-sm">
+        Intel_Promotion
+      </div>
+      <div className="absolute bottom-2 right-2 bg-black text-white text-[8px] font-black uppercase px-2 py-1 border border-white/20">
+        AD_NODE
       </div>
     </div>
   );

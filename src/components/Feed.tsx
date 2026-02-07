@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, CardContent, CardHeader } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { Badge } from './ui/badge';
 import { Loader2, MessageSquare, TrendingUp, Upload, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,6 +9,7 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { useAuth } from '../hooks/useAuth';
 import type { FeedItem } from '../types/clientTypes';
+import { cn } from '../lib/utils';
 
 const Feed: React.FC = () => {
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -118,106 +118,112 @@ const Feed: React.FC = () => {
   }
 
   return (
-    <div className="max-w-[800px] mx-auto space-y-6 px-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">Your Feed</h2>
+    <div className="max-w-[800px] mx-auto space-y-8 px-4">
+      <div className="flex items-center justify-between bg-white border-4 border-black p-6 shadow-neo">
+        <div>
+          <h2 className="text-3xl font-black uppercase tracking-tighter italic">Main Feed</h2>
+          <p className="text-sm font-bold text-gray-600">The pulse of the entire forum</p>
+        </div>
         <Button 
           onClick={handleStartTopic}
-          className="bg-green-600 hover:bg-green-700 text-white"
+          className="bg-green-500 hover:bg-green-400 text-black border-2 border-black shadow-neo-sm font-black uppercase"
         >
-          Start a Topic
+          Start Topic
         </Button>
       </div>
       
       {items.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-center space-y-4">
-            <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground opacity-20" />
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">Your feed is quiet</h3>
-              <p className="text-muted-foreground max-w-xs mx-auto">
-                Follow some topics or add friends to see what's happening in your community.
-              </p>
-            </div>
-            <Link to="/topics" className="inline-block text-primary hover:underline">
-              Explore Topics
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="neo-brutal-card p-12 text-center space-y-6 bg-white">
+          <MessageSquare className="h-20 w-16 mx-auto text-black opacity-20 stroke-[1]" />
+          <div className="space-y-2">
+            <h3 className="text-2xl font-black uppercase italic tracking-tight">Feed is Empty</h3>
+            <p className="font-bold text-gray-500 max-w-xs mx-auto">
+              Be the spark! Start a conversation or follow some topics.
+            </p>
+          </div>
+          <Button variant="outline" className="font-black border-2 border-black shadow-neo-sm">
+            <Link to="/topics">Explore Topics</Link>
+          </Button>
+        </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid gap-8">
           {items.map((item) => {
             const relevance = getRelevanceLabel(item.relevanceScore);
             return (
-              <Card key={item.postId} className="overflow-hidden transition-all hover:shadow-md">
-                <CardHeader className="flex flex-row items-start space-y-0 gap-4 pb-3">
+              <div key={item.postId} className="neo-brutal-card bg-white overflow-hidden group">
+                <div className="flex flex-row items-start gap-4 p-6 border-b-2 border-black bg-yellow-400/5">
                   <Link to={`/profile/${item.posterId}`}>
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={item.authorAvatarUrl || undefined} />
-                      <AvatarFallback>{item.authorUsername[0].toUpperCase()}</AvatarFallback>
-                    </Avatar>
+                    <div className="border-2 border-black shadow-neo-sm bg-white overflow-hidden transition-transform group-hover:-rotate-2">
+                      <Avatar className="h-12 w-12 rounded-none">
+                        <AvatarImage src={item.authorAvatarUrl || undefined} className="rounded-none" />
+                        <AvatarFallback className="rounded-none bg-orange-400 font-black">{item.authorUsername[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    </div>
                   </Link>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <Link to={`/profile/${item.posterId}`} className="font-semibold hover:underline">
+                        <Link to={`/profile/${item.posterId}`} className="font-black uppercase tracking-tight hover:underline decoration-2">
                           {item.authorUsername}
                         </Link>
-                        <span className="text-muted-foreground text-sm">•</span>
-                        <span className="text-muted-foreground text-sm">
+                        <span className="text-black font-black opacity-20">•</span>
+                        <span className="text-xs font-bold text-gray-500">
                           {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
                         </span>
                       </div>
-                      <Badge variant="secondary" className={`${relevance.color} border-none font-medium flex items-center px-2 py-0.5`}>
-                        {relevance.icon}
+                      <div className={cn("px-2 py-0.5 border-2 border-black text-[10px] font-black uppercase shadow-neo-sm", relevance.color)}>
                         {relevance.label}
-                      </Badge>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <span>posted in</span>
-                      <Link to={`/topics/${item.topicId}`} className="text-primary hover:underline font-medium">
+                    <div className="flex items-center gap-1 text-xs font-bold text-gray-500 italic">
+                      <span>In topic:</span>
+                      <Link to={`/topics/${item.topicId}`} className="text-black hover:underline decoration-1 underline-offset-2">
                         {item.topicTitle}
                       </Link>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                </div>
+                <div className="p-6 space-y-6">
+                  <p className="text-lg font-bold leading-tight whitespace-pre-wrap">
                     {item.content}
                   </p>
                   {item.imageUrl && (
-                    <div className="rounded-lg overflow-hidden border">
+                    <div className="border-4 border-black shadow-neo-sm overflow-hidden bg-black transition-transform hover:rotate-1">
                       <img 
                         src={item.imageUrl} 
                         alt="Post content" 
-                        className="w-full h-auto max-h-[400px] object-cover"
+                        className="w-full h-auto max-h-[500px] object-cover"
                       />
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center justify-between pt-4 border-t-2 border-black/5">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleStartReply(item.postId)}
+                      className="border-2 border-black shadow-neo-sm font-black uppercase text-xs hover:bg-yellow-400"
                     >
                       Reply
                     </Button>
-                    <Link to={`/topics/${item.topicId}`} className="text-sm text-primary hover:underline">
-                      View topic
+                    <Link to={`/topics/${item.topicId}`} className="text-xs font-black uppercase underline decoration-2 underline-offset-4 hover:bg-black hover:text-white px-2 py-1 transition-colors">
+                      Enter Topic →
                     </Link>
                   </div>
 
                   {replyingToPostId === item.postId && (
-                    <div className="space-y-2 pt-2">
-                      <Textarea
-                        value={replyContent}
-                        onChange={(e) => setReplyContent(e.target.value)}
-                        placeholder={`Reply to ${item.authorUsername}...`}
-                        className="min-h-[90px]"
-                      />
-                      <div className="flex items-center justify-between gap-2">
-                        <label className="inline-flex items-center text-sm text-gray-700 cursor-pointer">
+                    <div className="space-y-4 pt-6 mt-6 border-t-2 border-black">
+                      <div className="relative">
+                        <div className="absolute -top-3 left-4 bg-white px-2 border-2 border-black text-[10px] font-black uppercase tracking-widest">Your Response</div>
+                        <Textarea
+                          value={replyContent}
+                          onChange={(e) => setReplyContent(e.target.value)}
+                          placeholder={`Shout at ${item.authorUsername}...`}
+                          className="min-h-[120px] rounded-none border-2 border-black shadow-neo-sm focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all font-bold p-4"
+                        />
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <label className="flex items-center gap-2 px-4 py-2 border-2 border-black bg-white hover:bg-orange-50 cursor-pointer shadow-neo-sm active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all group">
                           <input
                             type="file"
                             accept="image/*"
@@ -227,41 +233,41 @@ const Feed: React.FC = () => {
                               setReplyImage(file);
                             }}
                           />
-                          <span className="inline-flex items-center">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Upload image
-                          </span>
+                          <Upload className="h-4 w-4 stroke-[3] group-hover:rotate-12 transition-transform" />
+                          <span className="text-xs font-black uppercase">Attach Intel</span>
                         </label>
                         {replyImage && (
-                          <span className="text-xs text-muted-foreground truncate max-w-[55%]">
-                            {replyImage.name}
-                          </span>
+                          <div className="px-2 py-1 bg-black text-white text-[10px] font-black uppercase max-w-[200px] truncate italic">
+                            [{replyImage.name}]
+                          </div>
                         )}
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setReplyingToPostId(null);
-                            setReplyContent('');
-                            setReplyImage(null);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleSubmitReply(item.topicId)}
-                          disabled={isReplySubmitting || !replyContent.trim()}
-                        >
-                          {isReplySubmitting ? 'Posting...' : 'Post Reply'}
-                        </Button>
+                        <div className="flex items-center gap-3 ml-auto">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setReplyingToPostId(null);
+                              setReplyContent('');
+                              setReplyImage(null);
+                            }}
+                            className="font-black uppercase text-xs"
+                          >
+                            Abort
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleSubmitReply(item.topicId)}
+                            disabled={isReplySubmitting || !replyContent.trim()}
+                            className="bg-yellow-400 border-2 border-black shadow-neo-sm font-black uppercase text-xs hover:bg-yellow-300"
+                          >
+                            {isReplySubmitting ? 'Transmitting...' : 'Post Intel'}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>

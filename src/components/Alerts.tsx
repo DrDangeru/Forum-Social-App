@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useAuth } from '../hooks/useAuth';
@@ -12,10 +11,11 @@ import {
   MessageSquare, 
   Check, 
   X,
-  RefreshCw
+  RefreshCw,
+  Zap
 } from 'lucide-react';
 import { AlertItem, AlertsResponse } from '../types/clientTypes';
-import './Alerts.css';
+import { cn } from '../lib/utils';
 
 const Alerts: React.FC = () => {
   const { user } = useAuth();
@@ -31,7 +31,12 @@ const Alerts: React.FC = () => {
       setLoading(true);
       const response = await axios.get<AlertsResponse>('/api/alerts');
       setAlerts(response.data.alerts);
-      setCounts(response.data.counts);
+      setCounts({
+        friendRequests: response.data.counts.friendRequests,
+        groupInvitations: response.data.counts.groupInvitations,
+        topicUpdates: response.data.counts.topicUpdates || 0,
+        total: response.data.counts.total
+      });
     } catch (error) {
       console.error('Failed to fetch alerts:', error);
     } finally {
@@ -192,101 +197,112 @@ const Alerts: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="alerts-container">
-        <div className="text-center py-8">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
-          <p className="mt-2 text-gray-500">Loading alerts...</p>
-        </div>
+      <div className="container mx-auto p-8 flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <RefreshCw className="h-12 w-12 animate-spin text-black" />
+        <p className="font-black uppercase tracking-widest italic">Intercepting Signals...</p>
       </div>
     );
   }
 
   return (
-    <div className="alerts-container">
-      <div className="alerts-header">
-        <h1 className="alerts-title">
-          <Bell className="h-6 w-6" />
-          Alerts
-        </h1>
-        <Button variant="outline" size="sm" onClick={fetchAlerts}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+    <div className="container mx-auto p-4 max-w-5xl space-y-8 pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border-4 border-black p-8 shadow-neo relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400 border-b-2 border-l-2 border-black -mr-16 -mt-16 rotate-45" />
+        <div>
+          <h1 className="text-5xl font-black uppercase tracking-tighter italic mb-2 flex items-center gap-3">
+            <Bell className="h-10 w-10 stroke-[3]" />
+            Alerts
+          </h1>
+          <p className="font-bold text-gray-600 uppercase tracking-widest text-xs">Real-time intelligence and incoming protocols</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="lg" 
+          onClick={fetchAlerts}
+          className="border-2 border-black font-black uppercase tracking-widest shadow-neo-sm hover:bg-yellow-400 relative z-10"
+        >
+          <RefreshCw className="h-4 w-4 mr-2 stroke-[3]" />
+          Sync
         </Button>
       </div>
 
       {/* Summary Cards */}
-      <div className="alerts-summary">
-        <Card className="summary-card">
-          <CardContent className="pt-4">
-            <div className="summary-icon friend-request">
-              <UserPlus className="h-5 w-5" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {[
+          { label: 'Recruits', count: counts.friendRequests, icon: UserPlus, color: 'bg-blue-400' },
+          { label: 'Intel', count: counts.topicUpdates, icon: MessageSquare, color: 'bg-green-400' },
+          { label: 'Ops', count: counts.groupInvitations, icon: Users, color: 'bg-purple-400' }
+        ].map((item, i) => (
+          <div key={i} className="neo-brutal-card bg-white p-6 flex items-center gap-4 group hover:-translate-rotate-1 transition-all">
+            <div className={cn("p-3 border-2 border-black shadow-neo-sm", item.color)}>
+              <item.icon className="h-6 w-6 text-black" />
             </div>
-            <div className="summary-count">{counts.friendRequests}</div>
-            <div className="summary-label">Friend Requests</div>
-          </CardContent>
-        </Card>
-        <Card className="summary-card">
-          <CardContent className="pt-4">
-            <div className="summary-icon group-invitation">
-              <Users className="h-5 w-5" />
+            <div>
+              <div className="text-3xl font-black">{item.count}</div>
+              <div className="text-[10px] font-black uppercase text-gray-500 tracking-widest">{item.label}</div>
             </div>
-            <div className="summary-count">{counts.groupInvitations}</div>
-            <div className="summary-label">Group Invitations</div>
-          </CardContent>
-        </Card>
-        <Card className="summary-card">
-          <CardContent className="pt-4">
-            <div className="summary-icon topic-update">
-              <MessageSquare className="h-5 w-5" />
-            </div>
-            <div className="summary-count">{counts.topicUpdates}</div>
-            <div className="summary-label">Topic Updates</div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
 
       {/* Alerts List */}
-      <Card className="alerts-list-card">
-        <CardHeader>
-          <CardTitle className="text-lg">All Notifications</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="neo-brutal-card bg-white overflow-hidden">
+        <div className="bg-black text-white p-4 border-b-2 border-black flex items-center justify-between">
+          <h2 className="font-black uppercase tracking-widest italic flex items-center gap-2 text-sm">
+            <Zap className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+            Active Feed
+          </h2>
+          <span className="text-[10px] font-black uppercase bg-white text-black px-2 py-0.5">{alerts.length} NOTIFICATIONS</span>
+        </div>
+        
+        <div className="divide-y-2 divide-black/5">
           {alerts.length === 0 ? (
-            <div className="empty-alerts">
-              <Bell className="h-12 w-12 text-gray-300" />
-              <p>No new alerts</p>
-              <span>You're all caught up!</span>
+            <div className="py-20 text-center space-y-4">
+              <div className="w-20 h-20 mx-auto border-4 border-dashed border-black/10 flex items-center justify-center rotate-12">
+                <Bell className="h-10 w-10 text-black/10" />
+              </div>
+              <p className="font-black uppercase text-gray-400 italic text-xl">Static on all channels.</p>
+              <p className="font-bold text-gray-400 text-sm">You're fully up to date, operative.</p>
             </div>
           ) : (
-            <div className="alerts-list">
-              {alerts.map((alert) => (
-                <div key={alert.id} className="alert-item">
-                  <div className="alert-icon">
+            alerts.map((alert) => (
+              <div key={alert.id} className="p-6 hover:bg-orange-50/30 transition-colors flex items-start gap-6 group">
+                <div className="shrink-0 mt-1">
+                  <div className="p-2 border-2 border-black bg-white shadow-neo-sm group-hover:shadow-none group-hover:translate-x-[1px] group-hover:translate-y-[1px] transition-all">
                     {getAlertIcon(alert.type)}
                   </div>
-                  <div className="alert-content">
-                    <div className="alert-header-row">
+                </div>
+                
+                <div className="flex-1 min-w-0 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
                       {alert.fromAvatarUrl && (
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={alert.fromAvatarUrl} />
-                          <AvatarFallback>
-                            {alert.fromUsername?.[0]?.toUpperCase() || '?'}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="border-2 border-black overflow-hidden shadow-neo-sm h-10 w-10">
+                          <Avatar className="rounded-none h-full w-full">
+                            <AvatarImage src={alert.fromAvatarUrl} className="rounded-none" />
+                            <AvatarFallback className="rounded-none bg-yellow-400 font-black">
+                              {alert.fromUsername?.[0]?.toUpperCase() || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
                       )}
-                      <div className="alert-text">
-                        <p className="alert-message">{alert.message}</p>
-                        <span className="alert-time">{formatTime(alert.createdAt)}</span>
+                      <div>
+                        <p className="font-black uppercase tracking-tight text-lg leading-none">{alert.message}</p>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{formatTime(alert.createdAt)}</span>
                       </div>
                     </div>
+                  </div>
+                  
+                  {/* Action Area */}
+                  <div className="flex items-center gap-3">
                     {renderAlertActions(alert)}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
