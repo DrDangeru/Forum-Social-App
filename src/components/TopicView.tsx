@@ -301,7 +301,7 @@ export default function TopicView() {
                   ) : (
                     <>
                       <Heart className="h-5 w-5 stroke-[3] fill-black" />
-                      Join Intercept
+                      Join Topic  
                     </>
                   )}
                 </Button>

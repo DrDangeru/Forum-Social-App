@@ -104,8 +104,9 @@ export default function Topics() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border-4 border-black p-8 shadow-neo relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-green-400 border-b-2 border-l-2 border-black -mr-16 -mt-16 rotate-45" />
         <div className="relative z-10">
-          <h1 className="text-5xl font-black uppercase tracking-tighter italic mb-2">Topic Hub</h1>
-          <p className="font-bold text-gray-600 uppercase tracking-widest text-xs italic">Operational Transmissions & Archive Management</p>
+          <h1 className="text-5xl font-black uppercase tracking-tighter italic mb-2">Topics Hub</h1>
+          <p className="font-bold text-gray-600 uppercase tracking-widest text-xs italic">
+            Transmissions & Topics Management</p>
         </div>
         <Button 
           onClick={() => setShowForm(!showForm)}

@@ -199,7 +199,7 @@ const Alerts: React.FC = () => {
     return (
       <div className="container mx-auto p-8 flex flex-col items-center justify-center min-h-[400px] gap-4">
         <RefreshCw className="h-12 w-12 animate-spin text-black" />
-        <p className="font-black uppercase tracking-widest italic">Intercepting Signals...</p>
+        <p className="font-black uppercase tracking-widest italic">Signals...Topics</p>
       </div>
     );
   }

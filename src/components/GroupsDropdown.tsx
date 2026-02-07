@@ -43,10 +43,7 @@ export const GroupsDropdown: React.FC = () => {
             fetchMyGroups();
           }
         }}
-        className={
-          "flex items-center space-x-1 text-gray-700 hover:text-gray-900 " +
-          "px-3 py-2 rounded-md"
-        }
+        className="flex items-center space-x-1 text-sm font-bold hover:bg-black/5 px-3 py-1 border-2 border-transparent hover:border-black transition-all"
       >
         <span>Group Chats</span>
         {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}

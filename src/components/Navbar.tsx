@@ -57,7 +57,7 @@ const Navbar = () => {
               <>
                 <Link
                   to="/friends"
-                  className="font-bold hover:bg-black/5 px-3 py-1 border-2 border-transparent hover:border-black transition-all relative"
+                  className="text-sm font-bold hover:bg-black/5 px-3 py-1 border-2 border-transparent hover:border-black transition-all relative"
                 >
                   Friends ({profile?.friends?.length || 0})
                   {alertCounts.friendRequests > 0 && (
@@ -68,7 +68,7 @@ const Navbar = () => {
                 <GroupsDropdown />
                 <Link
                   to="/followed"
-                  className="font-bold hover:bg-black/5 px-3 py-1 border-2 border-transparent hover:border-black transition-all"
+                  className="text-sm font-bold hover:bg-black/5 px-3 py-1 border-2 border-transparent hover:border-black transition-all"
                 >
                   Followed
                 </Link>

@@ -146,7 +146,7 @@ export default function FriendTopics() {
                     {new Date(topic.createdAt).toLocaleDateString()}
                   </div>
                   <div className="flex items-center gap-1 text-[8px] font-black uppercase group-hover:gap-2 transition-all">
-                    Intercept Intel <ChevronRight className="h-3 w-3 stroke-[3]" />
+                    Topics and Stuff <ChevronRight className="h-3 w-3 stroke-[3]" />
                   </div>
                 </div>
               </div>

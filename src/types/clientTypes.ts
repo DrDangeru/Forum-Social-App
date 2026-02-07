@@ -436,6 +436,7 @@ export interface WelcomeModalProps {
   isOpen: boolean;
   onClose: () => void;
   userName: string;
+  userRegion?: string | null;
 }
 
 export type RegisterPayload = Omit<AuthCredentials, 'userId'> & {

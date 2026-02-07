@@ -21,12 +21,24 @@ const Home: React.FC = () => {
   const [regionalMessage, setRegionalMessage] = useState<string | null>(null);
   const regionalEventSource = useRef<EventSource | null>(null);
   
+  const [userRegion, setUserRegion] = useState<string | null>(null);
+
   // Check if we should show welcome modal (on login)
+  // Pre-fetch region so modal knows whether to show region chooser
   useEffect(() => {
     const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
     if (user && !hasSeenWelcome) {
-      setShowWelcomeModal(true);
-      sessionStorage.setItem('hasSeenWelcome', 'true');
+      fetch('/api/regional/activity', { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          setUserRegion(data.region || null);
+          setShowWelcomeModal(true);
+          sessionStorage.setItem('hasSeenWelcome', 'true');
+        })
+        .catch(() => {
+          setShowWelcomeModal(true);
+          sessionStorage.setItem('hasSeenWelcome', 'true');
+        });
     }
   }, [user]);
   
@@ -74,6 +86,7 @@ const Home: React.FC = () => {
         isOpen={showWelcomeModal} 
         onClose={() => setShowWelcomeModal(false)}
         userName={user?.firstName || user?.username || ''}
+        userRegion={userRegion}
       />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Sidebar - Local Feed */}

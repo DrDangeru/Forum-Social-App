@@ -92,12 +92,12 @@ const Login = () => {
           </Button>
           
           <div className="pt-4 text-center border-t-2 border-black border-dashed">
-            <p className="font-bold text-gray-600 mb-2">New to the grid?</p>
+            <p className="font-bold text-gray-600 mb-2">New to this place? Reg now!</p>
             <Link
               to="/register"
               className="inline-block font-black uppercase text-sm underline decoration-4 underline-offset-4 hover:bg-black hover:text-white px-2 py-1 transition-all"
             >
-              Join the Resistance
+              Join the Happening
             </Link>
           </div>
         </form>
